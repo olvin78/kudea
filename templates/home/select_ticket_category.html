@@ -1,0 +1,114 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/ticket_category_styles.css' %}">
+{% endblock %}
+
+
+{% block content %}
+<div class="container py-5" style="background-color: #eef5f9;">
+  <h2 class="text-center fw-semibold mb-4">Selecciona una categoría de ticket</h2>
+  <div class="row row-cols-1 row-cols-md-2 g-4 justify-content-center">
+
+    <!-- General -->
+    <div class="col">
+      <a href="#" class="text-decoration-none">
+        <div class="d-flex align-items-center justify-content-between p-4 bg-white rounded shadow-sm">
+          <div class="d-flex align-items-center">
+            <div class="me-3">
+              <div class="icon-circle">
+                <i class="bi bi-chevron-right text-primary"></i>
+              </div>
+            </div>
+            <span class="text-primary fw-semibold">General</span>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- Soporte -->
+    <div class="col">
+      <a href="#" class="text-decoration-none">
+        <div class="d-flex align-items-center justify-content-between p-4 bg-white rounded shadow-sm">
+          <div class="d-flex align-items-center">
+            <div class="me-3">
+              <div class="icon-circle">
+                <i class="bi bi-chevron-right text-primary"></i>
+              </div>
+            </div>
+            <span class="text-primary fw-semibold">Soporte</span>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- Publicidad -->
+    <div class="col">
+      <a href="#" class="text-decoration-none">
+        <div class="d-flex align-items-center justify-content-between p-4 bg-white rounded shadow-sm">
+          <div class="d-flex align-items-center">
+            <div class="me-3">
+              <div class="icon-circle">
+                <i class="bi bi-chevron-right text-primary"></i>
+              </div>
+            </div>
+            <span class="text-primary fw-semibold">Publicidad</span>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- Facturación -->
+    <div class="col">
+      <a href="#" class="text-decoration-none">
+        <div class="d-flex align-items-center justify-content-between p-4 bg-white rounded shadow-sm">
+          <div class="d-flex align-items-center">
+            <div class="me-3">
+              <div class="icon-circle">
+                <i class="bi bi-chevron-right text-primary"></i>
+              </div>
+            </div>
+            <span class="text-primary fw-semibold">Facturación</span>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- Categoría con campos personalizados -->
+    <div class="col">
+      <a href="#" class="text-decoration-none">
+        <div class="d-flex align-items-center justify-content-between p-4 bg-white rounded shadow-sm">
+          <div class="d-flex align-items-center">
+            <div class="me-3">
+              <div class="icon-circle">
+                <i class="bi bi-chevron-right text-primary"></i>
+              </div>
+            </div>
+            <span class="text-primary fw-semibold">Categoría con campos personalizados</span>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- Categoría con vencimiento en 5 días -->
+    <div class="col">
+      <a href="#" class="text-decoration-none">
+        <div class="d-flex align-items-center justify-content-between p-4 bg-white rounded shadow-sm">
+          <div class="d-flex align-items-center">
+            <div class="me-3">
+              <div class="icon-circle">
+                <i class="bi bi-chevron-right text-primary"></i>
+              </div>
+            </div>
+            <span class="text-primary fw-semibold">Categoría con vencimiento en 5 días</span>
+          </div>
+        </div>
+      </a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+

@@ -1,0 +1,100 @@
+:root {
+  --primary-color: #1e3a8a;
+  --primary-dark: #0c3e7c;
+  --text-muted: #4b5563;
+  --bg-circle: #f0f4fa;
+  --card-bg: #ffffff;
+  --card-radius: 16px;
+  --transition-speed: 0.25s;
+  --shadow-light: 0 4px 10px rgba(0, 0, 0, 0.06);
+  --shadow-hover: 0 10px 25px rgba(0, 0, 0, 0.12);
+}
+
+.card {
+  margin-top: 2rem;
+  border: none;
+  border-radius: var(--card-radius);
+  background-color: var(--card-bg);
+  box-shadow: var(--shadow-light);
+  transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+  cursor: pointer;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+}
+
+.card-body {
+  padding: 2rem;
+  text-align: center;
+  transition: background-color var(--transition-speed);
+}
+
+.card-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  margin-bottom: 0.75rem;
+}
+
+.card-text {
+  color: var(--text-muted);
+  font-size: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.card-icon {
+  font-size: 2.5rem;
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+  transition: color var(--transition-speed);
+}
+
+.card:hover .card-icon {
+  color: var(--primary-dark);
+}
+
+.card a {
+  text-decoration: none;
+  color: inherit;
+  display: inline-block;
+  font-weight: 500;
+  transition: color var(--transition-speed);
+}
+
+.card a:hover {
+  color: var(--primary-dark);
+}
+
+.card-deck {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  justify-content: center;
+  padding-top: 1rem;
+}
+
+.icon-circle {
+  width: 40px;
+  height: 40px;
+  background-color: var(--bg-circle);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .card {
+    width: 100%;
+  }
+
+  .card-body {
+    padding: 1.5rem;
+  }
+
+  .card-icon {
+    font-size: 2rem;
+  }
+}
