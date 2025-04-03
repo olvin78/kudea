@@ -1,0 +1,148 @@
+{% extends "home/base.html" %}
+
+{% block title %}Página de Inicio{% endblock %}
+
+{% block head %}
+<style>
+.card {
+  margin-bottom: 0;  /* Elimina el margen extra al final de la tarjeta */
+  padding-bottom: 0; /* Elimina el padding extra al final de la tarjeta */
+}
+
+.table-responsive {
+  margin-bottom: 0;
+}
+
+  .overlay {
+  display: none;
+}
+
+.overlay.active {
+  display: block;
+  z-index: 1030;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+</style>
+{% endblock %}
+{% block content %}
+    <!-- Contenido principal -->
+    <div class="main-content collapsed" id="main-content">
+
+      <!-- Filtros de tickets -->
+      <div class="bg-body-tertiary border-bottom px-4 py-3 mb-4 shadow-sm">
+        <div class="d-flex flex-wrap align-items-center gap-2">
+
+          <button class="btn btn-primary">
+            Tickets abiertos <span class="badge bg-light text-dark ms-1">49</span>
+          </button>
+
+          <button class="btn btn-outline-primary">
+            Asignados a mí <span class="badge bg-light text-dark ms-1">46</span>
+          </button>
+
+          <button class="btn btn-outline-primary">
+            Asignados a otros <span class="badge bg-light text-dark ms-1">3</span>
+          </button>
+
+          <button class="btn btn-outline-primary">
+            Sin asignar <span class="badge bg-light text-dark ms-1">0</span>
+          </button>
+
+          <button class="btn btn-outline-success">
+            Marcados <span class="badge bg-light text-dark ms-1">1</span>
+          </button>
+
+          <button class="btn btn-outline-warning">
+            Próximos a vencer <span class="badge bg-light text-dark ms-1">0</span>
+          </button>
+
+          <button class="btn btn-outline-danger">
+            Vencidos <span class="badge bg-light text-dark ms-1">2</span>
+          </button>
+
+          <div class="ms-auto">
+            <div class="form-check d-inline-block">
+              <input class="form-check-input" type="checkbox" id="autoReload" />
+              <label class="form-check-label text-primary" for="autoReload">
+                Recargar automáticamente
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla de Tickets -->
+      <div class="card border-0 shadow-sm rounded-3">
+        <div class="table-responsive">
+          <table class="table table-hover table-bordered align-middle mb-0">
+            <thead style="background-color: #195c96;" class="text-white text-uppercase small">
+              <tr>
+                <th style="width: 40px;"><input type="checkbox" class="form-check-input" /></th>
+                <th>ID</th>
+                <th>Actualizado</th>
+                <th>Cliente</th>
+                <th>Asunto</th>
+                <th>Estado</th>
+                <th>Última respuesta</th>
+                <th>Prioridad</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="bg-white">
+                <td><input type="checkbox" class="form-check-input" /></td>
+                <td><a href="#">RAA-J7R-7GUR</a></td>
+                <td>26 Feb 25</td>
+                <td>Demo Customer</td>
+                <td><a href="#"><i data-lucide="user" class="me-1" style="width:14px;"></i> testLT</a></td>
+                <td><span class="text-primary">En curso</span></td>
+                <td>Demo Customer</td>
+                <td><span class="badge bg-primary-subtle text-primary">Baja</span></td>
+              </tr>
+              <tr class="bg-light">
+                <td><input type="checkbox" class="form-check-input" /></td>
+                <td><a href="#">JUA-D44-JHJQ</a></td>
+                <td>23 Feb 25</td>
+                <td>Demo Customer</td>
+                <td><a href="#"><i data-lucide="user" class="me-1" style="width:14px;"></i> hola</a></td>
+                <td><span class="text-primary">En curso</span></td>
+                <td>Hesk Demo</td>
+                <td><span class="badge bg-primary-subtle text-primary">Baja</span></td>
+              </tr>
+              <tr class="bg-white">
+                <td><input type="checkbox" class="form-check-input" /></td>
+                <td><a href="#">8T3-MPW-4P27</a></td>
+                <td>07 Feb 25</td>
+                <td>123</td>
+                <td><a href="#"><i data-lucide="user" class="me-1" style="width:14px;"></i> 123</a></td>
+                <td><span class="text-primary">En curso</span></td>
+                <td>123</td>
+                <td><span class="badge bg-primary-subtle text-primary">Baja</span></td>
+              </tr>
+              <!-- Añade más filas igual -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Paginación -->
+        <div class="text-center py-3 bg-body-secondary small">
+          <nav>
+            <ul class="pagination justify-content-center mb-2">
+              <li class="page-item active"><a class="page-link" href="#">1</a></li>
+              <li class="page-item"><a class="page-link" href="#">2</a></li>
+              <li class="page-item"><a class="page-link" href="#">3</a></li>
+              <li class="page-item"><a class="page-link" href="#">4</a></li>
+              <li class="page-item"><a class="page-link" href="#">5</a></li>
+            </ul>
+          </nav>
+          <div class="text-muted">Número de tickets: 49 • Número de páginas: 5</div>
+        </div>
+      </div>
+
+    </div>
+{% endblock %}

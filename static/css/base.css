@@ -1,0 +1,211 @@
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f4f6f9;
+}
+
+/* Sidebar */
+.sidebar {
+  background-color: #123954;
+  color: white;
+  min-height: 100vh;
+  padding-top: 1rem;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1040;
+  width: 280px;
+  transform: translateX(0);
+  transition: transform 0.3s ease;
+}
+
+.sidebar.collapsed {
+  transform: translateX(-100%);
+}
+
+.sidebar h4 {
+  text-align: center;
+  font-weight: 600;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 1rem;
+}
+
+.sidebar a {
+  color: white;
+  text-decoration: none;
+  padding: 12px 1.8rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background 0.2s ease;
+}
+
+.sidebar a:hover, .sidebar a.active {
+  background-color: #0f2f47;
+}
+
+/* Topbar */
+.topbar {
+  height: 60px;
+  background-color: #eaf2f7;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  border-bottom: 1px solid #ccc;
+  margin-left: 280px;
+  transition: margin-left 0.3s ease;
+}
+
+.topbar.collapsed {
+  margin-left: 0;
+}
+
+.topbar .btn {
+  background-color: #195c96;
+  border: none;
+}
+
+.topbar .btn:hover {
+  background-color: #144b7a;
+}
+
+.topbar .profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.topbar .avatar {
+  width: 35px;
+  height: 35px;
+  background-color: #195c96;
+  color: white;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 35px;
+  font-weight: bold;
+}
+
+/* Main Content */
+.main-content {
+  margin-left: 280px;
+  margin-top: 60px;
+  padding: 2rem;
+  transition: all 0.3s ease;
+}
+
+.main-content.collapsed {
+  margin-left: 0;
+}
+
+.table-responsive {
+  max-width: calc(100% - 280px);  /* Asegura que la tabla no ocupe más espacio que el disponible cuando el sidebar está extendido */
+  overflow-x: auto;
+  transition: max-width 0.3s ease;
+}
+
+.sidebar.collapsed + .main-content .table-responsive {
+  max-width: 100%;  /* La tabla ocupará el 100% cuando el sidebar se colapse */
+}
+
+/* Responsive para móvil */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+
+  .sidebar.active {
+    transform: translateX(0);
+  }
+
+  .topbar {
+    margin-left: 0 !important;
+  }
+
+  .main-content {
+    margin-left: 0 !important;
+  }
+
+  .table-responsive {
+    max-width: 100%; /* Asegura que la tabla ocupe todo el ancho disponible en dispositivos móviles */
+  }
+}
+
+/* Fondo oscuro cuando el menú móvil está activo */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: 1030;
+  display: none;
+}
+
+.overlay.active {
+  display: block;
+}
+
+/* Sidebar: elementos solo visibles en móvil */
+.sidebar .d-md-none {
+  display: block; /* Muestra en móvil */
+}
+
+.sidebar .d-md-flex {
+  display: none; /* Oculta en móvil */
+}
+
+/* Topbar: elementos visibles solo en escritorio */
+.topbar .d-md-none {
+  display: none; /* Oculta en escritorio */
+}
+
+.topbar .d-md-block {
+  display: block; /* Muestra en escritorio */
+}
+
+.topbar .d-flex.justify-content-between {
+  width: 100%;
+}
+
+/* En el sidebar, los elementos principales solo deben ser visibles en móviles */
+.sidebar .btn-primary {
+  background-color: #195c96;
+  border-color: #195c96;
+  width: 90%;
+  margin: 0 auto;
+}
+
+.sidebar .btn-primary:hover {
+  background-color: #144b7a;
+}
+
+.sidebar .avatar {
+  width: 35px;
+  height: 35px;
+  background-color: #195c96;
+  color: white;
+  border-radius: 50%;
+  font-weight: bold;
+  display: flex; /* Esto centrará verticalmente y horizontalmente */
+  align-items: center;
+  justify-content: center;
+}
+
+/* Mostrar "Kudea Panel" solo en móvil */
+.topbar .d-md-none {
+  display: block;  /* Muestra en móvil */
+  text-align: center;  /* Centra el texto en el topbar */
+}
+
+/* Ocultar "Kudea Panel" en pantallas grandes */
+.topbar .d-md-block {
+  display: block;  /* Muestra en escritorio */
+}
+
+.topbar .d-md-none {
+  display: none; /* Oculta el texto en escritorio */
+}
