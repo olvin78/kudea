@@ -12,6 +12,13 @@
 
 <link rel="stylesheet" href="{% static 'css/base.css' %}">
 
+
+{% block head %}
+
+{% endblock %}
+
+
+
 </head>
 <body>
 
@@ -20,19 +27,13 @@
 
 <!-- Sidebar (se elimina el perfil en móvil) -->
 <div class="sidebar collapsed" id="sidebar">
-  <a href="#"><h4>KUDEA</h4></a
+  <a href="{% url 'home_app:home' %}"><h4>KUDEA</h4></a>
   <a href="#" class="active"><i data-lucide="ticket"></i> Tickets</a>
-  <a href="#"><i data-lucide="file-text"></i> Presupuestos</a>
+  <a href="{% url 'budget_app:budget_main' %}"><i data-lucide="file-text"></i> Presupuestos</a>
   <a href="#"><i data-lucide="receipt"></i> Facturas</a>
   <a href="#"><i data-lucide="users"></i> Clientes</a>
   <a href="#"><i data-lucide="bar-chart-3"></i> Informes</a>
   <a href="#"><i data-lucide="settings"></i> Configuración</a>
-
-  <!-- Estos elementos solo deben aparecer en móvil -->
-  <button class="btn btn-primary d-md-none d-flex align-items-center gap-2 my-3">
-    <i data-lucide="plus-circle"></i>
-    Create New Ticket
-  </button>
 
   <a href="#" class="d-md-none d-flex align-items-center gap-2 text-white">
     <i data-lucide="mail"></i>
@@ -51,11 +52,7 @@
 
   <!-- Derecha (Botones y Avatar con Dropdown) -->
   <div class="profile dropdown d-flex align-items-center gap-3">
-    <!-- Botón Crear Ticket solo en escritorio -->
-    <button class="btn btn-primary d-none d-md-flex align-items-center gap-2">
-      <i data-lucide="plus-circle"></i>
-      Create New Ticket
-    </button>
+
     <!-- Icono de Mensaje solo en escritorio -->
     <i data-lucide="mail" class="text-dark d-none d-md-flex" style="cursor: pointer;"></i>
 
@@ -64,6 +61,7 @@
       H
     </div>
     <ul class="dropdown-menu dropdown-menu-end">
+      <li><a class="dropdown-item" href="{% url 'support_app:crear_ticket' %}">Crear Ticket</a></li>
       <li><a class="dropdown-item" href="#">Configuración</a></li>
       <li><a class="dropdown-item" href="#">Cerrar sesión</a></li>
     </ul>

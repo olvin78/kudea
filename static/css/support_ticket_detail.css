@@ -1,0 +1,60 @@
+.ticket-detail-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.ticket-id {
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+.ticket-descripcion {
+  font-size: 0.95rem;
+  color: #374151;
+  background-color: #f9fafb;
+  padding: 1rem;
+  border-radius: 6px;
+  white-space: pre-line;
+}
+
+/*estos so estilos para los botones de detail improimir
+y esos*/
+
+.btn-custom-blue {
+  background-color: #0D3A56;  /* Azul elegante */
+  color: #ffffff;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btn-custom-blue:hover {
+  background-color: #0b2f45;
+  transform: translateY(-2px);
+  color: #ffffff;
+}
+
+
+.badge {
+  padding: 0.4em 0.75em;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.estado-abierto {
+  background-color: #22c55e; /* verde */
+}
+
+.estado-progreso {
+  background-color: #facc15; /* amarillo */
+  color: #1f2937;
+}
+
+.estado-cerrado {
+  background-color: #ef4444; /* rojo */
+}

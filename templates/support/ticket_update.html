@@ -1,0 +1,22 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/support_ticket_form.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <h2 class="text-primary mb-4">Editar Ticket {{ ticket.identificador }}</h2>
+
+  <form method="post" enctype="multipart/form-data" class="card p-4 shadow-sm">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <div class="mt-3 d-flex gap-3">
+      <button type="submit" class="btn btn-primary">💾 Guardar cambios</button>
+      <a href="{% url 'support_app:ticket_detail' ticket.identificador %}" class="btn btn-secondary">← Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agregar Cliente</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f4f7fb;
+    margin: 0;
+}
+
+/* Centrado solo en pantallas grandes */
+@media (min-width: 768px) {
+    body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+    }
+}
+
+
+.container {
+    margin-top: 100px; /* margen en móvil */
+    padding-bottom: 100px;
+}
+
+@media (min-width: 768px) {
+    .container {
+        margin-top: 0; /* sin margen en escritorio */
+        padding-bottom: 0;
+    }
+}
+
+
+h2 {
+    text-align: center;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.form-control {
+    font-size: 1.05rem;
+    padding: 12px 16px;
+    width: 100%; /* asegura que ocupan todo el ancho disponible */
+    box-sizing: border-box;
+}
+
+.form-group label {
+    font-weight: 500;
+}
+
+.btn-container {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+}
+
+.btn-submit {
+    background-color: #007BFF;
+    color: white;
+    font-weight: 600;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    width: 48%;
+    transition: background-color 0.3s;
+}
+
+.btn-submit:hover {
+    background-color: #0056b3;
+}
+
+.btn-cancel {
+    background-color: #6c757d;
+    color: white;
+    font-weight: 600;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    width: 48%;
+    text-decoration: none;
+    transition: background-color 0.3s;
+}
+
+.btn-cancel:hover {
+    background-color: #5a6268;
+}
+
+    </style>
+</head>
+<body>
+
+    {% block content %}
+    <div class="container">
+        <h2>Agregar Cliente Nuevo</h2>
+
+        <!-- 🔍 Filtro de clientes -->
+        <div class="mb-3">
+            <label for="cliente-search">Buscar Cliente:</label>
+            <input type="text" id="cliente-search" class="form-control" placeholder="Escribe el nombre o NIF...">
+            <ul id="cliente-list" class="list-group mt-2"></ul>
+        </div>
+
+<form method="POST">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            {{ form.nombre.label_tag }}
+            {{ form.nombre }}
+        </div>
+        <div class="col-md-6 mb-3">
+            {{ form.empresa.label_tag }}
+            {{ form.empresa }}
+        </div>
+        <div class="col-md-6 mb-3">
+            {{ form.nif.label_tag }}
+            {{ form.nif }}
+        </div>
+        <div class="col-md-6 mb-3">
+            {{ form.email.label_tag }}
+            {{ form.email }}
+        </div>
+        <div class="col-md-6 mb-3">
+            {{ form.telefono.label_tag }}
+            {{ form.telefono }}
+        </div>
+        <div class="col-md-6 mb-3">
+            {{ form.ciudad.label_tag }}
+            {{ form.ciudad }}
+        </div>
+        <div class="col-md-6 mb-3">
+            {{ form.codigo_postal.label_tag }}
+            {{ form.codigo_postal }}
+        </div>
+        <div class="col-12 mb-3">
+            {{ form.direccion.label_tag }}
+            {{ form.direccion }}
+        </div>
+    </div>
+    <div class="btn-container">
+        <button type="submit" class="btn-submit">Guardar Cliente</button>
+        <a href="{% url 'budget_app:budget_create' %}" class="btn-cancel text-center">Cancelar</a>
+    </div>
+</form>
+
+    </div>
+    {% endblock %}
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const clientes = [
+                {% for cliente in clientes %}
+                    {
+                        "id": "{{ cliente.id }}",
+                        "nombre": "{{ cliente.nombre }}",
+                        "empresa": "{{ cliente.empresa }}",
+                        "nif": "{{ cliente.nif }}",
+                        "email": "{{ cliente.email }}",
+                        "telefono": "{{ cliente.telefono }}",
+                        "ciudad": "{{ cliente.ciudad }}",
+                        "codigo_postal": "{{ cliente.codigo_postal }}"
+                    },
+                {% endfor %}
+            ];
+
+            const searchInput = document.getElementById("cliente-search");
+            const resultList = document.getElementById("cliente-list");
+
+            searchInput.addEventListener("input", function() {
+                const searchTerm = searchInput.value.toLowerCase();
+                resultList.innerHTML = "";  // Limpiar la lista
+
+                if (searchTerm.length > 1) {
+                    const filteredClients = clientes.filter(cliente =>
+                        cliente.nombre.toLowerCase().includes(searchTerm) || 
+                        cliente.nif.toLowerCase().includes(searchTerm)
+                    );
+
+                    filteredClients.forEach(cliente => {
+                        const listItem = document.createElement("li");
+                        listItem.classList.add("list-group-item", "list-group-item-action");
+                        listItem.textContent = `${cliente.nombre} - ${cliente.nif}`;
+                        listItem.addEventListener("click", function() {
+                            rellenarFormulario(cliente);
+                            resultList.innerHTML = ""; // Limpiar la lista tras selección
+                        });
+                        resultList.appendChild(listItem);
+                    });
+                }
+            });
+
+            function rellenarFormulario(cliente) {
+                document.getElementById("id_nombre").value = cliente.nombre;
+                document.getElementById("id_empresa").value = cliente.empresa;
+                document.getElementById("id_nif").value = cliente.nif;
+                document.getElementById("id_email").value = cliente.email;
+                document.getElementById("id_telefono").value = cliente.telefono;
+                document.getElementById("id_ciudad").value = cliente.ciudad;
+                document.getElementById("id_codigo_postal").value = cliente.codigo_postal;
+            }
+        });
+    </script>
+
+</body>
+</html>

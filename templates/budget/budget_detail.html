@@ -1,0 +1,180 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Presupuesto #{{ budget.id }}</title>
+
+    <!-- Bootstrap CSS + Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color:white;
+            margin-top: 55px;
+        }
+
+        .documento {
+            max-width: 900px;
+            margin: auto;
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .tabla-azul th {
+            background-color: #0d6efd;
+            color: white;
+            text-align: center;
+        }
+
+        .firma {
+            padding-top: 20px;
+            margin-top: 30px;
+        }
+
+        .datos-cliente {
+            width: 49%;
+            float: left;
+        }
+
+        .clearfix::after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+    @media print {
+    .btn, nav, footer {
+        display: none !important;
+        }
+
+    .documento {
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        }
+    }
+    </style>
+</head>
+<body>
+
+<div class="documento">
+
+    <!-- ENCABEZADO -->
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <img src="{% static 'img/logo-euskodev-azul-transparente-negro.png' %}" alt="Logo" height="70">
+        </div>
+        <div class="d-flex justify-content-center">
+            <div style="text-align: left;">
+                <h5 class="text-primary fw-bold text-center mb-3">PRESUPUESTO</h5>
+                
+                <p class="mb-1"><strong>Nº:</strong> {{ budget.id }}</p>
+                
+                {% with budget.fecha_creacion as fecha %}
+                    <p class="mb-1"><strong>Fecha:</strong> {{ fecha.day }} de {{ fecha|date:"F" }} de {{ fecha.year }}</p>
+                {% endwith %}
+                
+                <p class="mb-1"><strong>Vencimiento:</strong> —</p>
+                {% if budget.agente %}
+                 <p class="mb-1"><strong>Agente:</strong> {{ budget.agente.get_full_name|default:budget.agente.username }}</p>
+                {% endif %}
+
+            </div>
+        </div>
+        
+    </div>
+
+    <!-- DATOS CLIENTE Y EMPRESA -->
+    <div class="mb-4">
+        <table class="table table-borderless table-sm w-100 align-top">
+            <tr>
+                <!-- DATOS DEL CLIENTE -->
+                <td class="w-50 pe-4 align-top">
+                    <h6 class="text-uppercase text-secondary fw-bold border-bottom pb-1 mb-2">Información del Cliente</h6>
+                    <p class="mb-1"><strong>Nombre:</strong> {{ budget.cliente.nombre }}</p>
+                    <p class="mb-1"><strong>Empresa:</strong> {{ budget.cliente.empresa }}</p>
+                    <p class="mb-1"><strong>NIF:</strong> {{ budget.cliente.nif|default:"-" }}</p>
+                    <p class="mb-1"><strong>Email:</strong> {{ budget.cliente.email|default:"No disponible" }}</p>
+                    <p class="mb-1"><strong>Teléfono:</strong> {{ budget.cliente.telefono|default:"-" }}</p>
+                    <p class="mb-1"><strong>Dirección:</strong> {{ budget.cliente.direccion|default:"-" }}</p>
+                </td>
+    
+                <!-- DATOS DE PAGO -->
+                <td class="w-50 ps-4 align-top border-start">
+                    <h6 class="text-uppercase text-secondary fw-bold border-bottom pb-1 mb-2">Datos de Pago</h6>
+                    <p class="mb-1"><strong>Cuenta:</strong> XXXXXX</p>
+                    <p class="mb-1"><strong>Banco:</strong> CaixaBank, S.A</p>
+                    <p class="mb-1"><strong>Empresa:</strong> Euskodev SRL</p>
+                </td>
+            </tr>
+        </table>
+    </div>
+    
+
+    <!-- TABLA DE ÍTEMS -->
+    <table class="table table-bordered tabla-azul">
+        <thead>
+            <tr>
+                <th></th>
+                <th>Descripción</th>
+                <th>Precio</th>
+                <th>Cant</th>
+                <th>Desc (%)</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td class="text-center">{{ forloop.counter }}</td>
+                <td>{{ item.descripcion }}</td>
+                <td style="width: 100px;text-align: center;">{{ item.precio_unitario }} €</td>
+                <td style="width: 70px;text-align: center;">{{ item.cantidad }}</td>
+                <td style="width: 90px;">{{ item.descuento }}%</td>
+                <td style="width: 100px;text-align: center;">{{ item.subtotal }} €</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- TOTALES -->
+    <div class="text-end">
+        <p><strong>Subtotal: </strong> {{ subtotal }} €</p>
+        <p><strong>Impuestos ({{ budget.impuesto_porcentaje }}%): </strong> {{ impuestos }} €</p>
+        <h5 class="text-primary"><strong>TOTAL: {{ total_con_impuestos }} €</strong></h5>
+    </div>
+
+<!-- CONDICIONES DE PAGO -->
+<div class="mt-5">
+    <h6 class="text-primary text-uppercase">Condiciones de Pago</h6>
+    <p class="mb-0">
+        Este presupuesto es válido por 15 días desde su emisión.  
+        Para iniciar el desarrollo del proyecto, se requiere el abono del <strong>50% del total</strong> o el <strong>100% en caso de acuerdo completo</strong>.  
+        El pago se realizará mediante transferencia bancaria a los datos indicados en este documento.
+    </p>
+</div>
+
+
+
+
+    <!-- BOTONES -->
+    <div class="d-flex justify-content-end gap-2 mt-4 d-print-none">
+        <a href="{% url 'budget_app:budget_list' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+        <a href="{% url 'budget_app:update_budget' budget.id %}" class="btn btn-warning">
+            <i class="bi bi-pencil"></i> Actualizar
+        </a>
+        <button onclick="window.print()" class="btn btn-primary">
+            <i class="bi bi-printer"></i> Imprimir
+        </button>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
