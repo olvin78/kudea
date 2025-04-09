@@ -1,0 +1,118 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/support_ticket_detail.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container py-5 ticket-detail-container">
+  <div class="card shadow-sm p-4">
+    <h2 class="ticket-id text-primary mb-4">Ticket: {{ ticket.identificador }}</h2>
+
+    <div class="row mb-3">
+      <div class="col-md-6">
+        {% if ticket.cliente %}
+          <p><strong>Cliente:</strong> {{ ticket.cliente.username }}</p>
+        {% else %}
+          <p><strong>Cliente:</strong> No asignado</p>
+        {% endif %}
+        <p><strong>Tipo:</strong> {{ ticket.tipo }}</p>
+        <p><strong>Asunto:</strong> {{ ticket.asunto }}</p>
+        <p><strong>Prioridad:</strong> {{ ticket.get_prioridad_display }}</p>
+      </div>
+      <div class="col-md-6">
+        {% if ticket.estado == 'abierto' %}
+        <p><strong>Estado:</strong> <span class="badge estado-abierto">Abierto</span></p>
+        {% elif ticket.estado == 'en_progreso' %}
+        <p><strong>Estado:</strong> <span class="badge estado-progreso">En progreso</span></p>
+        {% elif ticket.estado == 'cerrado' %}
+        <p><strong>Estado:</strong> <span class="badge estado-cerrado">Cerrado</span></p>
+        {% else %}
+        <p><strong>Estado:</strong> {{ ticket.get_estado_display }}</p>
+        {% endif %}
+
+        <p><strong>Última respuesta:</strong> 
+            {% if ticket.ultima_respuesta %}
+              {{ ticket.ultima_respuesta|date:"Y-m-d H:i" }}
+            {% else %}
+              Sin respuestas aún
+            {% endif %}
+          </p>
+        <p><strong>Actualizado:</strong> {{ ticket.actualizado|date:"Y-m-d H:i" }}</p>
+        <p><strong>Creado:</strong> {{ ticket.creado|date:"Y-m-d H:i" }}</p>
+      </div>
+    </div>
+
+    {% if ticket.descripcion %}
+    <div class="mt-4">
+      <h5 class="text-secondary">Descripción</h5>
+      <p class="ticket-descripcion">{{ ticket.descripcion|linebreaksbr }}</p>
+    </div>
+  {% endif %}
+  
+  {% if ticket.archivo %}
+  <div class="mt-5">
+    <h5 class="text-secondary mb-3">Archivo adjunto</h5>
+
+    {% with archivo_url=ticket.archivo.url|lower %}
+      {% if ".pdf" in archivo_url %}
+        <iframe src="{{ ticket.archivo.url }}" width="100%" height="500px" style="border:1px solid #ccc; border-radius:8px;"></iframe>
+
+      {% elif ".jpg" in archivo_url or ".jpeg" in archivo_url or ".png" in archivo_url or ".gif" in archivo_url %}
+        <img class="w-100 rounded border" src="{{ ticket.archivo.url }}" alt="Archivo adjunto" />
+      {% else %}
+        <p class="text-muted">Archivo cargado: {{ ticket.archivo.name }}</p>
+      {% endif %}
+    {% endwith %}
+  </div>
+{% endif %}
+
+
+  
+<div class="mt-5 text-center">
+    <div class="d-flex justify-content-center flex-wrap gap-3">
+  
+      <!-- Volver -->
+      <a href="{% url 'support_app:ticket_list' %}" class="btn btn-custom-blue">
+        ← Volver al listado
+      </a>
+  
+      <!-- Descargar -->
+      {% if ticket.archivo %}
+        <a href="{{ ticket.archivo.url }}" class="btn btn-custom-blue" download>
+          📎 Descargar archivo
+        </a>
+      {% endif %}
+  
+      <!-- Editar -->
+      <a href="{% url 'support_app:ticket_edit' ticket.id %}" class="btn btn-custom-blue">
+        ✏️ Editar ticket
+      </a>
+  
+      <!-- Responder -->
+      <a href="#" class="btn btn-custom-blue">
+        💬 Responder
+      </a>
+  
+      <a href="{% url 'support_app:ticket_delete' ticket.identificador %}" class="btn btn-danger">
+        🗑️ Eliminar ticket
+      </a>
+      
+      
+      <!-- Imprimir -->
+      <button onclick="window.print()" class="btn btn-custom-blue">
+        🖨️ Imprimir
+      </button>
+  
+    </div>
+  </div>
+  
+  
+  
+
+
+  
+  </div>
+</div>
+{% endblock %}
