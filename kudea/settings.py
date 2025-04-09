@@ -16,6 +16,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'applications.home',
+    'applications.tpv',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

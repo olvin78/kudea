@@ -20,13 +20,16 @@
 
 <!-- Sidebar (se elimina el perfil en móvil) -->
 <div class="sidebar collapsed" id="sidebar">
-  <a href="#"><h4>KUDEA</h4></a
+  <a href="#"><h4>KUDEA</h4></a>
   <a href="#" class="active"><i data-lucide="ticket"></i> Tickets</a>
   <a href="#"><i data-lucide="file-text"></i> Presupuestos</a>
   <a href="#"><i data-lucide="receipt"></i> Facturas</a>
   <a href="#"><i data-lucide="users"></i> Clientes</a>
   <a href="#"><i data-lucide="bar-chart-3"></i> Informes</a>
   <a href="#"><i data-lucide="settings"></i> Configuración</a>
+  <!-- NUEVA ENTRADA: TPV -->
+  <a href="{% url 'tpv_app:tpv_index' %}"><i data-lucide="store"></i> TPV</a>
+
 
   <!-- Estos elementos solo deben aparecer en móvil -->
   <button class="btn btn-primary d-md-none d-flex align-items-center gap-2 my-3">
