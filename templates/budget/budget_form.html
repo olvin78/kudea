@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Actualizar Presupuesto</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    {% block content %}
+    <div class="container py-5">
+        <div class="card shadow-lg">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Actualizar Presupuesto</h3>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-4">
+                        {{ form.as_p }}
+                    </div>
+
+                    <h5 class="mb-3">🧾 Ítems del Presupuesto</h5>
+
+                    {{ item_formset.management_form }}
+                    <table class="table table-bordered align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Descripción</th>
+                                <th>Cantidad</th>
+                                <th>Precio Unitario</th>
+                                <th>Descuento (%)</th>
+                                <th>Subtotal</th>
+                                <th>Eliminar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="item-rows">
+                            {% for form in item_formset %}
+                            <tr>
+                                {% for hidden in form.hidden_fields %}
+                                    {{ hidden }}
+                                {% endfor %}
+                                <td>{{ form.descripcion }}</td>
+                                <td>{{ form.cantidad }}</td>
+                                <td>{{ form.precio_unitario }}</td>
+                                <td>{{ form.descuento }}</td>
+                                <td>{{ form.instance.subtotal|default_if_none:"0.00"|floatformat:2 }} €</td>
+                                <td>{{ form.DELETE }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <button type="button" class="btn btn-outline-secondary" id="add-item-btn">
+                            ➕ Agregar producto o servicio
+                        </button>
+                        <div>
+                            <button type="submit" class="btn btn-success">
+                                💾 Actualizar
+                            </button>
+                            <a href="{% url 'budget_app:budget_list' %}" class="btn btn-secondary">
+                                Cancelar
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endblock %}
+
+    <script>
+        document.getElementById('add-item-btn').addEventListener('click', function () {
+            const tableBody = document.getElementById('item-rows');
+            const totalForms = document.getElementById("id_items-TOTAL_FORMS");
+            const formNum = parseInt(totalForms.value);
+
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td><input type="text" name="items-${formNum}-descripcion" class="form-control"></td>
+                <td><input type="number" name="items-${formNum}-cantidad" class="form-control" min="1" value="1"></td>
+                <td><input type="number" name="items-${formNum}-precio_unitario" class="form-control" step="0.01" value="0"></td>
+                <td><input type="number" name="items-${formNum}-descuento" class="form-control" step="0.01" value="0"></td>
+                <td>0.00 €</td>
+                <td><input type="checkbox" name="items-${formNum}-DELETE"></td>
+            `;
+
+            tableBody.appendChild(newRow);
+            totalForms.value = formNum + 1;
+        });
+    </script>
+</body>
+</html>

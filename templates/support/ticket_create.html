@@ -1,0 +1,68 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block head %}
+  <link rel="stylesheet" href="{% static 'css/support_ticket_form.css' %}">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="card shadow-sm p-4 animate-form" style="border-radius: 12px;">
+    <h2 class="text-primary fw-semibold mb-4 d-flex align-items-center gap-2">
+      <i data-lucide="ticket"></i> Crear nuevo ticket
+    </h2>
+
+    <form method="post" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+
+      <div class="row row-cols-1 row-cols-md-2 g-4">
+        {% for field in form.visible_fields %}
+          <div class="col">
+            <label for="{{ field.id_for_label }}" class="form-label fw-semibold text-primary">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}
+              <div class="form-text">{{ field.help_text }}</div>
+            {% endif %}
+            {% for error in field.errors %}
+              <div class="text-danger small">{{ error }}</div>
+            {% endfor %}
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="mt-4 d-flex flex-wrap gap-3">
+        <button type="submit" class="btn btn-primary d-flex align-items-center gap-2">
+          <i data-lucide="send"></i> Enviar ticket
+        </button>
+        <a href="{% url 'support_app:ticket_list' %}" class="btn btn-outline-secondary d-flex align-items-center gap-2">
+          <i data-lucide="x-circle"></i> Cancelar
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Inicializa Lucide Icons
+  lucide.createIcons();
+
+  // Animación de entrada con GSAP
+  gsap.from(".animate-form", {
+    opacity: 0,
+    y: 50,
+    duration: 1,
+    ease: "power2.out"
+  });
+
+  gsap.from(".animate-form form .col", {
+    opacity: 0,
+    y: 30,
+    duration: 0.8,
+    ease: "power2.out",
+    stagger: 0.15
+  });
+</script>
+{% endblock %}
