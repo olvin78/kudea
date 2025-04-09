@@ -1,0 +1,161 @@
+.ticket-list-container {
+    padding: 3rem 2rem 1rem; /* quitamos espacio abajo */
+    background-color: #f8fafc;
+    border-radius: 12px;
+    margin-bottom: 0;
+  }
+
+  .ticket-list-title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #1e3a8a;
+    margin-bottom: 2rem;
+    text-align: left;
+  }
+  
+.table-responsive {
+  padding: 0; /* ¡Sin padding extra que empuje! */
+  margin: 0 auto;
+  overflow-x: auto;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+}
+  
+
+.ticket-table {
+    margin: 0;
+    border-collapse: collapse;
+  }
+  
+  .ticket-table thead {
+    background-color: #dbeafe;
+    color: #1e3a8a;
+  }
+  
+  .ticket-table th,
+  .ticket-table td {
+    padding: 1rem;
+    white-space: nowrap;
+    text-align: center;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .ticket-table tr:nth-child(even) {
+    background-color: #f9fafc;
+  }
+  
+  .ticket-table tr:hover {
+    background-color: #eff6ff;
+    transition: background-color 0.2s ease;
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .ticket-list-container {
+      padding: 2rem 1rem;
+    }
+  
+    .ticket-list-title {
+      font-size: 1.5rem;
+    }
+  
+    .ticket-table {
+      font-size: 0.875rem;
+      min-width: 100%;
+    }
+
+    .no-data-message {
+        text-align: center;
+        font-style: italic;
+        color: #6b7280;
+        padding: 1rem 0;
+        margin: 0;
+      }
+      
+  }
+  
+  @media (max-width: 767.98px) {
+    .container .btn,
+    .container form {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+  
+    .ticket-list-container {
+      position: relative;
+    }
+  
+  
+/* Estilo buscador */
+.ticket-search-wrapper .input-group {
+  border: 1px solid #ced4da;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #fff;
+  max-width: 100%;
+}
+
+.ticket-search-wrapper .input-group-text {
+  background-color: transparent;
+  border: none;
+  padding-left: 0.75rem;
+}
+
+.ticket-search-wrapper .form-control {
+  border: none;
+  box-shadow: none;
+  font-size: 0.95rem;
+}
+
+.btn-search {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border: none;
+  background-color: #2563eb;
+  color: #fff;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.btn-search:hover {
+  background-color: #1d4ed8;
+}
+
+.ticket-search-wrapper {
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .ticket-search-wrapper {
+    margin-right: auto;
+  }
+}
+
+
+/*estos sonb los estilos paa el aprata do de el estado de 
+los ticket*/
+.estado-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+  color: #fff;
+}
+
+.estado-abierto {
+  background-color: #22c55e; /* verde suave */
+}
+
+.estado-progreso {
+  background-color: #facc15; /* amarillo suave */
+  color: #1e293b;
+}
+
+.estado-cerrado {
+  background-color: #ef4444; /* rojo fuerte */
+}

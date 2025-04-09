@@ -1,0 +1,21 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="card shadow-sm p-4 text-center">
+    <h2 class="text-danger mb-4">¿Estás seguro que quieres eliminar este ticket?</h2>
+    <p class="mb-4">Ticket <strong>{{ ticket.identificador }}</strong> — {{ ticket.asunto }}</p>
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="d-flex justify-content-center gap-3">
+        <button type="submit" class="btn btn-danger">🗑️ Eliminar</button>
+        <a href="{% url 'support_app:ticket_detail' ticket.identificador %}" class="btn btn-secondary">
+          ← Cancelar
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
