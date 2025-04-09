@@ -1,0 +1,26 @@
+{% extends 'tpv/base_tpv.html' %}
+
+{% block tpv_content %}
+  <div class="card p-4 shadow-sm">
+    <h2>Inicio del TPV</h2>
+    <p>Desde aquí puedes gestionar todo el punto de venta.</p>
+
+    <ul class="list-group mt-4">
+      <li class="list-group-item">
+        <a href="{% url 'tpv_app:tpv_mesas' %}">🪑 Gestión de Mesas</a>
+      </li>
+      <li class="list-group-item">
+        <a href="{% url 'tpv_app:tpv_comandas' %}">📋 Comandas</a>
+      </li>
+      <li class="list-group-item">
+        <a href="{% url 'tpv_app:tpv_cobros' %}">💳 Cobros</a>
+      </li>
+      <li class="list-group-item">
+        <a href="{% url 'tpv_app:tpv_historial' %}">📊 Historial de Ventas</a>
+      </li>
+      <li class="list-group-item">
+        <a href="{% url 'tpv_app:tpv_config' %}">⚙️ Configuración</a>
+      </li>
+    </ul>
+  </div>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends 'home/base.html' %}
+{% load static %}
+
+{% block head %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'css/tpc_base.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="card shadow-sm rounded-4 p-4 border-0 mb-4 bg-white">
+    <div class="d-flex align-items-center mb-3">
+      <i data-lucide="store" class="me-2 text-primary" style="width: 28px; height: 28px;"></i>
+      <h2 class="h4 m-0 text-primary">Terminal Punto de Venta</h2>
+    </div>
+    <p class="text-muted mb-0">Gestiona tus operaciones diarias desde un panel claro, moderno y ágil.</p>
+  </div>
+
+  <!-- Navegación elegante -->
+  <div class="row row-cols-2 row-cols-md-3 row-cols-lg-6 g-3 mb-4">
+    <div class="col">
+      <a href="{% url 'tpv_app:tpv_index' %}" class="btn btn-light border shadow-sm w-100 text-start d-flex align-items-center gap-2 py-2">
+        <i data-lucide="home" class="text-primary"></i> Inicio
+      </a>
+    </div>
+    <div class="col">
+      <a href="{% url 'tpv_app:tpv_mesas' %}" class="btn btn-light border shadow-sm w-100 text-start d-flex align-items-center gap-2 py-2">
+        <i data-lucide="layout" class="text-primary"></i> Mesas
+      </a>
+    </div>
+    <div class="col">
+      <a href="{% url 'tpv_app:tpv_comandas' %}" class="btn btn-light border shadow-sm w-100 text-start d-flex align-items-center gap-2 py-2">
+        <i data-lucide="clipboard-list" class="text-primary"></i> Comandas
+      </a>
+    </div>
+    <div class="col">
+      <a href="{% url 'tpv_app:tpv_cobros' %}" class="btn btn-light border shadow-sm w-100 text-start d-flex align-items-center gap-2 py-2">
+        <i data-lucide="credit-card" class="text-primary"></i> Cobros
+      </a>
+    </div>
+    <div class="col">
+      <a href="{% url 'tpv_app:tpv_historial' %}" class="btn btn-light border shadow-sm w-100 text-start d-flex align-items-center gap-2 py-2">
+        <i data-lucide="history" class="text-primary"></i> Historial
+      </a>
+    </div>
+    <div class="col">
+      <a href="{% url 'tpv_app:tpv_config' %}" class="btn btn-light border shadow-sm w-100 text-start d-flex align-items-center gap-2 py-2">
+        <i data-lucide="settings" class="text-primary"></i> Configuración
+      </a>
+    </div>
+  </div>
+
+  <!-- Aquí irá el contenido de cada vista -->
+  {% block tpv_content %}{% endblock %}
+</div>
+{% endblock %}
