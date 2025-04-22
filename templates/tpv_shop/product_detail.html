@@ -1,0 +1,79 @@
+{% extends 'tpv_shop/base_tpv_shop.html' %}
+{% load static %}
+{% block tpv_content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <div class="card border-0 shadow-lg rounded-4 p-4">
+        <div class="row g-5 align-items-center">
+          <!-- Imagen -->
+          <div class="col-md-6 text-center">
+            {% if product.image %}
+              <img src="{{ product.image.url }}" class="img-fluid rounded-3" style="max-height: 480px; object-fit: contain;" alt="{{ product.name }}">
+            {% else %}
+              <img src="{% static 'img/no-image.png' %}" class="img-fluid rounded-3" alt="Sin imagen">
+            {% endif %}
+          </div>
+
+          <!-- Info y Formulario -->
+          <div class="col-md-6">
+            <h1 class="fw-bold text-dark mb-3">{{ product.name }}</h1>
+            <p class="text-muted fs-5 mb-4">{{ product.description }}</p>
+
+            <div class="mb-4">
+              <span class="h5 text-success">Precio:</span>
+              <span class="h5">${{ product.final_price }}</span>
+            </div>
+
+            <form method="POST" action="{% url 'tpv_shop:add_to_cart' product.id %}">
+              {% csrf_token %}
+
+              <!-- Talla -->
+              <div class="mb-3">
+                <label for="selectTalla" class="form-label fw-semibold">Talla</label>
+                <select name="size" class="form-select form-select-lg rounded-3" required>
+                  <option disabled selected>Selecciona tu talla</option>
+                  <option>XS - 34</option>
+                  <option>S - 36</option>
+                  <option>M - 38</option>
+                  <option>L - 40</option>
+                  <option>XL - 42</option>
+                  <option>XXL - 44</option>
+                  <option>46</option>
+                  <option>48</option>
+                  <option>50</option>
+                </select>
+              </div>
+
+              <!-- Color -->
+              <div class="mb-3">
+                <label for="selectColor" class="form-label fw-semibold">Color</label>
+                <select name="color" class="form-select form-select-lg rounded-3" required>
+                  <option disabled selected>Elige un color</option>
+                  <option value="Negro">🖤 Negro</option>
+                  <option value="Blanco">🤍 Blanco</option>
+                  <option value="Rojo">❤️ Rojo</option>
+                  <option value="Azul">💙 Azul</option>
+                  <option value="Verde">💚 Verde</option>
+                  <option value="Beige">🤎 Beige</option>
+                  <option value="Gris">⚪ Gris</option>
+                </select>
+              </div>
+
+              <!-- Cantidad -->
+              <div class="mb-4">
+                <label for="cantidad" class="form-label fw-semibold">Cantidad</label>
+                <input type="number" name="quantity" class="form-control form-control-lg w-50 rounded-3" min="1" max="99" value="1" required>
+              </div>
+
+              <button type="submit" class="btn btn-dark btn-lg w-100 shadow-sm rounded-3">
+                <i class="bi bi-cart-plus-fill me-2"></i> Añadir al carrito
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,198 @@
+{% extends 'tpv_shop/base_tpv_shop.html' %}
+{% load static %}
+
+{% block tpv_content %}
+<style>
+  .custom-keypad button {
+    padding: 1.2rem;
+    font-size: 1.5rem;
+    border-radius: 0.75rem;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .custom-keypad button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .custom-keypad .btn-outline-dark {
+    background-color: #ffffff;
+    border-color: #ced4da;
+    color: #343a40;
+  }
+
+  .custom-keypad .btn-outline-dark:active {
+    background-color: #dee2e6;
+    color: #000;
+  }
+
+  .custom-keypad .btn-danger {
+    background-color: #ffebee;
+    color: #c62828;
+  }
+
+  .keypad-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+  }
+
+  .btn-confirm-cash {
+    font-size: 1.25rem;
+    padding: 1rem;
+    border-radius: 0.75rem;
+  }
+</style>
+
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+
+      <div class="text-center mb-5">
+        <h2 class="fw-bold"><i class="fas fa-wallet text-primary me-2"></i> Cobro en TPV</h2>
+        <p class="text-muted">Seleccione el método de pago</p>
+      </div>
+
+      <div id="step-selection">
+        <div class="row g-4">
+          <div class="col-md-6 mx-auto">
+            <div class="card border-0 shadow-sm p-4 rounded-4">
+              <h6 class="fw-bold mb-4">Seleccione método de pago</h6>
+              <div class="d-grid gap-3">
+                <button class="btn btn-outline-primary btn-lg d-flex justify-content-between align-items-center" onclick="confirmPayment('Tarjeta')">
+                  <span><i class="far fa-credit-card me-2"></i> Tarjeta</span>
+                  <strong>{{ total_price|floatformat:2 }} €</strong>
+                </button>
+                <button class="btn btn-outline-success btn-lg d-flex justify-content-between align-items-center" onclick="confirmPayment('Efectivo')">
+                  <span><i class="fas fa-money-bill-wave me-2"></i> Efectivo</span>
+                  <strong>{{ total_price|floatformat:2 }} €</strong>
+                </button>
+                <button class="btn btn-outline-info btn-lg d-flex justify-content-between align-items-center" onclick="confirmPayment('PayPal')">
+                  <span><i class="fab fa-paypal me-2"></i> PayPal</span>
+                  <strong>{{ total_price|floatformat:2 }} €</strong>
+                </button>
+                <button class="btn btn-outline-dark btn-lg d-flex justify-content-between align-items-center" onclick="confirmPayment('Bizum')">
+                  <span><i class="fas fa-qrcode me-2"></i> Bizum</span>
+                  <strong>{{ total_price|floatformat:2 }} €</strong>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="step-confirmation" style="display:none;">
+        <div class="card border-0 shadow-sm p-4 rounded-4">
+          <h5 class="fw-bold mb-3 text-center">Confirmar pago</h5>
+          <p class="mb-2 text-center">Método seleccionado: <span id="selectedMethod" class="fw-semibold text-primary"></span></p>
+          <p class="mb-4 text-center">Importe: <span id="selectedAmount" class="fw-bold fs-4">{{ total_price|floatformat:2 }} €</span></p>
+
+          <div id="cashFields" style="display: none;">
+            <div class="card border-0 shadow-sm p-4 rounded-4 mb-3">
+              <h6 class="fw-bold mb-3">Efectivo recibido</h6>
+              <input type="text" id="cashGiven" class="form-control text-end fs-4 fw-bold mb-3" readonly placeholder="0.00">
+              <label class="form-label">Cambio / Falta:</label>
+              <div class="fw-bold fs-4" id="changeAmount">0.00 €</div>
+            </div>
+
+            <div class="card border-0 shadow-sm p-3 rounded-4 custom-keypad">
+              <div class="keypad-grid">
+                <button class="btn btn-outline-dark" onclick="appendKey('1')">1</button>
+                <button class="btn btn-outline-dark" onclick="appendKey('2')">2</button>
+                <button class="btn btn-outline-dark" onclick="appendKey('3')">3</button>
+                <button class="btn btn-outline-dark" onclick="appendKey('4')">4</button>
+                <button class="btn btn-outline-dark" onclick="appendKey('5')">5</button>
+                <button class="btn btn-outline-dark" onclick="appendKey('6')">6</button>
+                <button class="btn btn-outline-dark" onclick="appendKey('7')">7</button>
+                <button class="btn btn-outline-dark" onclick="appendKey('8')">8</button>
+                <button class="btn btn-outline-dark" onclick="appendKey('9')">9</button>
+                <button class="btn btn-outline-dark" onclick="appendKey('.')">.</button>
+                <button class="btn btn-outline-dark" onclick="appendKey('0')">0</button>
+                <button class="btn btn-danger" onclick="clearInput()">←</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-center gap-3 mt-4">
+            <button class="btn btn-outline-secondary" onclick="goBack()"><i class="fas fa-edit me-2"></i>Modificar</button>
+            <form method="POST" action="{% url 'tpv_shop:finalizar_compra' %}">
+              {% csrf_token %}
+              <input type="hidden" name="payment_method" id="payment_method_input">
+              <button type="submit" class="btn btn-success">
+                <i class="fas fa-check-circle me-2"></i>Confirmar pago
+              </button>
+            </form>
+            
+            
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  let selectedMethod = '';
+
+  function confirmPayment(method) {
+    const amount = parseFloat("{{ total_price|floatformat:2 }}");
+    selectedMethod = method;
+
+    // Mostrar datos en pantalla
+    document.getElementById('selectedMethod').textContent = method;
+    document.getElementById('selectedAmount').textContent = amount.toFixed(2) + ' €';
+
+    // Establecer el valor del input oculto del formulario
+    const methodInput = document.getElementById('payment_method_input');
+    if (methodInput) {
+      methodInput.value = method;
+    }
+
+    // Mostrar u ocultar campos según método
+    document.getElementById('step-selection').style.display = 'none';
+    document.getElementById('step-confirmation').style.display = 'block';
+
+    if (method === 'Efectivo') {
+      document.getElementById('cashFields').style.display = 'block';
+    } else {
+      document.getElementById('cashFields').style.display = 'none';
+    }
+  }
+
+  function goBack() {
+    document.getElementById('step-selection').style.display = 'block';
+    document.getElementById('step-confirmation').style.display = 'none';
+    document.getElementById('cashGiven').value = '';
+    document.getElementById('changeAmount').textContent = '0.00 €';
+  }
+
+  function appendKey(value) {
+    const input = document.getElementById('cashGiven');
+    input.value += value;
+    calculateChange();
+  }
+
+  function clearInput() {
+    const input = document.getElementById('cashGiven');
+    input.value = input.value.slice(0, -1);
+    calculateChange();
+  }
+
+  function calculateChange() {
+    const total = parseFloat("{{ total_price|floatformat:2 }}");
+    const given = parseFloat(document.getElementById('cashGiven').value);
+    const change = given - total;
+    const changeAmount = document.getElementById('changeAmount');
+
+    if (!isNaN(change)) {
+      changeAmount.textContent = (change > 0 ? '+' : '') + change.toFixed(2) + ' €';
+      changeAmount.classList.toggle('text-danger', change < 0);
+      changeAmount.classList.toggle('text-success', change >= 0);
+    } else {
+      changeAmount.textContent = '0.00 €';
+    }
+  }
+</script>
+
+{% endblock %}

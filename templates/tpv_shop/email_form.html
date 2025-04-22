@@ -1,0 +1,232 @@
+{% extends 'tpv_shop/base_tpv_shop.html' %}
+{% block tpv_content %}
+<div class="container-fluid mt-4 px-0">
+  <h2 class="text-center text-primary mb-4">Ingresa tu Correo Electrónico</h2>
+
+  <form method="POST">
+    {% csrf_token %}
+    <div class="form-group mb-4">
+      <input type="email" 
+             name="email" 
+             id="emailInput" 
+             class="form-control form-control-lg text-center" 
+             placeholder="ejemplo@correo.com" 
+             required
+             autofocus
+             style="font-size: 1.5rem; height: 60px;">
+    </div>
+    
+    <button type="submit" class="btn btn-primary btn-lg w-100 mb-4 py-3">
+      <i class="fas fa-paper-plane me-2"></i> Enviar Recibo
+    </button>
+  </form>
+
+  <!-- Selector de teclado (Letras/Números) -->
+  <div class="text-center mb-3">
+    <div class="btn-group" role="group">
+      <button type="button" class="btn btn-outline-primary active" id="btnLetters">Letras</button>
+      <button type="button" class="btn btn-outline-primary" id="btnNumbers">Números</button>
+    </div>
+  </div>
+
+  <!-- Teclado de Letras (ESPAÑOL) -->
+  <div class="keyboard-tpv" id="lettersKeyboard">
+    <div class="keyboard-row">
+      <button type="button" class="keyboard-key" data-char="q">Q</button>
+      <button type="button" class="keyboard-key" data-char="w">W</button>
+      <button type="button" class="keyboard-key" data-char="e">E</button>
+      <button type="button" class="keyboard-key" data-char="r">R</button>
+      <button type="button" class="keyboard-key" data-char="t">T</button>
+      <button type="button" class="keyboard-key" data-char="y">Y</button>
+      <button type="button" class="keyboard-key" data-char="u">U</button>
+      <button type="button" class="keyboard-key" data-char="i">I</button>
+      <button type="button" class="keyboard-key" data-char="o">O</button>
+      <button type="button" class="keyboard-key" data-char="p">P</button>
+    </div>
+    <div class="keyboard-row">
+      <button type="button" class="keyboard-key" data-char="a">A</button>
+      <button type="button" class="keyboard-key" data-char="s">S</button>
+      <button type="button" class="keyboard-key" data-char="d">D</button>
+      <button type="button" class="keyboard-key" data-char="f">F</button>
+      <button type="button" class="keyboard-key" data-char="g">G</button>
+      <button type="button" class="keyboard-key" data-char="h">H</button>
+      <button type="button" class="keyboard-key" data-char="j">J</button>
+      <button type="button" class="keyboard-key" data-char="k">K</button>
+      <button type="button" class="keyboard-key" data-char="l">L</button>
+      <button type="button" class="keyboard-key" data-char="ñ">Ñ</button>
+    </div>
+    <div class="keyboard-row">
+      <button type="button" class="keyboard-key" data-char="z">Z</button>
+      <button type="button" class="keyboard-key" data-char="x">X</button>
+      <button type="button" class="keyboard-key" data-char="c">C</button>
+      <button type="button" class="keyboard-key" data-char="v">V</button>
+      <button type="button" class="keyboard-key" data-char="b">B</button>
+      <button type="button" class="keyboard-key" data-char="n">N</button>
+      <button type="button" class="keyboard-key" data-char="m">M</button>
+      <button type="button" class="keyboard-key" data-char=",">,</button>
+      <button type="button" class="keyboard-key" data-char=".">.</button>
+      <button type="button" class="keyboard-key keyboard-key-delete">
+        <i class="fas fa-backspace"></i>
+      </button>
+    </div>
+    <div class="keyboard-row">
+      <button type="button" class="keyboard-key keyboard-key-shift" data-action="shift">
+        <i class="fas fa-arrow-up"></i>
+      </button>
+      <button type="button" class="keyboard-key" data-char="@">@</button>
+      <button type="button" class="keyboard-key" data-char="-">-</button>
+      <button type="button" class="keyboard-key" data-char="_">_</button>
+      <button type="button" class="keyboard-key keyboard-key-space" data-char=" ">ESPACIO</button>
+      <button type="button" class="keyboard-key" data-char="á">á</button>
+      <button type="button" class="keyboard-key" data-char="é">é</button>
+      <button type="button" class="keyboard-key" data-char="í">í</button>
+      <button type="button" class="keyboard-key" data-char="ó">ó</button>
+      <button type="button" class="keyboard-key" data-char="ú">ú</button>
+    </div>
+  </div>
+
+  <!-- Teclado Numérico (oculto inicialmente) -->
+  <div class="keyboard-tpv" id="numbersKeyboard" style="display: none;">
+    <div class="keyboard-row">
+      <button type="button" class="keyboard-key" data-char="1">1</button>
+      <button type="button" class="keyboard-key" data-char="2">2</button>
+      <button type="button" class="keyboard-key" data-char="3">3</button>
+      <button type="button" class="keyboard-key" data-char="4">4</button>
+      <button type="button" class="keyboard-key" data-char="5">5</button>
+    </div>
+    <div class="keyboard-row">
+      <button type="button" class="keyboard-key" data-char="6">6</button>
+      <button type="button" class="keyboard-key" data-char="7">7</button>
+      <button type="button" class="keyboard-key" data-char="8">8</button>
+      <button type="button" class="keyboard-key" data-char="9">9</button>
+      <button type="button" class="keyboard-key" data-char="0">0</button>
+    </div>
+    <div class="keyboard-row">
+      <button type="button" class="keyboard-key" data-char="/">/</button>
+      <button type="button" class="keyboard-key" data-char="*">*</button>
+      <button type="button" class="keyboard-key" data-char="-">-</button>
+      <button type="button" class="keyboard-key" data-char="+">+</button>
+      <button type="button" class="keyboard-key" data-char="(">(</button>
+      <button type="button" class="keyboard-key" data-char=")">)</button>
+    </div>
+    <div class="keyboard-row">
+      <button type="button" class="keyboard-key keyboard-key-space" data-char=" " style="flex: 3;">ESPACIO</button>
+      <button type="button" class="keyboard-key keyboard-key-delete" style="flex: 2;">
+        <i class="fas fa-backspace"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .keyboard-tpv {
+    background: #f0f0f0;
+    padding: 10px;
+    border-radius: 8px;
+    margin: 0 auto;
+    max-width: 800px;
+  }
+  
+  .keyboard-row {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 8px;
+    gap: 5px;
+  }
+  
+  .keyboard-key {
+    min-width: 50px;
+    height: 70px;
+    font-size: 1.4rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.1s;
+    flex: 1;
+  }
+  
+  .keyboard-key:hover {
+    background: #e0e0e0;
+  }
+  
+  /* Teclas especiales */
+  .keyboard-key-delete {
+    background: #ff4444;
+    color: white;
+  }
+  
+  .keyboard-key-shift {
+    background: #5b9bd5;
+    color: white;
+  }
+  
+  .keyboard-key-space {
+    flex: 3;
+    font-size: 1.2rem;
+  }
+  
+  /* Tildes */
+  .keyboard-key[data-char*="á"],
+  .keyboard-key[data-char*="é"],
+  .keyboard-key[data-char*="í"],
+  .keyboard-key[data-char*="ó"],
+  .keyboard-key[data-char*="ú"] {
+    font-size: 1.3rem;
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const input = document.getElementById('emailInput');
+    let isShift = false;
+
+    // Función para añadir caracteres
+    function addChar(char) {
+      input.value += isShift ? char.toUpperCase() : char;
+      input.focus();
+    }
+
+    // Mapeo de teclas
+    document.querySelectorAll('.keyboard-key[data-char]').forEach(key => {
+      key.addEventListener('click', () => addChar(key.getAttribute('data-char')));
+    });
+
+    // Shift (mayúsculas/minúsculas)
+    document.querySelector('.keyboard-key-shift').addEventListener('click', () => {
+      isShift = !isShift;
+      document.querySelectorAll('#lettersKeyboard .keyboard-key[data-char]').forEach(key => {
+        const char = key.getAttribute('data-char');
+        if (/[a-zñáéíóú]/.test(char)) {
+          key.textContent = isShift ? char.toUpperCase() : char.toLowerCase();
+        }
+      });
+    });
+
+    // Borrar
+    document.querySelectorAll('.keyboard-key-delete').forEach(btn => {
+      btn.addEventListener('click', () => {
+        input.value = input.value.slice(0, -1);
+        input.focus();
+      });
+    });
+
+    // Alternar entre teclados
+    document.getElementById('btnLetters').addEventListener('click', function() {
+      this.classList.add('active');
+      document.getElementById('btnNumbers').classList.remove('active');
+      document.getElementById('lettersKeyboard').style.display = 'block';
+      document.getElementById('numbersKeyboard').style.display = 'none';
+    });
+
+    document.getElementById('btnNumbers').addEventListener('click', function() {
+      this.classList.add('active');
+      document.getElementById('btnLetters').classList.remove('active');
+      document.getElementById('lettersKeyboard').style.display = 'none';
+      document.getElementById('numbersKeyboard').style.display = 'block';
+    });
+  });
+</script>
+{% endblock %}

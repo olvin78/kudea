@@ -1,0 +1,29 @@
+{% extends 'tpv_shop/base_tpv_shop.html' %}
+
+{% block tpv_content %}
+  <div class="container mt-5">
+    <div class="row justify-content-center">
+      <!-- Título de la página -->
+      <div class="col-12 mb-4 text-center">
+        <h2 class="display-4 text-primary"><i data-lucide="shopping-cart" class="me-2"></i> Tienda – Inicio</h2>
+        <p class="lead text-muted">Compra productos de forma fácil y rápida.</p>
+      </div>
+
+      <!-- Contenido principal con botones animados -->
+      <div class="col-12 col-md-8 col-lg-6">
+        <div class="d-grid gap-3">
+          <!-- Botones de las funcionalidades de la tienda -->
+          <a href="#" class="btn btn-lg btn-outline-primary rounded-3 shadow-sm p-4 transition-hover">
+            <i data-lucide="grid" class="me-3"></i> Ver Productos
+          </a>
+          <a href="#" class="btn btn-lg btn-outline-success rounded-3 shadow-sm p-4 transition-hover">
+            <i data-lucide="shopping-cart" class="me-3"></i> Ver Carrito
+          </a>
+          <a href="#" class="btn btn-lg btn-outline-secondary rounded-3 shadow-sm p-4 transition-hover">
+            <i data-lucide="credit-card" class="me-3"></i> Realizar Pedido
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

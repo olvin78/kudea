@@ -1,26 +1,53 @@
 {% extends 'tpv/base_tpv.html' %}
+{% load static %}
+
+{% block head %}
+  <!-- Enlace al CSS específico de la página de inicio de TPV -->
+  <link rel="stylesheet" href="{% static 'css/tpv_index.css' %}">
+  <style>
+    body {
+  background-color: yellow !important; /* Cambio de fondo a amarillo */
+}
+
+.transition-hover:hover {
+  background-color: #007bff !important;  /* Azul al hacer hover */
+  color: white !important;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;  /* Sombra */
+}
+
+  </style>
+{% endblock %}
 
 {% block tpv_content %}
-  <div class="card p-4 shadow-sm">
-    <h2>Inicio del TPV</h2>
-    <p>Desde aquí puedes gestionar todo el punto de venta.</p>
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <!-- Título de la página -->
+    <div class="col-12 mb-4 text-center">
+      <h2 class="display-4 text-primary"><i data-lucide="store" class="me-2"></i> TPV – Inicio</h2>
+      <p class="lead text-muted">Gestiona tu punto de venta de forma rápida y sencilla.</p>
+    </div>
 
-    <ul class="list-group mt-4">
-      <li class="list-group-item">
-        <a href="{% url 'tpv_app:tpv_mesas' %}">🪑 Gestión de Mesas</a>
-      </li>
-      <li class="list-group-item">
-        <a href="{% url 'tpv_app:tpv_comandas' %}">📋 Comandas</a>
-      </li>
-      <li class="list-group-item">
-        <a href="{% url 'tpv_app:tpv_cobros' %}">💳 Cobros</a>
-      </li>
-      <li class="list-group-item">
-        <a href="{% url 'tpv_app:tpv_historial' %}">📊 Historial de Ventas</a>
-      </li>
-      <li class="list-group-item">
-        <a href="{% url 'tpv_app:tpv_config' %}">⚙️ Configuración</a>
-      </li>
-    </ul>
+    <!-- Contenido principal con botones animados -->
+    <div class="col-12 col-md-8 col-lg-6">
+      <div class="d-grid gap-3">
+        <!-- Botones interactivos -->
+        <a href="{% url 'tpv_app:tpv_mesas' %}" class="btn btn-lg btn-outline-primary rounded-3 shadow-sm p-4 transition-hover">
+          <i data-lucide="layout" class="me-3"></i> Gestión de Mesas
+        </a>
+        <a href="{% url 'tpv_app:tpv_comandas' %}" class="btn btn-lg btn-outline-info rounded-3 shadow-sm p-4 transition-hover">
+          <i data-lucide="clipboard-list" class="me-3"></i> Comandas
+        </a>
+        <a href="{% url 'tpv_app:tpv_cobros' %}" class="btn btn-lg btn-outline-success rounded-3 shadow-sm p-4 transition-hover">
+          <i data-lucide="credit-card" class="me-3"></i> Cobros
+        </a>
+        <a href="{% url 'tpv_app:tpv_historial' %}" class="btn btn-lg btn-outline-warning rounded-3 shadow-sm p-4 transition-hover">
+          <i data-lucide="history" class="me-3"></i> Historial de Ventas
+        </a>
+        <a href="{% url 'tpv_app:tpv_config' %}" class="btn btn-lg btn-outline-dark rounded-3 shadow-sm p-4 transition-hover">
+          <i data-lucide="settings" class="me-3"></i> Configuración
+        </a>
+      </div>
+    </div>
   </div>
+</div>
 {% endblock %}

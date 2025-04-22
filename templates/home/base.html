@@ -12,6 +12,10 @@
 
 <link rel="stylesheet" href="{% static 'css/base.css' %}">
 
+{% block head %}
+{% endblock %}
+
+
 </head>
 <body>
 
@@ -20,9 +24,13 @@
 
 <!-- Sidebar (se elimina el perfil en móvil) -->
 <div class="sidebar collapsed" id="sidebar">
-  <a href="#"><h4>KUDEA</h4></a
-  <a href="#" class="active"><i data-lucide="ticket"></i> Tickets</a>
+  <a href="#"><h4>KUDEA</h4></a>
+  <a href="{% url 'support_app:crear_ticket' %}" class="active"><i data-lucide="ticket"></i> Tickets</a>
   <a href="#"><i data-lucide="file-text"></i> Presupuestos</a>
+  <a href="#"><i data-lucide="receipt"></i> Facturas</a>
+  <a href="{% url 'tpv_shop:category_list' %}"><i data-lucide="receipt"></i> Tpv shop</a>
+  <a href="{% url 'tpv_app:tpv_index' %}"><i data-lucide="receipt"></i> Tpv</a>
+  <a href="#"><i data-lucide="receipt"></i> Facturas</a>
   <a href="#"><i data-lucide="receipt"></i> Facturas</a>
   <a href="#"><i data-lucide="users"></i> Clientes</a>
   <a href="#"><i data-lucide="bar-chart-3"></i> Informes</a>

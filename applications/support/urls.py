@@ -15,5 +15,4 @@ urlpatterns = [
     path('tickets/<str:identificador>/eliminar/', TicketDeleteView.as_view(), name='ticket_delete'),
 
 
-
 ]

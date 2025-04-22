@@ -1,12 +1,5 @@
 from django.urls import path
-from .views import (
-    TpvIndexView,
-    TpvMesasView,
-    TpvComandasView,
-    TpvCobrosView,
-    TpvHistorialView,
-    TpvConfigView,
-)
+from .views import TpvIndexView, TpvMesasView, TpvComandasView, TpvCobrosView, TpvHistorialView, TpvConfigView
 
 app_name = 'tpv_app'
 
