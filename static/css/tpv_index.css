@@ -1,0 +1,9 @@
+body {
+  background-color: rgb(150, 194, 194) !important; /* Cambio de fondo a amarillo */
+}
+
+.transition-hover:hover {
+  background-color: #007bff !important;  /* Azul al hacer hover */
+  color: white !important;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;  /* Sombra */
+}

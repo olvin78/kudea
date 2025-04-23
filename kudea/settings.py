@@ -19,13 +19,16 @@ INSTALLED_APPS = [
     'applications.tpv',
     'applications.support',
     'applications.budget',
+    'applications.tpv_shop',
+    'applications.customer',  # ← esto debe estar exactamente así
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+
+    'widget_tweaks',
 ]
 
 MIDDLEWARE = [
@@ -114,11 +117,30 @@ STATICFILES_DIRS = [
     BASE_DIR / "static",  # Si usas Pathlib
 ]
 
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+
+# Directorio donde se guardarán los archivos subidos (en tu máquina local)
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# URL base para acceder a los archivos subidos
+MEDIA_URL = '/media/'
 
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# settings.py
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # O el servicio que estés usando
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'tu_correo@example.com'  # Tu correo electrónico
+EMAIL_HOST_PASSWORD = 'tu_contraseña'  # Tu contraseña de correo
+DEFAULT_FROM_EMAIL = 'no-reply@example.com'  # El correo de salida

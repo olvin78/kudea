@@ -1,0 +1,87 @@
+{% extends 'tpv_shop/base_tpv_shop.html' %}
+
+{% block tpv_content %}
+  <div class="container mt-5">
+    <h2 class="text-center text-primary mb-4">¿Cómo te gustaría recibir el recibo?</h2>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+      <!-- Opción de Correo Electrónico -->
+      <div class="col">
+        <div class="card shadow-sm rounded-3 text-center p-3">
+          <i class="fas fa-envelope fa-3x text-primary mb-3"></i>
+          <h5 class="card-title">Correo Electrónico</h5>
+          <p class="card-text">Recibe tu recibo en formato digital en tu correo.</p>
+          <!-- Enlace para redirigir al formulario de correo electrónico -->
+          <a href="{% url 'tpv_shop:receipt_sent' %}" class="btn btn-primary w-100">
+            Seleccionar
+          </a>
+        </div>
+      </div>
+
+      <!-- Opción de SMS -->
+      <div class="col">
+        <div class="card shadow-sm rounded-3 text-center p-3">
+          <i class="fas fa-sms fa-3x text-success mb-3"></i>
+          <h5 class="card-title">SMS</h5>
+          <p class="card-text">Recibe tu recibo por mensaje de texto.</p>
+          <form method="POST">
+            {% csrf_token %}
+            <button type="submit" name="receipt_type" value="sms" class="btn btn-success w-100">
+              Seleccionar
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Opción de Imprimir -->
+      <div class="col">
+        <div class="card shadow-sm rounded-3 text-center p-3">
+          <i class="fas fa-print fa-3x text-warning mb-3"></i>
+          <h5 class="card-title">Imprimir</h5>
+          <p class="card-text">Prepara el recibo para ser impreso.</p>
+          <form method="POST">
+            {% csrf_token %}
+            <button type="submit" name="receipt_type" value="print" class="btn btn-warning w-100">
+              Seleccionar
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Opción de No Recibo -->
+      <div class="col">
+        <div class="card shadow-sm rounded-3 text-center p-3">
+          <i class="fas fa-times fa-3x text-danger mb-3"></i>
+          <h5 class="card-title">Sin Recibo</h5>
+          <p class="card-text">No se enviará ningún recibo.</p>
+          <form method="POST">
+            {% csrf_token %}
+            <button type="submit" name="receipt_type" value="none" class="btn btn-danger w-100">
+              Seleccionar
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mostrar el campo para correo electrónico si se elige la opción 'email' -->
+    {% if receipt_type == 'email' %}
+      <div class="mt-4">
+        <h4 class="text-center">Ingresa tu Correo Electrónico</h4>
+        <form method="POST">
+          {% csrf_token %}
+          <input type="email" name="email" class="form-control mb-3" placeholder="ejemplo@correo.com" required>
+          <button type="submit" class="btn btn-primary w-100">Enviar Recibo</button>
+        </form>
+      </div>
+    {% endif %}
+
+    <!-- Mostrar mensaje si se ha procesado la acción -->
+    {% if message %}
+      <div class="alert alert-info mt-4 text-center">
+        {{ message }}
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}
+

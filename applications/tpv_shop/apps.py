@@ -1,7 +1,6 @@
 from django.apps import AppConfig
 
 
-class SupportConfig(AppConfig):
+class TpvShopConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-
-    name = 'applications.support'
+    name = 'applications.tpv_shop'

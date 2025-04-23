@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Historial de Tickets</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+    .ticket-card {
+      background: white;
+      border-left: 4px solid #0d6efd;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+      padding: 1rem 1.25rem;
+      border-radius: 0.5rem;
+      transition: 0.2s ease-in-out;
+    }
+    .ticket-card:hover {
+      background-color: #f1f1f1;
+      transform: scale(1.01);
+    }
+    .search-bar input {
+      border-radius: 0.5rem 0 0 0.5rem;
+    }
+    .search-bar button {
+      border-radius: 0 0.5rem 0.5rem 0;
+    }
+    .empty-state {
+      background-color: #fef7e0;
+      border-left: 5px solid #ffc107;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body class="py-5">
+
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="fw-bold text-primary">📄 Historial de Tickets</h2>
+      <a href="{% url 'tpv_shop:index' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-house-door me-1"></i> Volver al panel
+      </a>
+    </div>
+
+    <!-- Buscador -->
+    <form method="get" class="search-bar d-flex mb-4">
+        <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Buscar por ID o fecha...">
+        <button type="submit" class="btn btn-primary">Buscar</button>
+      </form>
+      
+
+    {% if tickets %}
+      <div class="d-grid gap-3">
+        {% for ticket in tickets %}
+          <div class="ticket-card">
+            <div class="d-flex justify-content-between">
+              <div>
+                <strong>Ticket #{{ ticket.id }}</strong><br>
+                <small class="text-muted">🕒 {{ ticket.date|date:"d/m/Y H:i" }}</small><br>
+                <small class="text-muted">💳 {{ ticket.get_payment_method_display }}</small>
+              </div>
+              <div class="text-end">
+                <div class="fw-bold text-success fs-5">{{ ticket.total }} €</div>
+                <a href="{% url 'tpv_shop:ticket_detalle' ticket.pk %}" class="btn btn-sm btn-outline-primary mt-2">Ver detalle</a>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state mt-5">
+        <strong>😕 No hay tickets registrados.</strong><br>
+        Intenta con otro filtro o vuelve más tarde.
+      </div>
+    {% endif %}
+  </div>
+
+</body>
+</html>

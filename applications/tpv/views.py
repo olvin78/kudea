@@ -1,7 +1,6 @@
 from django.shortcuts import render
 from django.views.generic import TemplateView
 
-from django.views.generic import TemplateView
 
 class TpvIndexView(TemplateView):
     template_name = 'tpv/index.html'
