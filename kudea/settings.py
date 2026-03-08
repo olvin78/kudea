@@ -4,16 +4,22 @@ import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-n=h4#+90b^n2xw!i@$gn935an+5pulpw9isidot+q7fr!gvc@4'
+# Seguridad de Entorno (Environment Variables)
+# Estas variables deben inyectarse en el servidor o archivo .env manejado externamente
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-n=h4#+90b^n2xw!i@$gn935an+5pulpw9isidot+q7fr!gvc@4')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '*').split(',')
 
 CSRF_TRUSTED_ORIGINS = [
     "https://*.loca.lt",
 ]
+
+# Añadir dominios dinámicos si existen en variables de entorno
+if os.environ.get('DJANGO_CSRF_TRUSTED'):
+    CSRF_TRUSTED_ORIGINS.extend(os.environ.get('DJANGO_CSRF_TRUSTED').split(','))
 
 # Application definition
 
