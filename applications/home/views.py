@@ -41,7 +41,7 @@ from applications.cash.models import AperturaCaja
 # HOME
 # ============================================================
 
-class HomePageView(ListView):
+class HomePageView(LoginRequiredMixin, ListView):
     template_name = 'home/index.html'
     model = Producto
     context_object_name = 'productos'
@@ -50,7 +50,7 @@ class HomePageView(ListView):
 # TPV GENERAL
 # ============================================================
 
-class TpvGeneralView(TemplateView):
+class TpvGeneralView(LoginRequiredMixin, TemplateView):
     template_name = 'home/tpv_general.html'
 
     def get_context_data(self, **kwargs):
