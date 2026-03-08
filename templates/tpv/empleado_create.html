@@ -1,0 +1,199 @@
+{% extends 'tpv/base_tpv.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+  .form-label {
+    font-weight: 600;
+    color: #1D3557;
+  }
+
+  .form-control, .form-select {
+    border-radius: 0.5rem;
+    padding: 0.6rem 0.9rem;
+    font-size: 1rem;
+  }
+
+  .form-check-input {
+    margin-top: 0.3rem;
+    border-radius: 0.35rem;
+  }
+
+  .form-check-label {
+    font-weight: 500;
+    margin-left: 0.5rem;
+  }
+
+  .kudea-form-card {
+    background: white;
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    padding: 2rem;
+  }
+
+  .kudea-btn {
+    background-color: #1D3557;
+    border: none;
+    padding: 0.6rem 1.5rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    color: white;
+  }
+
+  .kudea-btn:hover {
+    background-color: #457B9D;
+  }
+
+  .back-btn {
+    color: #1D3557;
+    padding: 0.5rem 0;
+  }
+
+  .back-btn:hover {
+    color: #457B9D;
+    text-decoration: none;
+  }
+</style>
+
+<div class="container py-4">
+  <a href="{% url 'tpv_app:empleados_lista' %}" class="back-btn d-inline-flex align-items-center mb-3">
+    <i class="fas fa-arrow-left me-2"></i> Volver al listado
+  </a>
+
+  <div class="kudea-form-card">
+    <h4 class="mb-4"><i class="fas fa-user-plus me-2"></i>Nuevo Empleado</h4>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      <div class="row g-4">
+        <!-- Columna izquierda -->
+        <div class="col-md-6">
+          <div class="mb-3">
+            <label class="form-label">Nombre</label>
+            <input type="text" name="nombre" class="form-control" placeholder="Nombre">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">NIF</label>
+            <input type="text" name="nif" class="form-control" placeholder="NIF">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" placeholder="Correo electrónico">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Móvil</label>
+            <input type="text" name="movil" class="form-control" placeholder="Número de móvil">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Código Postal</label>
+            <input type="text" name="cp" class="form-control" placeholder="CP">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Provincia</label>
+            <input type="text" name="provincia" class="form-control" placeholder="Provincia">
+          </div>
+          <div class="form-check mb-2">
+            <input type="checkbox" name="puede_realizar_salidas" class="form-check-input" id="salidas">
+            <label class="form-check-label" for="salidas">Puede realizar salidas</label>
+          </div>
+          <div class="form-check mb-2">
+            <input type="checkbox" name="puede_modificar_ventas" class="form-check-input" id="ventas">
+            <label class="form-check-label" for="ventas">Puede modificar ventas</label>
+          </div>
+          <div class="form-check mb-3">
+            <input type="checkbox" name="puede_cambiar_tarifa" class="form-check-input" id="tarifa">
+            <label class="form-check-label" for="tarifa">Puede cambiar tarifa</label>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Fecha de baja</label>
+            <input type="date" name="fecha_baja" class="form-control">
+          </div>
+        </div>
+
+        <!-- Columna derecha -->
+        <div class="col-md-6">
+          <div class="mb-3">
+            <label class="form-label">Apellidos</label>
+            <input type="text" name="apellidos" class="form-control" placeholder="Apellidos">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Usuario</label>
+            <input type="text" name="usuario" class="form-control" placeholder="Nombre del Usuario en el sistema">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Teléfono</label>
+            <input type="text" name="telefono" class="form-control" placeholder="Teléfono fijo">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Dirección</label>
+            <input type="text" name="direccion" class="form-control" placeholder="Dirección">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Población</label>
+            <input type="text" name="poblacion" class="form-control" placeholder="Población">
+          </div>
+          <div class="form-check mb-2">
+            <input type="checkbox" name="es_administrador" class="form-check-input" id="admin">
+            <label class="form-check-label" for="admin">Administrador</label>
+          </div>
+          <div class="form-check mb-2">
+            <input type="checkbox" name="puede_cambiar_fecha_hora" class="form-check-input" id="fechahora">
+            <label class="form-check-label" for="fechahora">Puede cambiar fecha/hora</label>
+          </div>
+          <div class="form-check mb-2">
+            <input type="checkbox" name="puede_cambiar_subtotales" class="form-check-input" id="subtotales">
+            <label class="form-check-label" for="subtotales">Puede cambiar subtotales</label>
+          </div>
+          <div class="form-check mb-3">
+            <input type="checkbox" name="esta_de_baja" class="form-check-input" id="baja">
+            <label class="form-check-label" for="baja">Empleado de baja</label>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Observaciones</label>
+            <textarea name="observaciones" rows="3" class="form-control" placeholder="Notas internas..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+        <button type="reset" class="btn btn-outline-secondary">
+          <i class="fas fa-undo me-2"></i> Limpiar
+        </button>
+        <button type="submit" class="kudea-btn">
+          <i class="fas fa-save me-2"></i> Guardar empleado
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const adminCheckbox = document.querySelector('input[name="es_administrador"]');
+    
+      const permisos = [
+        'puede_realizar_salidas',
+        'puede_modificar_ventas',
+        'puede_cambiar_tarifa',
+        'puede_cambiar_fecha_hora',
+        'puede_cambiar_subtotales'
+      ];
+    
+      adminCheckbox.addEventListener('change', function () {
+        const checked = this.checked;
+        permisos.forEach(nombre => {
+          const permisoCheckbox = document.querySelector(`input[name="${nombre}"]`);
+          if (permisoCheckbox) {
+            permisoCheckbox.checked = checked;
+          }
+        });
+      });
+    });
+    </script>
+
+
+
+{% endblock %}

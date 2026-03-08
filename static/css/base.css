@@ -1,28 +1,33 @@
+/* ===== ESTILOS GENERALES ===== */
+/* Aplicados a toda la página, definen la fuente y color de fondo */
 body {
   font-family: 'Segoe UI', sans-serif;
   background-color: #f4f6f9;
 }
 
-/* Sidebar */
+/* ===== SIDEBAR (MENÚ LATERAL) ===== */
+/* Barra lateral que contiene la navegación principal */
 .sidebar {
   background-color: #123954;
   color: white;
-  min-height: 100vh;
+  min-height: 100vh;           /* Ocupa todo el alto */
   padding-top: 1rem;
-  position: fixed;
+  position: fixed;              /* Se queda fija al hacer scroll */
   top: 0;
   bottom: 0;
   left: 0;
-  z-index: 1040;
+  z-index: 1040;                /* Por encima de otros elementos */
   width: 280px;
-  transform: translateX(0);
-  transition: transform 0.3s ease;
+  transform: translateX(0);      /* Visible por defecto */
+  transition: transform 0.3s ease; /* Animación suave al colapsar */
 }
 
+/* Estado colapsado del sidebar (oculto) */
 .sidebar.collapsed {
   transform: translateX(-100%);
 }
 
+/* Título del sidebar "Kudea Panel" */
 .sidebar h4 {
   text-align: center;
   font-weight: 600;
@@ -31,21 +36,24 @@ body {
   margin-bottom: 1rem;
 }
 
+/* Enlaces de navegación del menú */
 .sidebar a {
   color: white;
   text-decoration: none;
   padding: 12px 1.8rem;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 10px;                   /* Espacio entre ícono y texto */
   transition: background 0.2s ease;
 }
 
+/* Efecto hover y enlace activo */
 .sidebar a:hover, .sidebar a.active {
   background-color: #0f2f47;
 }
 
-/* Topbar */
+/* ===== TOPBAR (BARRA SUPERIOR) ===== */
+/* Barra superior con botón menú y perfil */
 .topbar {
   height: 60px;
   background-color: #eaf2f7;
@@ -54,14 +62,16 @@ body {
   justify-content: space-between;
   padding: 0 1.5rem;
   border-bottom: 1px solid #ccc;
-  margin-left: 280px;
+  margin-left: 280px;           /* Deja espacio para el sidebar */
   transition: margin-left 0.3s ease;
 }
 
+/* Topbar cuando el sidebar está colapsado */
 .topbar.collapsed {
   margin-left: 0;
 }
 
+/* Botón de menú hamburguesa */
 .topbar .btn {
   background-color: #195c96;
   border: none;
@@ -71,12 +81,14 @@ body {
   background-color: #144b7a;
 }
 
+/* Contenedor del perfil de usuario */
 .topbar .profile {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
+/* Avatar circular del usuario */
 .topbar .avatar {
   width: 35px;
   height: 35px;
@@ -88,52 +100,63 @@ body {
   font-weight: bold;
 }
 
-/* Main Content */
+/* ===== CONTENIDO PRINCIPAL ===== */
+/* Área donde va el contenido de cada página */
 .main-content {
-  margin-left: 280px;
-  margin-top: 60px;
+  margin-left: 280px;           /* Deja espacio para el sidebar */
+  margin-top: 60px;             /* Deja espacio para el topbar */
   padding: 2rem;
   transition: all 0.3s ease;
 }
 
+/* Contenido principal con sidebar colapsado */
 .main-content.collapsed {
   margin-left: 0;
 }
 
+/* ===== TABLAS RESPONSIVAS ===== */
+/* Contenedor que permite scroll horizontal en tablas */
 .table-responsive {
-  max-width: calc(100% - 280px);  /* Asegura que la tabla no ocupe más espacio que el disponible cuando el sidebar está extendido */
-  overflow-x: auto;
-  transition: max-width 0.3s ease;
+  width: 100%;
+  overflow-x: auto;              /* Scroll horizontal si es necesario */
 }
 
+/* Cuando el sidebar colapsa, la tabla usa todo el ancho */
 .sidebar.collapsed + .main-content .table-responsive {
-  max-width: 100%;  /* La tabla ocupará el 100% cuando el sidebar se colapse */
+  max-width: 100%;
 }
 
-/* Responsive para móvil */
+/* ===== DISEÑO RESPONSIVE MÓVIL ===== */
+/* Estilos que se activan en pantallas pequeñas */
 @media (max-width: 768px) {
+  /* Sidebar oculto por defecto en móvil */
   .sidebar {
     transform: translateX(-100%);
   }
 
+  /* Sidebar visible cuando tiene clase active */
   .sidebar.active {
     transform: translateX(0);
   }
 
+  /* Topbar sin margen en móvil */
   .topbar {
     margin-left: 0 !important;
   }
 
+  /* Contenido sin margen en móvil */
   .main-content {
     margin-left: 0 !important;
   }
 
+  /* Tabla ocupa todo el ancho disponible */
   .table-responsive {
-    max-width: 100%; /* Asegura que la tabla ocupe todo el ancho disponible en dispositivos móviles */
+    max-width: 100%;
   }
 }
 
-/* Fondo oscuro cuando el menú móvil está activo */
+/* ===== OVERLAY (CAPA OSCURA) ===== */
+/* Fondo oscuro que aparece detrás del menú en móvil */
 .overlay {
   position: fixed;
   top: 0;
@@ -141,37 +164,26 @@ body {
   height: 100vh;
   width: 100vw;
   background-color: rgba(0, 0, 0, 0.3);
-  z-index: 1030;
-  display: none;
+  z-index: 1030;                /* Debajo del sidebar (1040) */
+  display: none;                /* Oculto por defecto */
 }
 
 .overlay.active {
-  display: block;
+  display: block;               /* Visible cuando el menú está abierto */
 }
 
-/* Sidebar: elementos solo visibles en móvil */
+/* ===== UTILIDADES RESPONSIVE ===== */
+/* Elementos visibles solo en móvil dentro del sidebar */
 .sidebar .d-md-none {
-  display: block; /* Muestra en móvil */
+  display: block;                /* Se muestra en móvil */
 }
 
 .sidebar .d-md-flex {
-  display: none; /* Oculta en móvil */
+  display: none;                 /* Se oculta en móvil */
 }
 
-/* Topbar: elementos visibles solo en escritorio */
-.topbar .d-md-none {
-  display: none; /* Oculta en escritorio */
-}
-
-.topbar .d-md-block {
-  display: block; /* Muestra en escritorio */
-}
-
-.topbar .d-flex.justify-content-between {
-  width: 100%;
-}
-
-/* En el sidebar, los elementos principales solo deben ser visibles en móviles */
+/* ===== ESTILOS DE COMPONENTES ===== */
+/* Botón primario dentro del sidebar */
 .sidebar .btn-primary {
   background-color: #195c96;
   border-color: #195c96;
@@ -183,6 +195,7 @@ body {
   background-color: #144b7a;
 }
 
+/* Avatar dentro del sidebar (alineación centrada) */
 .sidebar .avatar {
   width: 35px;
   height: 35px;
@@ -190,22 +203,8 @@ body {
   color: white;
   border-radius: 50%;
   font-weight: bold;
-  display: flex; /* Esto centrará verticalmente y horizontalmente */
+  display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* Mostrar "Kudea Panel" solo en móvil */
-.topbar .d-md-none {
-  display: block;  /* Muestra en móvil */
-  text-align: center;  /* Centra el texto en el topbar */
-}
-
-/* Ocultar "Kudea Panel" en pantallas grandes */
-.topbar .d-md-block {
-  display: block;  /* Muestra en escritorio */
-}
-
-.topbar .d-md-none {
-  display: none; /* Oculta el texto en escritorio */
-}

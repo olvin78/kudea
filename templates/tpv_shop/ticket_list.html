@@ -48,10 +48,9 @@
 
     <!-- Buscador -->
     <form method="get" class="search-bar d-flex mb-4">
-        <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Buscar por ID o fecha...">
-        <button type="submit" class="btn btn-primary">Buscar</button>
-      </form>
-      
+      <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Buscar por ID o fecha...">
+      <button type="submit" class="btn btn-primary">Buscar</button>
+    </form>
 
     {% if tickets %}
       <div class="d-grid gap-3">
@@ -65,7 +64,32 @@
               </div>
               <div class="text-end">
                 <div class="fw-bold text-success fs-5">{{ ticket.total }} €</div>
-                <a href="{% url 'tpv_shop:ticket_detalle' ticket.pk %}" class="btn btn-sm btn-outline-primary mt-2">Ver detalle</a>
+                <a href="{% url 'tpv_shop:ticket_detalle' ticket.pk %}" class="btn btn-sm btn-outline-primary mt-2 me-1">Ver detalle</a>
+                <button class="btn btn-sm btn-outline-danger mt-2" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal{{ ticket.id }}">
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Modal de confirmación (dentro del bucle) -->
+          <div class="modal fade" id="confirmDeleteModal{{ ticket.id }}" tabindex="-1" aria-labelledby="confirmDeleteLabel{{ ticket.id }}" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content rounded-4">
+                <div class="modal-header bg-danger text-white">
+                  <h5 class="modal-title" id="confirmDeleteLabel{{ ticket.id }}">¿Eliminar ticket?</h5>
+                  <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                  ¿Estás seguro de que deseas eliminar el ticket #{{ ticket.id }}? Esta acción no se puede deshacer.
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                  <form method="POST" action="{% url 'tpv_shop:eliminar_ticket' ticket.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                  </form>
+                </div>
               </div>
             </div>
           </div>
@@ -79,5 +103,6 @@
     {% endif %}
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

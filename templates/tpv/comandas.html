@@ -1,6 +1,42 @@
-{% extends 'tpv/base_tpv.html' %}
+{% extends 'base.html' %}
 
-{% block tpv_content %}
-  <h2>Comandas</h2>
-  <p>Lista de comandas activas y pendientes.</p>
+{% block content %}
+    <h1>Lista de Comandas</h1>
+    
+    <!-- Enlace para crear una nueva comanda -->
+    <div>
+        <a href="{% url 'tpv_app:create_comanda' %}" class="btn btn-primary">Crear Nueva Comanda</a>
+    </div>
+
+    <!-- Mostrar la lista de comandas -->
+    <table class="table table-bordered mt-3">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Mesa</th>
+                <th>Estado</th>
+                <th>Total</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for comanda in comandas %}
+                <tr>
+                    <td>{{ comanda.id }}</td>
+                    <td>{{ comanda.mesa.nombre }}</td>
+                    <td>{{ comanda.get_estado_display }}</td>  <!-- Si usas una elección de estado -->
+                    <td>{{ comanda.calcular_total }}</td>
+                    <td>
+                        <!-- Acciones como ver detalles o cerrar comanda -->
+                        <a href="{% url 'tpv_app:comanda_detail' comanda.id %}" class="btn btn-info">Ver</a>
+                        <a href="{% url 'tpv_app:comanda_cerrar' comanda.id %}" class="btn btn-danger" onclick="return confirm('¿Estás seguro de que deseas cerrar esta comanda?')">Cerrar</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if not comandas %}
+        <p>No hay comandas abiertas.</p>
+    {% endif %}
 {% endblock %}

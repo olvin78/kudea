@@ -1,79 +1,223 @@
 {% extends 'tpv_shop/base_tpv_shop.html' %}
 {% load static %}
+
+{% block head %}
+<style>
+    :root {
+        --kudea-dark: #1D3557;
+        --kudea-medium: #457B9D;
+        --kudea-light: #A8DADC;
+        --kudea-soft: #F1FAEE;
+        --kudea-red: #E63946;
+    }
+
+    /* Encabezado */
+    .header-area {
+        padding: 40px 0;
+        border-bottom: 3px solid var(--kudea-medium);
+        margin-bottom: 40px;
+    }
+
+    .header-title {
+        font-size: 2.4rem;
+        font-weight: 800;
+        color: var(--kudea-dark);
+        text-align: center;
+    }
+
+    /* Imagen del producto */
+    .product-image {
+        background: var(--kudea-soft);
+        padding: 30px;
+        border-radius: 15px;
+        height: 420px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .product-image img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+
+    /* Texto */
+    .product-description {
+        font-size: 1.15rem;
+        line-height: 1.7;
+        color: #4b5563;
+        margin-bottom: 20px;
+    }
+
+    /* Precio */
+    .price-box {
+        margin-bottom: 25px;
+    }
+
+    .price-main {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--kudea-dark);
+    }
+
+    .price-old {
+        text-decoration: line-through;
+        color: #9ca3af;
+        font-size: 1rem;
+    }
+
+    .discount-tag {
+        background: var(--kudea-red);
+        color: white;
+        font-weight: bold;
+        padding: 4px 10px;
+        border-radius: 8px;
+        margin-left: 6px;
+        font-size: .9rem;
+    }
+
+    /* Selectores */
+    .form-label {
+        font-weight: 600;
+        color: var(--kudea-dark);
+        margin-bottom: 5px;
+    }
+
+    .form-select, .form-control {
+        border-radius: 10px;
+        padding: 10px 14px;
+        border: 1px solid #cbd5e1;
+    }
+
+    /* Selección de color con paletas reales */
+    .color-swatch {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2px solid transparent;
+        display: inline-block;
+        margin-right: 10px;
+    }
+
+    .color-swatch.selected {
+        border: 3px solid var(--kudea-dark);
+    }
+
+    /* Botón KUDEA */
+    .btn-kudea {
+        background: linear-gradient(135deg, var(--kudea-medium), var(--kudea-dark));
+        color: white;
+        padding: 15px;
+        border-radius: 12px;
+        border: none;
+        width: 100%;
+        font-size: 1.15rem;
+        font-weight: 600;
+        transition: 0.3s;
+    }
+
+    .btn-kudea:hover {
+        background: var(--kudea-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }
+</style>
+{% endblock %}
+
+
 {% block tpv_content %}
-<div class="container py-5">
-  <div class="row justify-content-center">
-    <div class="col-lg-10">
-      <div class="card border-0 shadow-lg rounded-4 p-4">
-        <div class="row g-5 align-items-center">
-          <!-- Imagen -->
-          <div class="col-md-6 text-center">
-            {% if product.image %}
-              <img src="{{ product.image.url }}" class="img-fluid rounded-3" style="max-height: 480px; object-fit: contain;" alt="{{ product.name }}">
-            {% else %}
-              <img src="{% static 'img/no-image.png' %}" class="img-fluid rounded-3" alt="Sin imagen">
-            {% endif %}
-          </div>
 
-          <!-- Info y Formulario -->
-          <div class="col-md-6">
-            <h1 class="fw-bold text-dark mb-3">{{ product.name }}</h1>
-            <p class="text-muted fs-5 mb-4">{{ product.description }}</p>
+<!-- HEADER -->
+<div class="header-area">
+    <h1 class="header-title">{{ product.nombre }}</h1>
+</div>
 
-            <div class="mb-4">
-              <span class="h5 text-success">Precio:</span>
-              <span class="h5">${{ product.final_price }}</span>
+
+<div class="container pb-5">
+    <div class="row gy-5">
+
+        <!-- IMAGEN -->
+        <div class="col-md-6">
+            <div class="product-image">
+                {% if product.imagen %}
+                    <img src="{{ product.imagen.url }}" alt="{{ product.nombre }}">
+                {% else %}
+                    <img src="{% static 'img/no-image.png' %}" alt="Sin imagen">
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- INFO -->
+        <div class="col-md-6">
+
+            <p class="product-description">{{ product.descripcion }}</p>
+
+            <!-- Precio -->
+            <div class="price-box">
+                {% if product.descuento > 0 %}
+                    <div class="price-old">{{ product.precio|floatformat:2 }} €</div>
+                    <span class="price-main">{{ product.final_price|floatformat:2 }} €</span>
+                    <span class="discount-tag">-{{ product.descuento }}%</span>
+                {% else %}
+                    <span class="price-main">{{ product.precio|floatformat:2 }} €</span>
+                {% endif %}
             </div>
 
+            <!-- FORMULARIO -->
             <form method="POST" action="{% url 'tpv_shop:add_to_cart' product.id %}">
-              {% csrf_token %}
+                {% csrf_token %}
 
-              <!-- Talla -->
-              <div class="mb-3">
-                <label for="selectTalla" class="form-label fw-semibold">Talla</label>
-                <select name="size" class="form-select form-select-lg rounded-3" required>
-                  <option disabled selected>Selecciona tu talla</option>
-                  <option>XS - 34</option>
-                  <option>S - 36</option>
-                  <option>M - 38</option>
-                  <option>L - 40</option>
-                  <option>XL - 42</option>
-                  <option>XXL - 44</option>
-                  <option>46</option>
-                  <option>48</option>
-                  <option>50</option>
-                </select>
-              </div>
+                <!-- Talla -->
+                <div class="mb-3">
+                    <label class="form-label">Talla</label>
+                    <select name="size" class="form-select" required>
+                        <option disabled selected>Selecciona talla</option>
+                        <option>S</option>
+                        <option>M</option>
+                        <option>L</option>
+                        <option>XL</option>
+                        <option>XXL</option>
+                    </select>
+                </div>
 
-              <!-- Color -->
-              <div class="mb-3">
-                <label for="selectColor" class="form-label fw-semibold">Color</label>
-                <select name="color" class="form-select form-select-lg rounded-3" required>
-                  <option disabled selected>Elige un color</option>
-                  <option value="Negro">🖤 Negro</option>
-                  <option value="Blanco">🤍 Blanco</option>
-                  <option value="Rojo">❤️ Rojo</option>
-                  <option value="Azul">💙 Azul</option>
-                  <option value="Verde">💚 Verde</option>
-                  <option value="Beige">🤎 Beige</option>
-                  <option value="Gris">⚪ Gris</option>
-                </select>
-              </div>
+                <!-- Color (con paletas) -->
+                <div class="mb-3">
+                    <label class="form-label">Color</label><br>
 
-              <!-- Cantidad -->
-              <div class="mb-4">
-                <label for="cantidad" class="form-label fw-semibold">Cantidad</label>
-                <input type="number" name="quantity" class="form-control form-control-lg w-50 rounded-3" min="1" max="99" value="1" required>
-              </div>
+                    <div onclick="selectColor(this, 'Negro')" class="color-swatch" style="background:black;"></div>
+                    <div onclick="selectColor(this, 'Blanco')" class="color-swatch" style="background:white; border:1px solid #ccc;"></div>
+                    <div onclick="selectColor(this, 'Rojo')" class="color-swatch" style="background:#E63946;"></div>
+                    <div onclick="selectColor(this, 'Azul')" class="color-swatch" style="background:#1D3557;"></div>
+                    <div onclick="selectColor(this, 'Verde')" class="color-swatch" style="background:#2ecc71;"></div>
 
-              <button type="submit" class="btn btn-dark btn-lg w-100 shadow-sm rounded-3">
-                <i class="bi bi-cart-plus-fill me-2"></i> Añadir al carrito
-              </button>
+                    <input type="hidden" name="color" id="colorInput" required>
+                </div>
+
+                <!-- Cantidad -->
+                <div class="mb-4">
+                    <label class="form-label">Cantidad</label>
+                    <input type="number" name="quantity" class="form-control" min="1" value="1" required>
+                </div>
+
+                <button class="btn-kudea" type="submit">
+                    Añadir al carrito
+                </button>
+
             </form>
-          </div>
+
         </div>
-      </div>
     </div>
-  </div>
 </div>
+
+
+<script>
+function selectColor(element, colorName) {
+    document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+    element.classList.add('selected');
+    document.getElementById("colorInput").value = colorName;
+}
+</script>
+
 {% endblock %}

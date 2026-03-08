@@ -10,54 +10,100 @@
   <link rel="stylesheet" href="{% static 'css/tpv_index.css' %}">
 {% endblock %}
 
-
 {% block content %}
+
+<style>
+  /* ==== Estilo de Botones KUDEA TPV ==== */
+  .kudea-tpv-btn {
+    background: #F1FAFE;
+    border: 1px solid #E0E6EC;
+    border-radius: 14px;
+    padding: 14px 16px;
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 12px;
+    font-weight: 600;
+    color: #1D3557;
+    transition: all 0.25s ease;
+    box-shadow: 0 2px 6px rgba(29,53,87,0.05);
+    text-decoration: none;
+  }
+
+  .kudea-tpv-btn i {
+    width: 22px;
+    height: 22px;
+    color: #457B9D;
+  }
+
+  .kudea-tpv-btn:hover {
+    background: #E8F4FB;
+    border-color: #C7D8E5;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(29,53,87,0.12);
+    color: #1D3557;
+    text-decoration: none;
+  }
+
+  .kudea-tpv-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 4px rgba(29,53,87,0.2);
+  }
+</style>
+
+
 <div class="container mt-4">
-  <!--
-  <div class="card shadow-sm rounded-4 p-4 border-0 mb-4 bg-white">
-    <div class="d-flex align-items-center mb-3">
-      <i data-lucide="store" class="me-2 text-primary" style="width: 28px; height: 28px;"></i>
-      <h2 class="h4 m-0 text-primary">Terminal Punto de Venta</h2>
+
+  <!-- ===== BOTONES KUDEA TPV ===== -->
+  <div class="row row-cols-2 row-cols-md-3 row-cols-lg-6 g-3 mb-4">
+
+    <div class="col">
+      <a href="{% url 'tpv_shop:category_list' %}" class="kudea-tpv-btn">
+        <i data-lucide="grid"></i> Ver Productos
+      </a>
     </div>
-    <p class="text-muted mb-0">Gestiona tus operaciones diarias desde un panel claro, moderno y ágil.</p>
+
+    <div class="col">
+      <a href="{% url 'tpv_shop:cart' %}" class="kudea-tpv-btn">
+        <i data-lucide="shopping-cart"></i> Carrito
+      </a>
+    </div>
+
+    <div class="col">
+      <a href="{% url 'tpv_shop:checkout' %}" class="kudea-tpv-btn">
+        <i data-lucide="credit-card"></i> Cobrar
+      </a>
+    </div>
+
+    <div class="col">
+      <a href="{% url 'tpv_shop:ticket_list' %}" class="kudea-tpv-btn">
+        <i data-lucide="history"></i> Historial
+      </a>
+    </div>
+
+    <div class="col">
+      <a href="#" class="kudea-tpv-btn">
+        <i data-lucide="percent"></i> Descuentos
+      </a>
+    </div>
+
+    <div class="col">
+      <a href="#" class="kudea-tpv-btn">
+        <i data-lucide="settings"></i> Configuración
+      </a>
+    </div>
+
   </div>
--->
-<!-- Navegación de Caja Registradora -->
-<div class="row row-cols-2 row-cols-md-3 row-cols-lg-6 g-3 mb-4">
-  <div class="col">
-    <a href="{% url 'tpv_shop:category_list' %}" class="btn btn-light border shadow-sm w-100 text-start d-flex align-items-center gap-2 py-2">
-      <i data-lucide="grid" class="text-primary"></i> Ver Productos
-    </a>
-  </div>
-  <div class="col">
-    <a href="{% url 'tpv_shop:cart' %}" class="btn btn-light border shadow-sm w-100 text-start d-flex align-items-center gap-2 py-2">
-      <i data-lucide="shopping-cart" class="text-primary"></i> Carrito
-    </a>
-  </div>
-  <div class="col">
-    <a href="{% url 'tpv_shop:checkout' %}" class="btn btn-light border shadow-sm w-100 text-start d-flex align-items-center gap-2 py-2">
-      <i data-lucide="credit-card" class="text-primary"></i> Cobrar
-    </a>
-  </div>
-  <div class="col">
-    <a href="{% url 'tpv_shop:ticket_list' %}" class="btn btn-light border shadow-sm w-100 text-start d-flex align-items-center gap-2 py-2">
-      <i data-lucide="history" class="text-primary"></i> Historial
-    </a>
-    
-  </div>
-  <div class="col">
-    <a href="#" class="btn btn-light border shadow-sm w-100 text-start d-flex align-items-center gap-2 py-2">
-      <i data-lucide="percent" class="text-primary"></i> Descuentos
-    </a>
-  </div>
-  <div class="col">
-    <a href="#" class="btn btn-light border shadow-sm w-100 text-start d-flex align-items-center gap-2 py-2">
-      <i data-lucide="settings" class="text-primary"></i> Configuración
-    </a>
-  </div>
-</div>
+
   <!-- Aquí irá el contenido de cada vista -->
   {% block tpv_content %}{% endblock %}
 </div>
+
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+  lucide.createIcons();
+</script>
 
 {% endblock %}

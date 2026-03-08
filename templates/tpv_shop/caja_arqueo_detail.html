@@ -1,0 +1,386 @@
+{% extends 'tpv_shop/base_tpv_shop.html' %}
+{% load static %}
+
+{% block tpv_content %}
+<style>
+  .detalle-container {
+    max-width: 1000px;
+    margin: 2rem auto;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.08);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    overflow: hidden;
+  }
+
+  .enhanced-header {
+    background: linear-gradient(135deg, #1a2e5a, #2a5298);
+    padding: 2.5rem 2.5rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    color: white;
+    position: relative;
+  }
+
+  .enhanced-header::before {
+    content: '';
+    position: absolute;
+    bottom: -20px;
+    left: 0;
+    right: 0;
+    height: 20px;
+    background: linear-gradient(to bottom, rgba(26, 46, 90, 0.8), transparent);
+    z-index: 1;
+  }
+
+  .enhanced-header .icon-wrapper {
+    background-color: rgba(255, 255, 255, 0.2);
+    padding: 1.2rem;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  }
+
+  .enhanced-header h2 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem;
+    letter-spacing: -0.5px;
+  }
+
+  .enhanced-header p {
+    font-size: 0.95rem;
+    opacity: 0.9;
+    margin: 0;
+    font-weight: 400;
+  }
+
+  .detalle-body {
+    padding: 2.5rem;
+  }
+
+  .resumen-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .resumen-card {
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 1.5rem;
+    border-left: 4px solid #2a5298;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .resumen-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  }
+
+  .resumen-card-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    color: #4a5568;
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+
+  .resumen-card-header i {
+    margin-right: 10px;
+    font-size: 1.1rem;
+    color: #2a5298;
+  }
+
+  .resumen-card-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1a365d;
+  }
+
+  .resumen-card-value.negative {
+    color: #c53030;
+  }
+
+  .observaciones-section {
+    background: #f5f9ff;
+    border-radius: 10px;
+    padding: 1.75rem;
+    margin-bottom: 2.5rem;
+    border-left: 4px solid #4299e1;
+  }
+
+  .observaciones-title {
+    display: flex;
+    align-items: center;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2b6cb0;
+    margin-bottom: 1rem;
+  }
+
+  .observaciones-title i {
+    margin-right: 10px;
+  }
+
+  .observaciones-content {
+    color: #4a5568;
+    line-height: 1.6;
+    white-space: pre-line;
+  }
+
+  .section-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 2.5rem 0 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+  }
+
+  .section-title i {
+    margin-right: 12px;
+    color: #2a5298;
+  }
+
+  .table-articulos {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 1.5rem 0 2.5rem;
+  }
+
+  .table-articulos thead th {
+    background-color: #f7fafc;
+    color: #4a5568;
+    font-weight: 600;
+    padding: 1rem 1.25rem;
+    border-bottom: 2px solid #e2e8f0;
+    position: sticky;
+    top: 0;
+  }
+
+  .table-articulos tbody tr {
+    transition: background-color 0.15s;
+  }
+
+  .table-articulos tbody tr:hover {
+    background-color: #f8fafc;
+  }
+
+  .table-articulos td {
+    padding: 1rem 1.25rem;
+    color: #4a5568;
+    border-bottom: 1px solid #edf2f7;
+  }
+
+  .table-articulos td:first-child {
+    font-weight: 500;
+    color: #2d3748;
+  }
+
+  .btn-back {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.9rem 1.75rem;
+    border-radius: 8px;
+    font-weight: 600;
+    background-color: #edf2f7;
+    color: #2d3748;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+    font-size: 0.95rem;
+  }
+
+  .btn-back:hover {
+    background-color: #e2e8f0;
+    color: #1a365d;
+    transform: translateX(-3px);
+  }
+
+  .btn-back i {
+    margin-right: 8px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: #718096;
+    background-color: #f8fafc;
+    border-radius: 8px;
+    margin: 2rem 0;
+  }
+
+  .empty-state i {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: #cbd5e0;
+  }
+
+  @media (max-width: 768px) {
+    .resumen-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .detalle-body {
+      padding: 1.5rem;
+    }
+    
+    .enhanced-header {
+      padding: 1.75rem 1.5rem;
+      flex-direction: column;
+      text-align: center;
+    }
+    
+    .enhanced-header .icon-wrapper {
+      margin-bottom: 1rem;
+    }
+  }
+</style>
+
+<div class="detalle-container">
+  <div class="enhanced-header">
+    <div class="icon-wrapper">
+      <i class="fas fa-cash-register fa-2x"></i>
+    </div>
+    <div>
+      <h2>Arqueo de Caja #{{ arqueo.id }}</h2>
+      <p>Registro completo del cierre de caja</p>
+    </div>
+  </div>
+
+  <div class="detalle-body">
+    <div class="resumen-grid">
+      <div class="resumen-card">
+        <div class="resumen-card-header">
+          <i class="fas fa-calendar-alt"></i>
+          <span>Fecha</span>
+        </div>
+        <div class="resumen-card-value">{{ arqueo.fecha|date:"d/m/Y H:i" }}</div>
+      </div>
+      
+      <div class="resumen-card">
+        <div class="resumen-card-header">
+          <i class="fas fa-user-tie"></i>
+          <span>Usuario</span>
+        </div>
+        <div class="resumen-card-value">{{ arqueo.usuario }}</div>
+      </div>
+      
+      <div class="resumen-card">
+        <div class="resumen-card-header">
+          <i class="fas fa-wallet"></i>
+          <span>Efectivo Inicial</span>
+        </div>
+        <div class="resumen-card-value">{{ arqueo.efectivo_inicial }} €</div>
+      </div>
+      
+      <div class="resumen-card">
+        <div class="resumen-card-header">
+          <i class="fas fa-money-bill-wave"></i>
+          <span>Efectivo Final</span>
+        </div>
+        <div class="resumen-card-value">{{ arqueo.efectivo_final }} €</div>
+      </div>
+      
+      <div class="resumen-card">
+        <div class="resumen-card-header">
+          <i class="fas fa-receipt"></i>
+          <span>Total Ventas</span>
+        </div>
+        <div class="resumen-card-value">{{ arqueo.total_ventas }} €</div>
+      </div>
+      
+      <div class="resumen-card">
+        <div class="resumen-card-header">
+          <i class="fas fa-credit-card"></i>
+          <span>Tarjeta</span>
+        </div>
+        <div class="resumen-card-value">{{ arqueo.tarjeta_total }} €</div>
+      </div>
+      
+      <div class="resumen-card">
+        <div class="resumen-card-header">
+          <i class="fas fa-mobile-alt"></i>
+          <span>Bizum</span>
+        </div>
+        <div class="resumen-card-value">{{ arqueo.bizum_total }} €</div>
+      </div>
+      
+      <div class="resumen-card">
+        <div class="resumen-card-header">
+          <i class="fas fa-calculator"></i>
+          <span>Diferencia</span>
+        </div>
+        {% with diferencia=arqueo.efectivo_final|add:arqueo.tarjeta_total|add:arqueo.bizum_total|add:arqueo.efectivo_inicial %}
+        <div class="resumen-card-value {% if diferencia < 0 %}negative{% endif %}">
+          {{ diferencia }} €
+        </div>
+        {% endwith %}
+      </div>
+    </div>
+
+    <div class="observaciones-section">
+      <div class="observaciones-title">
+        <i class="fas fa-clipboard-list"></i>
+        <span>Observaciones</span>
+      </div>
+      <div class="observaciones-content">
+        {{ arqueo.observaciones|default:"No hay observaciones registradas" }}
+      </div>
+    </div>
+
+   
+<h3 class="section-title">
+    <i class="fas fa-shopping-basket"></i>
+    Artículos Vendidos
+  </h3>
+  
+  {% if ticket_items %}
+    <table class="table-articulos" style="width: 100%; font-size: 1rem;">
+      <thead>
+        <tr style="background-color: #f8f9fa;">
+          <th style="padding: 1.25rem; text-align: left; min-width: 200px;">Producto</th>
+          <th style="padding: 1.25rem; text-align: left; min-width: 120px;">Código</th>
+          <th style="padding: 1.25rem; text-align: center; min-width: 100px;">Cantidad</th>
+          <th style="padding: 1.25rem; text-align: right; min-width: 150px;">Precio con Descuento</th>
+          <th style="padding: 1.25rem; text-align: right; min-width: 150px;">Precio Original</th>
+          <th style="padding: 1.25rem; text-align: right; min-width: 150px; font-weight: 600; color: #2a5298;">Subtotal con IVA</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in ticket_items %}
+        <tr style="border-bottom: 1px solid #eee; transition: background-color 0.2s;">
+          <td style="padding: 1.25rem; font-weight: 500;">{{ item.product_name }}</td>
+          <td style="padding: 1.25rem; font-family: monospace;">{{ item.ticket_number }}</td>
+          <td style="padding: 1.25rem; text-align: center; font-weight: 600;">{{ item.quantity }}</td>
+          <td style="padding: 1.25rem; text-align: right;">{{ item.price_with_discount|floatformat:2 }} €</td>
+          <td style="padding: 1.25rem; text-align: right;">{{ item.price_original|floatformat:2 }} €</td>
+          <td style="padding: 1.25rem; text-align: right; font-weight: 600; color: #2a5298;">{{ item.subtotal_with_tax|floatformat:2 }} €</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+  <div class="empty-state">
+    <i class="fas fa-box-open"></i>
+    <p>No hay artículos vendidos registrados para este arqueo</p>
+  </div>
+  {% endif %}
+
+    <a href="{% url 'tpv_shop:caja_arqueo_list' %}" class="btn-back">
+      <i class="fas fa-arrow-left"></i> Volver al listado
+    </a>
+  </div>
+</div>
+{% endblock %}

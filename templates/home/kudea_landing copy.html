@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KUDEA - Sistema Integral de Gestión Empresarial</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- AOS Animation -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --success: #27ae60;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            color: #333;
+            overflow-x: hidden;
+        }
+        
+        /* Navbar */
+        .navbar {
+            background-color: white;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            padding: 15px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .navbar.scrolled {
+            padding: 10px 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 1.8rem;
+        }
+        
+        .navbar-brand span {
+            color: var(--secondary);
+        }
+        
+        .nav-link {
+            font-weight: 500;
+            color: var(--dark);
+            margin: 0 10px;
+            position: relative;
+        }
+        
+        .nav-link:after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            background: var(--secondary);
+            bottom: 0;
+            left: 0;
+            transition: width 0.3s;
+        }
+        
+        .nav-link:hover:after {
+            width: 100%;
+        }
+        
+        .btn-primary {
+            background-color: var(--secondary);
+            border: none;
+            padding: 10px 25px;
+            border-radius: 30px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, rgba(44,62,80,0.9) 0%, rgba(52,152,219,0.8) 100%), url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80') no-repeat center center;
+            background-size: cover;
+            color: white;
+            padding: 150px 0 100px;
+            position: relative;
+        }
+        
+        .hero h1 {
+            font-weight: 700;
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+        
+        .hero .btn {
+            margin-right: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .hero-image {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        /* Features */
+        .features {
+            padding: 100px 0;
+            background-color: #f9f9f9;
+        }
+        
+        .section-title {
+            position: relative;
+            margin-bottom: 60px;
+        }
+        
+        .section-title:after {
+            content: '';
+            position: absolute;
+            width: 80px;
+            height: 3px;
+            background: var(--secondary);
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .feature-box {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+            margin-bottom: 30px;
+            height: 100%;
+        }
+        
+        .feature-box:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+        
+        .feature-icon {
+            font-size: 2.5rem;
+            color: var(--secondary);
+            margin-bottom: 20px;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding-left: 0;
+            text-align: left;
+        }
+        
+        .feature-list li {
+            margin-bottom: 8px;
+            position: relative;
+            padding-left: 25px;
+        }
+        
+        .feature-list i {
+            color: var(--success);
+            position: absolute;
+            left: 0;
+            top: 4px;
+        }
+        
+        /* Dashboard Section */
+        .dashboard-section {
+            padding: 100px 0;
+        }
+        
+        .stats-card {
+            background: white;
+            padding: 30px 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            text-align: center;
+            transition: all 0.3s;
+            height: 100%;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .stats-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            color: white;
+            font-size: 1.5rem;
+        }
+        
+        .stats-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 10px 0;
+            color: var(--primary);
+        }
+        
+        /* TPV Section */
+        .tpv-section {
+            padding: 100px 0;
+            background: linear-gradient(135deg, rgba(52,152,219,0.9) 0%, rgba(46,204,113,0.8) 100%);
+            color: white;
+        }
+        
+        /* Pricing */
+        .pricing {
+            padding: 100px 0;
+            background-color: white;
+        }
+        
+        .pricing-card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+            margin-bottom: 30px;
+        }
+        
+        .pricing-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+        
+        .pricing-header {
+            background-color: var(--light);
+            padding: 20px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            text-align: center;
+        }
+        
+        .price {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .pricing-features {
+            padding: 30px;
+        }
+        
+        .pricing-features li {
+            margin-bottom: 15px;
+            position: relative;
+            padding-left: 25px;
+        }
+        
+        .pricing-features li:before {
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            left: 0;
+            color: var(--success);
+        }
+        
+        /* Testimonials */
+        .testimonials {
+            padding: 100px 0;
+            background-color: #f9f9f9;
+        }
+        
+        .testimonial-card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+        
+        .testimonial-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 20px;
+        }
+        
+        /* Contact */
+        .contact {
+            padding: 100px 0;
+            background: var(--primary);
+            color: white;
+        }
+        
+        .contact-form .form-control {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .contact-form .form-control::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+        
+        /* Footer */
+        .footer {
+            background: #1a252f;
+            color: white;
+            padding: 60px 0 0;
+        }
+        
+        .footer-links h5 {
+            margin-bottom: 25px;
+            position: relative;
+            padding-bottom: 10px;
+        }
+        
+        .footer-links h5:after {
+            content: '';
+            position: absolute;
+            width: 50px;
+            height: 2px;
+            background: var(--secondary);
+            bottom: 0;
+            left: 0;
+        }
+        
+        .footer-links ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .footer-links li {
+            margin-bottom: 10px;
+        }
+        
+        .footer-links a {
+            color: #bbb;
+            transition: all 0.3s;
+        }
+        
+        .footer-links a:hover {
+            color: white;
+            text-decoration: none;
+            padding-left: 5px;
+        }
+        
+        .social-icons a {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 40px;
+            margin-right: 10px;
+            transition: all 0.3s;
+        }
+        
+        .social-icons a:hover {
+            background: var(--secondary);
+            transform: translateY(-3px);
+        }
+        
+        .copyright {
+            background: #151f28;
+            padding: 20px 0;
+            margin-top: 40px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero p {
+                font-size: 1rem;
+            }
+        }
+    </style>
+
+
+
+    <style>
+        /* Footer Styles */
+        .footer {
+            background: #1a252f;
+            color: white;
+            padding: 60px 0 0;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        .footer-title {
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            position: relative;
+            padding-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .footer-title:after {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 2px;
+            background: #3498db;
+            bottom: 0;
+            left: 0;
+        }
+        
+        .footer-text {
+            color: #bbb;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        
+        .footer-links {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .footer-links li {
+            margin-bottom: 12px;
+        }
+        
+        .footer-link {
+            color: #bbb;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            position: relative;
+            padding-left: 0;
+        }
+        
+        .footer-link:hover {
+            color: #3498db;
+            padding-left: 5px;
+        }
+        
+        .footer-link:before {
+            content: '→';
+            position: absolute;
+            left: -15px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            color: #3498db;
+        }
+        
+        .footer-link:hover:before {
+            left: -10px;
+            opacity: 1;
+        }
+        
+        .social-icons {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .social-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            transition: all 0.3s ease;
+        }
+        
+        .social-link:hover {
+            background: #3498db;
+            transform: translateY(-3px);
+        }
+        
+        .newsletter-form {
+            display: flex;
+            margin-top: 15px;
+        }
+        
+        .newsletter-input {
+            flex: 1;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px 0 0 4px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .newsletter-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .newsletter-button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .newsletter-button:hover {
+            background: #2980b9;
+        }
+        
+        .copyright {
+            background: #151f28;
+            padding: 20px 0;
+            margin-top: 40px;
+        }
+        
+        .copyright-text {
+            color: #bbb;
+            font-size: 0.8rem;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">KUDE<span>A</span></a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#home">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#features">Funcionalidades</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#dashboard">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#tpv">TPV</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#pricing">Precios</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#contact">Contacto</a>
+                    </li>
+                </ul>
+                <a href="#login" class="btn btn-primary ms-lg-3">Acceder</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6" data-aos="fade-right">
+                    <h1>Gestión empresarial todo en uno</h1>
+                    <p>KUDEA es la solución integral para gestionar tu negocio de manera eficiente. Controla ventas, inventario, empleados y clientes desde una única plataforma.</p>
+                    <a href="#features" class="btn btn-primary">Ver Funcionalidades</a>
+                    <a href="#contact" class="btn btn-outline-light">Solicitar Demo</a>
+                </div>
+                <div class="col-lg-6" data-aos="fade-left">
+                    <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="Dashboard KUDEA" class="img-fluid hero-image">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 text-center">
+                    <h2 class="section-title">Funcionalidades Completas</h2>
+                    <p class="lead">Todas las herramientas que necesitas para gestionar tu negocio</p>
+                </div>
+            </div>
+            <div class="row">
+                <!-- Sección de Ventas -->
+                <div class="col-md-4" data-aos="fade-up">
+                    <div class="feature-box">
+                        <div class="feature-icon">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <h4>Ventas</h4>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check"></i> TPV Completo</li>
+                            <li><i class="fas fa-check"></i> Gestión de Tickets</li>
+                            <li><i class="fas fa-check"></i> Facturación</li>
+                            <li><i class="fas fa-check"></i> Presupuestos</li>
+                            <li><i class="fas fa-check"></i> Cierre de Caja</li>
+                            <li><i class="fas fa-check"></i> Movimientos de Caja</li>
+                            <li><i class="fas fa-check"></i> Formas de Pago</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Sección de Clientes y CRM -->
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                    <div class="feature-box">
+                        <div class="feature-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h4>Clientes</h4>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check"></i> Gestión de Clientes</li>
+                            <li><i class="fas fa-check"></i> Historial de Compras</li>
+                            <li><i class="fas fa-check"></i> Programas de Fidelización</li>
+                            <li><i class="fas fa-check"></i> Comunicación Multicanal</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Sección de Productos e Inventario -->
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                    <div class="feature-box">
+                        <div class="feature-icon">
+                            <i class="fas fa-boxes"></i>
+                        </div>
+                        <h4>Productos e Inventario</h4>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check"></i> TPV Shop</li>
+                            <li><i class="fas fa-check"></i> Gestión de Productos</li>
+                            <li><i class="fas fa-check"></i> Movimientos de Stock</li>
+                            <li><i class="fas fa-check"></i> Alertas de Inventario</li>
+                            <li><i class="fas fa-check"></i> Gestión de Proveedores</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-4">
+                <!-- Sección de Personal -->
+                <div class="col-md-4" data-aos="fade-up">
+                    <div class="feature-box">
+                        <div class="feature-icon">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <h4>Personal</h4>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check"></i> Gestión de Empleados</li>
+                            <li><i class="fas fa-check"></i> Registro de Horas</li>
+                            <li><i class="fas fa-check"></i> Control de Turnos</li>
+                            <li><i class="fas fa-check"></i> Permisos y Vacaciones</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Sección de Informes y Análisis -->
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                    <div class="feature-box">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                        <h4>Informes y Análisis</h4>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check"></i> Informes Personalizados</li>
+                            <li><i class="fas fa-check"></i> Dashboard Ejecutivo</li>
+                            <li><i class="fas fa-check"></i> Análisis de Ventas</li>
+                            <li><i class="fas fa-check"></i> Indicadores Clave</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Sección de Configuración -->
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                    <div class="feature-box">
+                        <div class="feature-icon">
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                        <h4>Configuración</h4>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check"></i> Configuración de Tienda</li>
+                            <li><i class="fas fa-check"></i> Cuentas y Usuarios</li>
+                            <li><i class="fas fa-check"></i> Orden de Registros</li>
+                            <li><i class="fas fa-check"></i> Personalización del Sistema</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dashboard Section -->
+    <section class="dashboard-section bg-light" id="dashboard">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 text-center">
+                    <h2 class="section-title">Dashboard Integral</h2>
+                    <p class="lead">Controla todos los aspectos de tu negocio desde un único panel</p>
+                </div>
+            </div>
+            <div class="row mt-5">
+                <div class="col-md-6 col-lg-3 mb-4" data-aos="fade-up">
+                    <div class="stats-card">
+                        <div class="stats-icon bg-primary">
+                            <i class="fas fa-euro-sign"></i>
+                        </div>
+                        <h3>Ventas Hoy</h3>
+                        <p class="stats-value">€1,245.60</p>
+                        <p class="stats-change text-success"><i class="fas fa-arrow-up"></i> 12%</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 mb-4" data-aos="fade-up" data-aos-delay="100">
+                    <div class="stats-card">
+                        <div class="stats-icon bg-success">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h3>Clientes Nuevos</h3>
+                        <p class="stats-value">24</p>
+                        <p class="stats-change text-success"><i class="fas fa-arrow-up"></i> 8%</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 mb-4" data-aos="fade-up" data-aos-delay="200">
+                    <div class="stats-card">
+                        <div class="stats-icon bg-warning">
+                            <i class="fas fa-box-open"></i>
+                        </div>
+                        <h3>Productos Bajos</h3>
+                        <p class="stats-value">7</p>
+                        <a href="#" class="stats-link">Ver lista</a>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 mb-4" data-aos="fade-up" data-aos-delay="300">
+                    <div class="stats-card">
+                        <div class="stats-icon bg-info">
+                            <i class="fas fa-user-clock"></i>
+                        </div>
+                        <h3>Horas Trabajadas</h3>
+                        <p class="stats-value">156.5h</p>
+                        <p class="stats-change text-danger"><i class="fas fa-arrow-down"></i> 5%</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TPV Section -->
+    <section class="tpv-section" id="tpv">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6" data-aos="fade-right">
+                    <img src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="TPV KUDEA" class="img-fluid rounded shadow">
+                </div>
+                <div class="col-lg-6" data-aos="fade-left">
+                    <h2>TPV para todo tipo de negocios</h2>
+                    <p class="lead">Adaptado a restaurantes, tiendas minoristas, supermercados y más</p>
+                    <ul class="list-unstyled">
+                        <li class="mb-3"><i class="fas fa-check-circle me-2"></i> Interfaz intuitiva y configurable</li>
+                        <li class="mb-3"><i class="fas fa-check-circle me-2"></i> Compatible con múltiples dispositivos</li>
+                        <li class="mb-3"><i class="fas fa-check-circle me-2"></i> Gestión de mesas y comandas (para restaurantes)</li>
+                        <li class="mb-3"><i class="fas fa-check-circle me-2"></i> Impresión directa a cocina/barra</li>
+                        <li class="mb-3"><i class="fas fa-check-circle me-2"></i> Soporte para múltiples cajas y usuarios</li>
+                    </ul>
+                    <a href="#contact" class="btn btn-light mt-3">Solicitar Demo</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing" id="pricing">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 text-center">
+                    <h2 class="section-title">Planes y Precios</h2>
+                    <p class="lead">Elige el plan que mejor se adapte a las necesidades de tu negocio</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4" data-aos="fade-up">
+                    <div class="card pricing-card">
+                        <div class="pricing-header">
+                            <h4>Básico</h4>
+                            <div class="price">€29<span>/mes</span></div>
+                            <small>Para pequeños negocios</small>
+                        </div>
+                        <div class="pricing-features">
+                            <ul>
+                                <li>TPV básico</li>
+                                <li>1 terminal</li>
+                                <li>Gestión de inventario</li>
+                                <li>Reportes básicos</li>
+                                <li>Soporte por email</li>
+                            </ul>
+                            <a href="#contact" class="btn btn-outline-primary w-100">Contratar</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                    <div class="card pricing-card">
+                        <div class="pricing-header bg-primary text-white">
+                            <h4>Profesional</h4>
+                            <div class="price text-white">€59<span>/mes</span></div>
+                            <small>Recomendado</small>
+                        </div>
+                        <div class="pricing-features">
+                            <ul>
+                                <li>TPV avanzado</li>
+                                <li>Hasta 3 terminales</li>
+                                <li>Gestión de clientes (CRM)</li>
+                                <li>Control de empleados</li>
+                                <li>Analíticas avanzadas</li>
+                                <li>Soporte prioritario</li>
+                            </ul>
+                            <a href="#contact" class="btn btn-primary w-100">Contratar</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                    <div class="card pricing-card">
+                        <div class="pricing-header">
+                            <h4>Empresa</h4>
+                            <div class="price">€99<span>/mes</span></div>
+                            <small>Para múltiples locales</small>
+                        </div>
+                        <div class="pricing-features">
+                            <ul>
+                                <li>TPV multicaja</li>
+                                <li>Terminales ilimitados</li>
+                                <li>Gestión centralizada</li>
+                                <li>App móvil</li>
+                                <li>Integraciones API</li>
+                                <li>Soporte 24/7</li>
+                            </ul>
+                            <a href="#contact" class="btn btn-outline-primary w-100">Contratar</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 text-center">
+                    <h2 class="section-title">Lo que dicen nuestros clientes</h2>
+                    <p class="lead">Más de 500 negocios confían en KUDEA</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4" data-aos="fade-up">
+                    <div class="testimonial-card">
+                        <img src="https://randomuser.me/api/portraits/women/32.jpg" alt="Cliente 1" class="testimonial-img">
+                        <p>"Desde que implementamos KUDEA en nuestro restaurante, hemos reducido los errores en comandas y mejorado la eficiencia en un 40%."</p>
+                        <h5>María Gómez</h5>
+                        <small>Dueña, Restaurante La Terraza</small>
+                    </div>
+                </div>
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                    <div class="testimonial-card">
+                        <img src="https://randomuser.me/api/portraits/men/75.jpg" alt="Cliente 2" class="testimonial-img">
+                        <p>"El TPV de KUDEA es increíblemente intuitivo. Nuestros empleados lo aprendieron en un día y el soporte técnico es excepcional."</p>
+                        <h5>Juan Pérez</h5>
+                        <small>Gerente, Supermercados Pérez</small>
+                    </div>
+                </div>
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                    <div class="testimonial-card">
+                        <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="Cliente 3" class="testimonial-img">
+                        <p>"Las analíticas nos han permitido entender mejor a nuestros clientes y optimizar nuestro inventario. ¡Una herramienta imprescindible!"</p>
+                        <h5>Laura Martínez</h5>
+                        <small>Directora, Boutique Elegance</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact" id="contact">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 text-center">
+                    <h2 class="section-title text-white">Contacta con nosotros</h2>
+                    <p class="lead">¿Listo para transformar la gestión de tu negocio? Escríbenos y te asesoraremos sin compromiso.</p>
+                </div>
+            </div>
+            <div class="row mt-5">
+                <div class="col-lg-6" data-aos="fade-right">
+                    <form class="contact-form">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <input type="text" class="form-control" placeholder="Nombre">
+                            </div>
+                            <div class="col-md-6">
+                                <input type="email" class="form-control" placeholder="Email">
+                            </div>
+                        </div>
+                        <input type="text" class="form-control" placeholder="Asunto">
+                        <textarea class="form-control" rows="5" placeholder="Mensaje"></textarea>
+                        <button type="submit" class="btn btn-primary mt-3">Enviar Mensaje</button>
+                    </form>
+                </div>
+                <div class="col-lg-6" data-aos="fade-left">
+                    <div class="mt-4 mt-lg-0">
+                        <div class="d-flex align-items-center mb-4">
+                            <i class="fas fa-map-marker-alt fa-2x me-3"></i>
+                            <div>
+                                <h5>Dirección</h5>
+                                <p>Calle Innovación 123, Barcelona, España</p>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center mb-4">
+                            <i class="fas fa-phone-alt fa-2x me-3"></i>
+                            <div>
+                                <h5>Teléfono</h5>
+                                <p>+34 123 456 789</p>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center mb-4">
+                            <i class="fas fa-envelope fa-2x me-3"></i>
+                            <div>
+                                <h5>Email</h5>
+                                <p>info@kudea.com</p>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-clock fa-2x me-3"></i>
+                            <div>
+                                <h5>Horario</h5>
+                                <p>Lunes a Viernes: 9:00 - 18:00</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-5 mb-lg-0">
+                    <h5 class="footer-title">Sobre KUDEA</h5>
+                    <p class="footer-text">KUDEA es una solución integral de gestión empresarial diseñada para ayudar a negocios de todos los tamaños a optimizar sus operaciones y aumentar su productividad.</p>
+                    <div class="social-icons mt-4">
+                        <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-5 mb-md-0">
+                    <h5 class="footer-title">Enlaces</h5>
+                    <ul class="footer-links">
+                        <li><a href="#home" class="footer-link">Inicio</a></li>
+                        <li><a href="#features" class="footer-link">Funcionalidades</a></li>
+                        <li><a href="#dashboard" class="footer-link">Dashboard</a></li>
+                        <li><a href="#tpv" class="footer-link">TPV</a></li>
+                        <li><a href="#pricing" class="footer-link">Precios</a></li>
+                        <li><a href="#contact" class="footer-link">Contacto</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-5 mb-md-0">
+                    <h5 class="footer-title">Productos</h5>
+                    <ul class="footer-links">
+                        <li><a href="#" class="footer-link">TPV Restaurante</a></li>
+                        <li><a href="#" class="footer-link">TPV Retail</a></li>
+                        <li><a href="#" class="footer-link">App Móvil</a></li>
+                        <li><a href="#" class="footer-link">Integraciones</a></li>
+                        <li><a href="#" class="footer-link">API</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4">
+                    <h5 class="footer-title">Newsletter</h5>
+                    <p class="footer-text">Suscríbete para recibir noticias y actualizaciones sobre KUDEA.</p>
+                    <div class="newsletter-form">
+                        <input type="email" class="newsletter-input" placeholder="Tu email">
+                        <button class="newsletter-button">Suscribir</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="copyright">
+            <div class="container text-center">
+                <p class="copyright-text">&copy; 2025 KUDEA. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        // Initialize AOS animation
+        AOS.init({
+            duration: 800,
+            easing: 'ease-in-out',
+            once: true
+        });
+        
+        // Navbar scroll effect
+        window.addEventListener('scroll', function() {
+            if (window.scrollY > 50) {
+                document.querySelector('.navbar').classList.add('scrolled');
+            } else {
+                document.querySelector('.navbar').classList.remove('scrolled');
+            }
+        });
+        
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -2,129 +2,255 @@
 {% load static %}
 
 {% block tpv_content %}
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
-  .custom-keypad button {
-    padding: 1.2rem;
+  :root {
+    --kudea-primary: #1D3557;
+    --kudea-secondary: #457B9D;
+    --kudea-accent: #A8DADC;
+    --kudea-light: #F1FAEE;
+    --kudea-danger: #E63946;
+    --kudea-success: #2A9D8F;
+    --glass-bg: rgba(255, 255, 255, 0.55);
+    --glass-border: rgba(255, 255, 255, 0.25);
+  }
+
+  /* ======== FONDO GENERAL ESTILO POS PREMIUM ======== */
+  body, .container {
+    background: linear-gradient(135deg, #F1FAEE, #A8DADC, #F1FAEE);
+    background-size: 200% 200%;
+    animation: gradientMove 6s infinite alternate ease-in-out;
+  }
+
+  @keyframes gradientMove {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+  }
+
+  /* ======== TARJETAS GLASSMORPHISM ======== */
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 20px;
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    padding: 2rem;
+    transition: all 0.35s ease;
+  }
+
+  .glass-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+  }
+
+  /* ======== TÍTULO PRINCIPAL ======== */
+  h2 {
+    font-weight: 700;
+    color: var(--kudea-primary);
+    letter-spacing: -0.5px;
+  }
+
+  /* ======== BOTONES MÉTODO DE PAGO ======== */
+  .method-btn {
+    padding: 1.4rem;
+    border-radius: 18px;
+    font-size: 1.25rem;
+    font-weight: 600;
+    border-width: 2px;
+    transition: 0.3s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .method-btn span {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .method-btn i {
     font-size: 1.5rem;
-    border-radius: 0.75rem;
-    transition: all 0.2s ease-in-out;
+  }
+
+  .method-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0px 8px 20px rgba(0,0,0,0.15);
+  }
+
+  /* ======== CUADRO DE CONFIRMACIÓN ======== */
+  #selectedAmount {
+    color: var(--kudea-primary);
+    font-size: 2rem;
+  }
+
+  /* ======== BLOQUE DE EFECTIVO ======== */
+  #cashFields .glass-card {
+    padding: 1.5rem;
+  }
+
+  #cashGiven {
+    border-radius: 18px;
+    border: 2px solid var(--kudea-secondary);
+    padding: 0.8rem;
+    background: white;
+    font-size: 2rem;
+    text-align: right;
+    font-weight: 700;
+  }
+
+  #changeAmount {
+    font-size: 1.8rem;
+    font-weight: 700;
+  }
+
+  /* ======== TECLADO NUMÉRICO PREMIUM ======== */
+  .custom-keypad button {
+    padding: 1.3rem;
+    font-size: 1.6rem;
+    border-radius: 16px;
+    border: none;
+    background: white;
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+    font-weight: 600;
   }
 
   .custom-keypad button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transform: translateY(-3px);
+    background: var(--kudea-light);
   }
 
-  .custom-keypad .btn-outline-dark {
-    background-color: #ffffff;
-    border-color: #ced4da;
-    color: #343a40;
-  }
-
-  .custom-keypad .btn-outline-dark:active {
-    background-color: #dee2e6;
-    color: #000;
+  .custom-keypad button:active {
+    transform: scale(0.96);
   }
 
   .custom-keypad .btn-danger {
-    background-color: #ffebee;
-    color: #c62828;
+    background: #ffe6e6;
+    color: var(--kudea-danger);
   }
 
   .keypad-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 0.75rem;
+    gap: 1rem;
   }
 
-  .btn-confirm-cash {
-    font-size: 1.25rem;
-    padding: 1rem;
-    border-radius: 0.75rem;
+  /* ======== BOTÓN CONFIRMAR PAGO ======== */
+  .btn-confirm {
+    background: linear-gradient(135deg, var(--kudea-success), #1f8f77);
+    color: white;
+    border: none;
+    border-radius: 16px;
+    padding: 1rem 2rem;
+    font-size: 1.3rem;
+    font-weight: 700;
+    transition: 0.3s ease;
   }
+
+  .btn-confirm:hover {
+    transform: translateY(-3px);
+    box-shadow: 0px 8px 18px rgba(0,0,0,0.2);
+  }
+
 </style>
 
 <div class="container py-5">
   <div class="row justify-content-center">
     <div class="col-lg-10">
 
+      <!-- TÍTULO -->
       <div class="text-center mb-5">
-        <h2 class="fw-bold"><i class="fas fa-wallet text-primary me-2"></i> Cobro en TPV</h2>
+        <h2><i class="fas fa-wallet text-primary me-2"></i> Cobro en TPV</h2>
         <p class="text-muted">Seleccione el método de pago</p>
       </div>
 
+      <!-- PASO 1 -->
       <div id="step-selection">
-        <div class="row g-4">
-          <div class="col-md-6 mx-auto">
-            <div class="card border-0 shadow-sm p-4 rounded-4">
-              <h6 class="fw-bold mb-4">Seleccione método de pago</h6>
-              <div class="d-grid gap-3">
-                <button class="btn btn-outline-primary btn-lg d-flex justify-content-between align-items-center" onclick="confirmPayment('Tarjeta')">
-                  <span><i class="far fa-credit-card me-2"></i> Tarjeta</span>
-                  <strong>{{ total_price|floatformat:2 }} €</strong>
-                </button>
-                <button class="btn btn-outline-success btn-lg d-flex justify-content-between align-items-center" onclick="confirmPayment('Efectivo')">
-                  <span><i class="fas fa-money-bill-wave me-2"></i> Efectivo</span>
-                  <strong>{{ total_price|floatformat:2 }} €</strong>
-                </button>
-                <button class="btn btn-outline-info btn-lg d-flex justify-content-between align-items-center" onclick="confirmPayment('PayPal')">
-                  <span><i class="fab fa-paypal me-2"></i> PayPal</span>
-                  <strong>{{ total_price|floatformat:2 }} €</strong>
-                </button>
-                <button class="btn btn-outline-dark btn-lg d-flex justify-content-between align-items-center" onclick="confirmPayment('Bizum')">
-                  <span><i class="fas fa-qrcode me-2"></i> Bizum</span>
-                  <strong>{{ total_price|floatformat:2 }} €</strong>
-                </button>
-              </div>
-            </div>
+        <div class="glass-card">
+          <h5 class="fw-bold mb-4">Seleccione método de pago</h5>
+
+          <div class="d-grid gap-4">
+
+            <button class="method-btn btn-outline-primary" onclick="confirmPayment('Tarjeta')">
+              <span><i class="far fa-credit-card"></i> Tarjeta</span>
+              <strong>{{ total_price|floatformat:2 }} €</strong>
+            </button>
+
+            <button class="method-btn btn-outline-success" onclick="confirmPayment('Efectivo')">
+              <span><i class="fas fa-money-bill-wave"></i> Efectivo</span>
+              <strong>{{ total_price|floatformat:2 }} €</strong>
+            </button>
+
+            <button class="method-btn btn-outline-info" onclick="confirmPayment('PayPal')">
+              <span><i class="fab fa-paypal"></i> PayPal</span>
+              <strong>{{ total_price|floatformat:2 }} €</strong>
+            </button>
+
+            <button class="method-btn btn-outline-dark" onclick="confirmPayment('Bizum')">
+              <span><i class="fas fa-qrcode"></i> Bizum</span>
+              <strong>{{ total_price|floatformat:2 }} €</strong>
+            </button>
+
           </div>
         </div>
       </div>
 
+      <!-- PASO 2 -->
       <div id="step-confirmation" style="display:none;">
-        <div class="card border-0 shadow-sm p-4 rounded-4">
-          <h5 class="fw-bold mb-3 text-center">Confirmar pago</h5>
-          <p class="mb-2 text-center">Método seleccionado: <span id="selectedMethod" class="fw-semibold text-primary"></span></p>
-          <p class="mb-4 text-center">Importe: <span id="selectedAmount" class="fw-bold fs-4">{{ total_price|floatformat:2 }} €</span></p>
+        <div class="glass-card">
 
-          <div id="cashFields" style="display: none;">
-            <div class="card border-0 shadow-sm p-4 rounded-4 mb-3">
+          <h4 class="fw-bold text-center mb-3">Confirmar pago</h4>
+
+          <p class="text-center mb-2">Método seleccionado:</p>
+          <p class="text-center fw-bold fs-4 text-primary" id="selectedMethod"></p>
+
+          <p class="text-center">Importe:</p>
+          <p class="text-center fw-bold" id="selectedAmount">{{ total_price|floatformat:2 }} €</p>
+
+          <!-- EFECTIVO -->
+          <div id="cashFields" style="display:none;">
+            <div class="glass-card mb-4">
               <h6 class="fw-bold mb-3">Efectivo recibido</h6>
-              <input type="text" id="cashGiven" class="form-control text-end fs-4 fw-bold mb-3" readonly placeholder="0.00">
-              <label class="form-label">Cambio / Falta:</label>
-              <div class="fw-bold fs-4" id="changeAmount">0.00 €</div>
+              <input type="text" id="cashGiven" class="form-control mb-3" readonly placeholder="0.00">
+              <label class="form-label">Cambio:</label>
+              <div id="changeAmount">0.00 €</div>
             </div>
 
-            <div class="card border-0 shadow-sm p-3 rounded-4 custom-keypad">
+            <div class="glass-card custom-keypad">
               <div class="keypad-grid">
-                <button class="btn btn-outline-dark" onclick="appendKey('1')">1</button>
-                <button class="btn btn-outline-dark" onclick="appendKey('2')">2</button>
-                <button class="btn btn-outline-dark" onclick="appendKey('3')">3</button>
-                <button class="btn btn-outline-dark" onclick="appendKey('4')">4</button>
-                <button class="btn btn-outline-dark" onclick="appendKey('5')">5</button>
-                <button class="btn btn-outline-dark" onclick="appendKey('6')">6</button>
-                <button class="btn btn-outline-dark" onclick="appendKey('7')">7</button>
-                <button class="btn btn-outline-dark" onclick="appendKey('8')">8</button>
-                <button class="btn btn-outline-dark" onclick="appendKey('9')">9</button>
-                <button class="btn btn-outline-dark" onclick="appendKey('.')">.</button>
-                <button class="btn btn-outline-dark" onclick="appendKey('0')">0</button>
-                <button class="btn btn-danger" onclick="clearInput()">←</button>
+                <button onclick="appendKey('1')">1</button>
+                <button onclick="appendKey('2')">2</button>
+                <button onclick="appendKey('3')">3</button>
+                <button onclick="appendKey('4')">4</button>
+                <button onclick="appendKey('5')">5</button>
+                <button onclick="appendKey('6')">6</button>
+                <button onclick="appendKey('7')">7</button>
+                <button onclick="appendKey('8')">8</button>
+                <button onclick="appendKey('9')">9</button>
+                <button onclick="appendKey('.')">.</button>
+                <button onclick="appendKey('0')">0</button>
+                <button class="btn-danger" onclick="clearInput()">←</button>
               </div>
             </div>
           </div>
 
-          <div class="d-flex justify-content-center gap-3 mt-4">
-            <button class="btn btn-outline-secondary" onclick="goBack()"><i class="fas fa-edit me-2"></i>Modificar</button>
+          <div class="text-center mt-4 d-flex justify-content-center gap-3">
+            <button class="btn btn-outline-secondary px-4 py-2" onclick="goBack()">
+              <i class="fas fa-arrow-left me-2"></i>Modificar
+            </button>
+
             <form method="POST" action="{% url 'tpv_shop:finalizar_compra' %}">
               {% csrf_token %}
               <input type="hidden" name="payment_method" id="payment_method_input">
-              <button type="submit" class="btn btn-success">
+              <button type="submit" class="btn-confirm">
                 <i class="fas fa-check-circle me-2"></i>Confirmar pago
               </button>
             </form>
-            
-            
           </div>
+
         </div>
       </div>
 
@@ -136,28 +262,18 @@
   let selectedMethod = '';
 
   function confirmPayment(method) {
-    const amount = parseFloat("{{ total_price|floatformat:2 }}");
+    const total = parseFloat("{{ total_price }}");
+
     selectedMethod = method;
-
-    // Mostrar datos en pantalla
     document.getElementById('selectedMethod').textContent = method;
-    document.getElementById('selectedAmount').textContent = amount.toFixed(2) + ' €';
+    document.getElementById('selectedAmount').textContent = total.toFixed(2) + " €";
 
-    // Establecer el valor del input oculto del formulario
-    const methodInput = document.getElementById('payment_method_input');
-    if (methodInput) {
-      methodInput.value = method;
-    }
+    document.getElementById('payment_method_input').value = method;
 
-    // Mostrar u ocultar campos según método
     document.getElementById('step-selection').style.display = 'none';
     document.getElementById('step-confirmation').style.display = 'block';
 
-    if (method === 'Efectivo') {
-      document.getElementById('cashFields').style.display = 'block';
-    } else {
-      document.getElementById('cashFields').style.display = 'none';
-    }
+    document.getElementById('cashFields').style.display = (method === 'Efectivo') ? 'block' : 'none';
   }
 
   function goBack() {
@@ -180,17 +296,17 @@
   }
 
   function calculateChange() {
-    const total = parseFloat("{{ total_price|floatformat:2 }}");
+    const total = parseFloat("{{ total_price }}");
     const given = parseFloat(document.getElementById('cashGiven').value);
-    const change = given - total;
     const changeAmount = document.getElementById('changeAmount');
 
-    if (!isNaN(change)) {
-      changeAmount.textContent = (change > 0 ? '+' : '') + change.toFixed(2) + ' €';
-      changeAmount.classList.toggle('text-danger', change < 0);
-      changeAmount.classList.toggle('text-success', change >= 0);
+    if (!isNaN(given)) {
+      const change = given - total;
+      changeAmount.textContent = (change >= 0 ? "+" : "") + change.toFixed(2) + " €";
+      changeAmount.style.color = change >= 0 ? "var(--kudea-success)" : "var(--kudea-danger)";
     } else {
-      changeAmount.textContent = '0.00 €';
+      changeAmount.textContent = "0.00 €";
+      changeAmount.style.color = "#000";
     }
   }
 </script>

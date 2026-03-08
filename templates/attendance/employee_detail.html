@@ -1,0 +1,8 @@
+<h2>{{ employee }}</h2>
+<p>Punch Code: {{ employee.punch_code }}</p>
+<a href="{% url 'attendance:punch_create' employee.pk %}">New Punch</a>
+<ul>
+  {% for punch in employee.punch_set.all %}
+    <li>{{ punch.clock_in }} - {{ punch.clock_out }}</li>
+  {% endfor %}
+</ul>

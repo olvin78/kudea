@@ -1,0 +1,291 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block title %}Panel Central KUDEA{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/kudea-cash-dashboard.css' %}">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<main class="k-wrap pb-5">
+
+    <!-- HEADER SECTON -->
+    <header class="k-header mb-5 mt-4">
+        <div>
+            <div class="d-flex align-items-center gap-3">
+                <div class="k-logo">K</div>
+                <div>
+                    <h1 class="k-header-title">Panel Central</h1>
+                    <p class="muted m-0">Control general del sistema y gestión operativa</p>
+                </div>
+            </div>
+        </div>
+        <div class="d-none d-md-block">
+            <div class="badge bg-white text-dark border p-2 px-3 rounded-pill shadow-sm">
+                <i class="fas fa-user-circle me-1 text-kudea-medium"></i>
+                <span class="fw-bold">{{ request.user.username }}</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- OPERATIONAL ALERTS -->
+    {% if alertas_stock %}
+    <section class="alert-strip mb-4">
+        <div class="alert-dot"></div>
+        <div class="small fw-bold text-danger">ALERTA DE REPOSICIÓN:</div>
+        <div class="d-flex gap-3 overflow-hidden">
+            {% for item in alertas_stock %}
+            <span class="small text-dark fw-medium">{{ item.nombre }} ({{ item.stock }} uds)</span>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- CASH STATUS DYNAMICS -->
+    <section class="mb-4">
+        {% if apertura_hoy %}
+            <div class="status-strip success">
+                <div class="status-dot pulse-success"></div>
+                <div class="d-flex justify-content-between align-items-center w-100">
+                    <div>
+                        <span class="fw-bold">CAJA ABIERTA:</span>
+                        <span class="small text-muted ms-2">Iniciada por {{ apertura_hoy.usuario.username }} el {{ apertura_hoy.fecha|date:"d/m/Y" }}</span>
+                    </div>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">Operativa</span>
+                </div>
+            </div>
+        {% else %}
+            <div class="status-strip danger">
+                <div class="status-dot pulse-danger"></div>
+                <div class="d-flex justify-content-between align-items-center w-100">
+                    <div>
+                        <span class="fw-bold text-danger">CAJA CERRADA:</span>
+                        <span class="small text-muted ms-2">Es necesario registrar la apertura para comenzar a operar hoy.</span>
+                    </div>
+                    <a href="{% url 'cash_app:apertura_caja' %}" class="btn btn-dark btn-sm rounded-pill px-4 shadow-sm">
+                        <i class="fas fa-unlock me-2"></i>Abrir Caja
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </section>
+
+    <!-- KPI STATS SECTION -->
+    <section class="mb-5">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <div class="kpi-card">
+                    <div class="kpi-label">Facturación Hoy</div>
+                    <div class="kpi-value text-success">€{{ kpi_hoy.total|default:0|floatformat:2 }}</div>
+                    <div class="mt-2">
+                        {% if kpi_hoy.crecimiento >= 0 %}
+                        <span class="badge bg-success-subtle text-success border border-success-subtle small">
+                            <i class="fas fa-arrow-up"></i> {{ kpi_hoy.crecimiento|floatformat:1 }}% vs ayer
+                        </span>
+                        {% else %}
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle small">
+                            <i class="fas fa-arrow-down"></i> {{ kpi_hoy.crecimiento|floatformat:1 }}% vs ayer
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="kpi-card">
+                    <div class="kpi-label">Tickets / Promedio</div>
+                    <div class="d-flex align-items-baseline gap-2">
+                        <span class="kpi-value">{{ kpi_hoy.tickets|default:0 }}</span>
+                        <span class="muted small fw-bold">/ €{{ kpi_hoy.ticket_medio|floatformat:2 }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="kpi-card">
+                    <div class="kpi-label">Arts. Vendidos</div>
+                    <div class="kpi-value">{{ kpi_hoy.productos|default:0 }}</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="kpi-card">
+                    <div class="kpi-label">Balance en Caja</div>
+                    <div class="kpi-value text-primary">€{{ kpi_hoy.total|floatformat:2 }}</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="row g-4 mb-5">
+        <!-- QUICK ACTIONS (Left side) -->
+        <div class="col-lg-7">
+            <div class="k-card h-100">
+                <div class="k-card-body p-4">
+                    <h2 class="k-title mb-4">
+                        <i class="fas fa-bolt text-warning"></i> Operaciones Rápidas
+                    </h2>
+                    <div class="row g-3">
+                        <div class="col-6 col-md-3">
+                            <a href="{% url 'home_app:tpv' %}" class="action-card">
+                                <span class="action-icon">🧾</span>
+                                <span class="action-name">TPV</span>
+                            </a>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <a href="{% url 'home_app:lista_productos' %}" class="action-card">
+                                <span class="action-icon">📦</span>
+                                <span class="action-name">Stock</span>
+                            </a>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <a href="{% url 'home_app:lista_ventas' %}" class="action-card">
+                                <span class="action-icon">📊</span>
+                                <span class="action-name">Ventas</span>
+                            </a>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <a href="{% url 'home_app:arqueo_menu' %}" class="action-card">
+                                <span class="action-icon">💰</span>
+                                <span class="action-name">Caja</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- REVENUE CONTROL (Right side) -->
+        <div class="col-lg-5">
+            <div class="k-card h-100">
+                <div class="k-card-body p-4">
+                    <h3 class="k-title mb-3">
+                        <i class="fas fa-wallet text-primary"></i> Control de Recaudación
+                    </h3>
+                    {% if recaudacion_hoy %}
+                        {% for item in recaudacion_hoy %}
+                        <div class="payment-row mb-2">
+                            <div class="small fw-bold text-muted">{{ item.metodo_pago__nombre }}</div>
+                            <div class="fw-bold fs-5">€{{ item.total|floatformat:2 }}</div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="muted text-center py-4">Sin datos de cobros hoy</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RECENT SALES LIST -->
+    <section>
+        <div class="k-card">
+            <div class="k-card-body">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+                    <h2 class="k-title m-0">
+                        <i class="fas fa-receipt text-kudea-medium"></i> Últimas Operaciones
+                    </h2>
+
+                    <div class="d-flex gap-2 bg-light p-1 rounded-pill border">
+                        <a href="?periodo=hoy"
+                            class="btn btn-sm px-3 rounded-pill {% if periodo_actual == 'hoy' %}btn-dark{% else %}btn-light{% endif %}">Hoy</a>
+                        <a href="?periodo=semana"
+                            class="btn btn-sm px-3 rounded-pill {% if periodo_actual == 'semana' %}btn-dark{% else %}btn-light{% endif %}">Semana</a>
+                        <a href="?periodo=mes"
+                            class="btn btn-sm px-3 rounded-pill {% if periodo_actual == 'mes' %}btn-dark{% else %}btn-light{% endif %}">Mes</a>
+                    </div>
+                </div>
+
+                <!-- DATE FILTER FORM -->
+                <div class="bg-light p-3 rounded-4 border mb-4">
+                    <form method="get" class="row g-2 align-items-center">
+                        <input type="hidden" name="periodo" value="personalizado">
+                        <div class="col-auto"><span class="small fw-bold text-muted">Intervalo:</span></div>
+                        <div class="col-auto">
+                            <input type="date" name="fecha_inicio" class="form-control form-control-sm rounded-pill"
+                                required>
+                        </div>
+                        <div class="col-auto">
+                            <input type="date" name="fecha_fin" class="form-control form-control-sm rounded-pill"
+                                required>
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-dark btn-sm rounded-pill px-3">Consultar</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- SALES GRID -->
+                {% if ventas_recientes %}
+                <div id="ventas-container" class="mb-4">
+                    {% for venta in ventas_recientes %}
+                    <div class="venta-item {% if forloop.counter > 5 %}d-none-important{% endif %}" data-index="{{ forloop.counter }}">
+                        <div class="d-flex align-items-center gap-3">
+                        <div class="venta-icon-wrapper">
+                                <i class="fas fa-file-invoice"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold fs-6">{{ venta.codigo }}</div>
+                                <div class="muted small">
+                                <span class="text-dark fw-bold">{{ venta.usuario.username }}</span> · 
+                                {{ venta.metodo_pago.nombre }} · 
+                                <span class="text-muted">{{ venta.creado_en|date:"H:i" }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <div class="fw-bold fs-5 text-kudea-dark">€{{ venta.total|floatformat:2 }}</div>
+                            <a href="{% url 'home_app:venta_detalle' venta.id %}"
+                                class="text-kudea-medium small text-decoration-none hover-underline">Ver detalle</a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {% if ventas_recientes|length > 5 %}
+                <div class="text-center">
+                    <button id="toggle-ventas-btn" class="btn btn-outline-dark btn-sm rounded-pill px-4">
+                        Mostrar más <i class="fas fa-chevron-down ms-2"></i>
+                    </button>
+                </div>
+                {% endif %}
+                {% else %}
+                <div class="text-center py-5">
+                    <img src="https://cdni.iconscout.com/illustration/premium/thumb/no-data-found-8867280-7223330.png"
+                        style="max-width:180px; opacity:0.6;" alt="No data" class="mb-3">
+                    <p class="muted">No se han encontrado registros para este periodo.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+    lucide.createIcons();
+
+    // Simple toggle logic for sales list
+    document.addEventListener("DOMContentLoaded", function () {
+        const btn = document.getElementById("toggle-ventas-btn");
+        if (!btn) return;
+
+        let expanded = false;
+        btn.addEventListener("click", function () {
+            const items = document.querySelectorAll(".venta-item");
+            if (!expanded) {
+                items.forEach(item => item.classList.remove("d-none-important"));
+                btn.innerHTML = 'Mostrar menos <i class="fas fa-chevron-up ms-2"></i>';
+                expanded = true;
+            } else {
+                items.forEach(item => {
+                    if (parseInt(item.dataset.index) > 5) item.classList.add("d-none-important");
+                });
+                btn.innerHTML = 'Mostrar más <i class="fas fa-chevron-down ms-2"></i>';
+                expanded = false;
+            }
+        });
+    });
+</script>
+{% endblock %}

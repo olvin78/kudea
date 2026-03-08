@@ -1,0 +1,12 @@
+[
+    {
+        "timestamp": "2026-03-08 14:27:33",
+        "tipo": "NEGOCIO",
+        "mensaje": "El producto 'Buñuelos' tiene stock negativo (-1). ¡Eso es físicamente imposible!"
+    },
+    {
+        "timestamp": "2026-03-08 14:27:33",
+        "tipo": "NEGOCIO",
+        "mensaje": "El producto 'Pinto con Queso' tiene stock negativo (-4). ¡Eso es físicamente imposible!"
+    }
+]

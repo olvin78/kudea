@@ -1,0 +1,884 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block title %}TPV - Punto de Venta{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  crossorigin="anonymous" />
+<link rel="stylesheet" href="{% static 'css/index.css' %}">
+<style>
+  :root {
+    --kudea-dark: #1D3557;
+    --kudea-medium: #457B9D;
+    --kudea-light: #A8DADC;
+    --kudea-accent: #F1FAEE;
+    --kudea-danger: #E63946;
+    --kudea-bg: #f4f7f6;
+  }
+
+  body {
+    background-color: var(--kudea-bg);
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* Contenedores modernos */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(29, 53, 87, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+  }
+
+  /* Botonera superior */
+  .toolbar-btn {
+    border-radius: 12px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(69, 123, 157, 0.2);
+    color: var(--kudea-medium);
+    background: white;
+  }
+
+  .toolbar-btn:hover {
+    background: var(--kudea-medium);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(69, 123, 157, 0.2);
+  }
+
+  /* Tarjetas de producto */
+  .producto-card-custom {
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    background: white;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .producto-card-custom:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 24px rgba(29, 53, 87, 0.1);
+    border-color: var(--kudea-light);
+  }
+
+  .product-price-tag {
+    background: linear-gradient(135deg, var(--kudea-light), var(--kudea-medium));
+    color: white;
+    font-weight: 600;
+    padding: 6px;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  /* El Ticket (Recibo) */
+  .ticket-container {
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    position: relative;
+  }
+
+  .ticket-container::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 0;
+    right: 0;
+    height: 10px;
+    background-image: radial-gradient(circle at 10px 0, transparent 10px, white 11px);
+    background-size: 20px 20px;
+    background-repeat: repeat-x;
+  }
+
+  .table-ticket th {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    border-bottom: 2px dashed #eee;
+  }
+
+  .table-ticket td {
+    vertical-align: middle;
+    font-weight: 500;
+  }
+
+  /* Botones Numpad */
+  .numpad-btn {
+    border-radius: 12px;
+    font-size: 1.25rem;
+    font-weight: 600;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    color: var(--kudea-dark);
+    transition: all 0.1s ease;
+  }
+
+  .numpad-btn:active {
+    background: var(--kudea-light);
+    transform: scale(0.95);
+  }
+
+  .numpad-btn.btn-danger {
+    background: var(--kudea-danger);
+    color: white;
+    border-color: var(--kudea-danger);
+  }
+
+  /* Métodos de Pago */
+  .payment-card {
+    border-radius: 12px;
+    border: 2px solid transparent;
+    background: #f8f9fa;
+    transition: all 0.2s;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--kudea-dark);
+  }
+
+  .payment-card:hover {
+    background: var(--kudea-accent);
+  }
+
+  .payment-card.selected {
+    border-color: var(--kudea-medium);
+    background: #e3f2fd;
+    box-shadow: 0 4px 10px rgba(69, 123, 157, 0.15);
+  }
+
+  /* Totales del ticket */
+  .ticket-totals {
+    background: var(--kudea-accent);
+    border-radius: 12px;
+    padding: 15px;
+    margin-top: 15px;
+    border: 1px dashed var(--kudea-light);
+  }
+
+  .total-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    font-size: 0.95rem;
+  }
+
+  .total-row.grand-total {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: white;
+    background: linear-gradient(135deg, var(--kudea-dark), var(--kudea-medium));
+    padding: 15px 20px;
+    border-radius: 12px;
+    margin-top: 15px;
+    border: none;
+    box-shadow: 0 4px 15px rgba(29, 53, 87, 0.2);
+  }
+
+  .discount-row {
+    color: var(--kudea-danger);
+    font-weight: 600;
+  }
+
+  /* Input Importe moderno */
+  .importe-input {
+    background: var(--kudea-dark);
+    color: #ffffff !important;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.8rem;
+    font-weight: 700;
+    text-align: right;
+    padding: 15px;
+  }
+
+  .importe-input:focus {
+    background: var(--kudea-dark);
+    color: #ffffff !important;
+    box-shadow: 0 0 0 0.25rem rgba(29, 53, 87, 0.25);
+  }
+
+  .importe-input[readonly] {
+    background-color: var(--kudea-dark) !important;
+    opacity: 1 !important;
+    color: #ffffff !important;
+  }
+
+  .importe-input::-webkit-input-placeholder {
+    color: rgba(255, 255, 255, 0.7) !important;
+    opacity: 1 !important;
+  }
+
+  .importe-input::-moz-placeholder {
+    color: rgba(255, 255, 255, 0.7) !important;
+    opacity: 1 !important;
+  }
+
+  .importe-input:-ms-input-placeholder {
+    color: rgba(255, 255, 255, 0.7) !important;
+    opacity: 1 !important;
+  }
+
+  .importe-input::placeholder {
+    color: rgba(255, 255, 255, 0.7) !important;
+    opacity: 1 !important;
+  }
+
+  /* Filtros de categoría */
+  .btn-filter {
+    border-radius: 30px;
+    border: 2px solid rgba(69, 123, 157, 0.2);
+    background: white;
+    color: var(--kudea-medium);
+    font-weight: 600;
+    font-size: 0.8rem;
+    padding: 6px 14px;
+    transition: all 0.2s ease;
+  }
+
+  .btn-filter:hover {
+    background: var(--kudea-light);
+    border-color: var(--kudea-medium);
+    color: var(--kudea-dark);
+  }
+
+  .btn-filter.active {
+    background: var(--kudea-medium);
+    border-color: var(--kudea-medium);
+    color: white;
+    box-shadow: 0 4px 10px rgba(69, 123, 157, 0.3);
+  }
+
+  /* Modals */
+  .modal-content {
+    border-radius: 20px;
+    border: none;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+
+  <!-- BARRA DE HERRAMIENTAS -->
+  <div class="glass-card p-3 mb-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
+    <div class="d-flex align-items-center gap-2">
+      <div
+        style="width: 40px; height: 40px; background: var(--kudea-medium); color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: bold;">
+        K
+      </div>
+      <h4 class="m-0 fw-bold text-kudea-dark">TPV <span class="fw-light text-muted">| Caja</span></h4>
+    </div>
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+      <!-- Balance de Caja Widget -->
+      <div class="d-flex align-items-center px-3 py-2 rounded-4 shadow-sm me-2 border"
+        style="background: rgba(29, 53, 87, 0.05); border-color: rgba(29, 53, 87, 0.1) !important;">
+        <div class="me-2"
+          style="font-size: 0.75rem; text-transform: uppercase; font-weight: 800; color: var(--kudea-dark); opacity: 0.7; letter-spacing: 0.05em;">
+          Balance Total</div>
+        <div class="fs-5 fw-bold" style="color: var(--kudea-dark);">€{{ balance_caja|floatformat:2|default:"0.00" }}</div>
+      </div>
+
+      <a href="{% url 'home_app:lista_productos' %}" class="btn toolbar-btn px-3 py-2">
+        <i class="fas fa-box-open me-2"></i>Inventario
+      </a>
+      <a href="{% url 'home_app:lista_ventas' %}" class="btn toolbar-btn px-3 py-2">
+        <i class="fas fa-history me-2"></i>Historial
+      </a>
+      <a href="{% url 'home_app:arqueo_menu' %}" class="btn toolbar-btn px-3 py-2">
+        <i class="fas fa-cash-register me-2"></i>Arqueo
+      </a>
+      <button class="btn toolbar-btn px-3 py-2" data-bs-toggle="modal" data-bs-target="#discountModal">
+        <i class="fas fa-tags me-2"></i>Aplicar Descuento
+      </button>
+      <button class="btn toolbar-btn px-3 py-2" onclick="TPV.toggleLayout()">
+        <i class="fas fa-exchange-alt me-2"></i>Vista
+      </button>
+    </div>
+  </div>
+
+  <!-- LAYOUT PRINCIPAL -->
+  <div class="row g-4" id="main-layout">
+
+    <!-- PANEL DE PRODUCTOS -->
+    <div class="col-lg-8" id="productos-section">
+      <div class="glass-card p-4 h-100">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h5 class="fw-bold m-0"><i class="fas fa-th-large me-2 text-kudea-medium"></i>Catálogo</h5>
+          <div class="badge bg-kudea-light text-dark px-3 py-2 rounded-pill fs-6">{{ productos|length }} Artículos</div>
+        </div>
+
+        <!-- Filtros de Categoría -->
+        <div class="d-flex flex-wrap gap-2 mb-4">
+          <button type="button" class="btn btn-sm btn-filter active" data-cat="all"
+            onclick="TPV.filterByCategory('all', this)">
+            <i class="fas fa-th me-1"></i> Todos
+          </button>
+          {% for cat in categorias %}
+          <button type="button" class="btn btn-sm btn-filter" data-cat="{{ cat.id }}"
+            onclick="TPV.filterByCategory('{{ cat.id }}', this)">
+            {{ cat.nombre }}
+          </button>
+          {% endfor %}
+        </div>
+
+        <div class="row g-3" id="productos-grid"
+          style="max-height: 65vh; overflow-y: auto; overflow-x: hidden; padding-right: 5px;">
+          {% for p in productos %}
+          <div class="col-6 col-md-4 col-lg-3 product-item" data-categoria="{{ p.categoria.id|default:'none' }}">
+            <div class="producto-card-custom"
+              onclick="TPV.addToTicket({{ p.id }}, '{{ p.nombre|escapejs }}', {{ p.precio|stringformat:'f' }}, {{ p.porcentaje_iva|default:21|stringformat:'f' }})">
+              <div class="product-price-tag text-center">
+                {{ p.precio }} €
+              </div>
+              <div class="p-3 text-center d-flex flex-column h-100 justify-content-between">
+                <div>
+                  {% if p.imagen %}
+                  <img src="{{ p.imagen.url }}" class="img-fluid rounded mb-3" style="height:80px; object-fit:contain;">
+                  {% else %}
+                  <div class="rounded d-flex align-items-center justify-content-center mb-3 mx-auto"
+                    style="height:80px; width:80px; background: #f8f9fa; border-radius: 50%;">
+                    <i class="fas fa-shopping-bag text-muted fa-2x"></i>
+                  </div>
+                  {% endif %}
+                  <h6 class="fw-bold mb-1 text-kudea-dark" style="font-size: 0.95rem;">{{ p.nombre }}</h6>
+                  <small class="text-muted d-block mb-2">{{ p.categoria.nombre|default:"General" }}</small>
+                </div>
+                <div class="mt-auto">
+                  <span
+                    class="badge rounded-pill {% if p.stock > 10 %}bg-success{% elif p.stock > 0 %}bg-warning text-dark{% else %}bg-danger{% endif %} w-100">
+                    {{ p.stock }} en stock
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL DE TICKET (DERECHA) -->
+    <div class="col-lg-4" id="ticket-section">
+      <div class="ticket-container h-100 d-flex flex-column">
+
+        <!-- Cabecera del ticket -->
+        <h5 class="fw-bold mb-3 text-center text-kudea-dark">
+          <i class="fas fa-receipt me-2"></i>Ticket de Venta
+        </h5>
+
+        <!-- Lista de productos en ticket -->
+        <div class="table-responsive flex-grow-1" style="min-height: 180px; max-height: 30vh; overflow-y: auto;">
+          <table class="table table-ticket table-borderless table-hover mb-0">
+            <thead>
+              <tr>
+                <th width="45%">Artículo</th>
+                <th width="15%" class="text-center">Cant</th>
+                <th width="25%" class="text-end">Total</th>
+                <th width="15%"></th>
+              </tr>
+            </thead>
+            <tbody id="ticket-list">
+              <!-- Elementos inyectados por JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Totales -->
+        <div class="ticket-totals">
+          <div class="total-row">
+            <span class="text-muted">Subtotal (Sin IVA):</span>
+            <span id="subtotal-ticket" class="fw-bold">0,00 €</span>
+          </div>
+          <div class="total-row discount-row" id="descuento-container">
+            <span>Descuento aplicado:</span>
+            <span id="descuento-ticket">0,00 €</span>
+          </div>
+          <div class="total-row">
+            <span class="text-muted">Total Impuestos (IVA):</span>
+            <span id="iva-ticket" class="fw-bold">0,00 €</span>
+          </div>
+          <div class="total-row grand-total d-flex justify-content-between align-items-center">
+            <span>TOTAL:</span>
+            <span id="total-ticket">0,00 €</span>
+          </div>
+        </div>
+
+        <!-- Entrada de dinero (Calculadora) -->
+        <div class="mt-4">
+          <input id="importe" type="text" class="form-control importe-input mb-3 shadow-sm" placeholder="0.00 €"
+            readonly>
+
+          <div class="row g-2 mb-3">
+            {% for n in "789456123" %}
+            <div class="col-4">
+              <button class="btn numpad-btn w-100 py-2" onclick="TPV.addNumber('{{ n }}')">{{ n }}</button>
+            </div>
+            {% endfor %}
+            <div class="col-4"><button class="btn numpad-btn w-100 py-2" onclick="TPV.addNumber('0')">0</button></div>
+            <div class="col-4"><button class="btn numpad-btn w-100 py-2" onclick="TPV.addNumber('.')">•</button></div>
+            <div class="col-4"><button class="btn numpad-btn btn-danger w-100 py-2" onclick="TPV.clearAmount()"><i
+                  class="fas fa-backspace"></i></button></div>
+          </div>
+        </div>
+
+        <!-- Métodos de pago -->
+        <div class="row g-2 mb-3">
+          {% for m in metodos_pago2 %}
+          <div class="col-6">
+            <div class="payment-card p-3 text-center h-100 d-flex flex-column justify-content-center align-items-center"
+              data-id="{{ m.id }}" data-nombre="{{ m.nombre }}" data-acepta_cambio="{{ m.acepta_cambio|yesno:'1,0' }}"
+              onclick="TPV.selectPayment(this)">
+              {% if m.imagen %}
+              <img src="{{ m.imagen.url }}" style="height: 24px; margin-bottom: 5px;">
+              {% else %}
+              <i class="fas fa-credit-card fa-lg mb-2 text-kudea-medium"></i>
+              {% endif %}
+              <span style="font-size: 0.9rem;">{{ m.nombre }}</span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <button class="btn btn-kudea w-100 py-3 rounded-pill fw-bold fs-5 shadow" onclick="TPV.showConfirm()"
+          style="background: var(--kudea-dark);">
+          <i class="fas fa-check-circle me-2"></i> Cobrar Ticket
+        </button>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================== -->
+<!-- MODALES -->
+<!-- ============================================== -->
+
+<!-- Modal Eliminar Producto -->
+<div class="modal fade" id="confirmRemoveModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content">
+      <div class="modal-body text-center p-4">
+        <i class="fas fa-exclamation-triangle text-warning fa-3x mb-3"></i>
+        <h5 class="fw-bold text-kudea-dark">¿Eliminar producto?</h5>
+        <p class="text-muted small mb-4">Vas a quitar este artículo del ticket actual. Esta acción no se puede deshacer.
+        </p>
+        <p class="fw-bold text-danger mb-4" id="remove-product-name"></p>
+        <div class="d-flex gap-2 justify-content-center">
+          <button type="button" class="btn btn-outline-secondary rounded-pill w-50"
+            data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-danger rounded-pill w-50" onclick="TPV.confirmRemove()">Eliminar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Descuento -->
+<div class="modal fade" id="discountModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="fw-bold"><i class="fas fa-tag me-2 text-kudea-medium"></i>Añadir Descuento</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center">
+        <p class="text-muted small">Introduce el importe a descontar (en €) sobre el total del ticket.</p>
+        <div class="input-group mb-3">
+          <span class="input-group-text bg-light text-kudea-dark fw-bold">€</span>
+          <input type="number" id="descuentoInput" class="form-control form-control-lg text-center fw-bold"
+            placeholder="0.00" step="0.01" min="0">
+        </div>
+        <div class="d-flex gap-2 justify-content-center">
+          <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
+            onclick="document.getElementById('descuentoInput').value=''">Limpiar</button>
+          <button type="button" class="btn btn-kudea rounded-pill px-4" onclick="TPV.applyDiscount()">Aplicar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Confirmar Pago -->
+<div class="modal fade" id="confirmPayModal">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-kudea-dark text-white rounded-top" style="border-radius: 20px 20px 0 0;">
+        <h5 class="modal-title"><i class="fas fa-check-circle me-2"></i> Confirmar Venta</h5>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="bg-light p-3 rounded-3 mb-3 border">
+          <p class="d-flex justify-content-between mb-2"><span class="text-muted">Método de pago:</span><strong
+              id="conf-metodo" class="text-kudea-dark">—</strong></p>
+          <p class="d-flex justify-content-between mb-2"><span class="text-muted">Subtotal Bruto:</span><strong
+              id="conf-subtotal">0,00 €</strong></p>
+          <p class="d-flex justify-content-between mb-2 text-danger" id="conf-descuento-row" style="display:none;"><span
+              class="text-muted">Descuento aplicado:</span><strong id="conf-descuento">0,00 €</strong></p>
+          <p class="d-flex justify-content-between mb-2 border-bottom pb-2"><span class="text-muted">Subtotal
+              Neto:</span><strong id="conf-subtotal-neto">0,00 €</strong></p>
+          <p class="d-flex justify-content-between mb-2"><span class="text-muted">Desglose de Impuestos:</span><strong id="conf-iva">0,00 €</strong></p>
+          <div class="border-top pt-2 mt-2">
+            <p class="d-flex justify-content-between mb-0"><span class="fw-bold text-kudea-dark text-uppercase">Total a
+                Pagar:</span><strong id="conf-total" class="fs-4 text-kudea-dark">0,00 €</strong></p>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between mb-1 px-2">
+          <span class="text-muted">Importe entregado por el cliente:</span><strong id="conf-recibido">0,00 €</strong>
+        </div>
+        <div class="d-flex justify-content-between px-2">
+          <span class="text-muted fw-bold">A Devolver (Cambio):</span><strong id="conf-cambio"
+            class="fs-5 text-success">0,00 €</strong>
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0 justify-content-center pb-4">
+        <button class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-success rounded-pill px-5 fw-bold shadow" id="confirmarPagoBtn">
+          <i class="fas fa-print me-2"></i> Emitir Ticket
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ============================
+  // 📌 CONFIG
+  // ============================
+  // El IVA ahora se gestiona por artículo individualmente.
+
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+      const cookies = document.cookie.split(";");
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + "=")) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+  const csrftoken = getCookie("csrftoken");
+
+  // ============================
+  // 🧾 OBJETO TPV KUDEA
+  // ============================
+  const TPV = {
+    ticket: [],
+    metodoPagoSeleccionado: null,
+    ultimoRecibido: 0,
+    // ivaPorcentaje eliminado por ser global
+    descuento: 0,
+    layoutInvertido: false,
+
+    fmt(n) { return (n || 0).toFixed(2) + " €"; },
+    getSubtotalBruto() { return this.ticket.reduce((s, i) => s + i.precio * i.cantidad, 0); },
+    getSubtotalNeto() { return Math.max(0, this.getSubtotalBruto() - this.descuento); },
+    getIVA() {
+      const bruto = this.getSubtotalBruto();
+      if (bruto <= 0) return 0;
+      const tasaDescuento = this.descuento / bruto;
+      return this.ticket.reduce((sum, item) => {
+        const itemBruto = item.precio * item.cantidad;
+        const itemNeto = itemBruto * (1 - tasaDescuento);
+        return sum + (itemNeto * ((item.iva || 21) / 100));
+      }, 0);
+    },
+    getTotal() { return this.getSubtotalNeto() + this.getIVA(); },
+
+    addToTicket(id, nombre, precio, iva) {
+      // Parsear precio por si viene como string
+      precio = parseFloat(precio);
+      iva = parseFloat(iva || 21);
+      const i = this.ticket.findIndex(x => x.id === id);
+      if (i >= 0) this.ticket[i].cantidad++;
+      else this.ticket.push({ id, nombre, precio, iva, cantidad: 1 });
+      this.updateTicket();
+    },
+
+    updateTicket() {
+      const tbody = document.getElementById("ticket-list");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+
+      this.ticket.forEach(item => {
+        tbody.innerHTML += `
+        <tr>
+          <td><div class="text-truncate" style="max-width: 150px;" title="${item.nombre}">${item.nombre}</div></td>
+          <td class="text-center px-0">
+            <span class="badge bg-light text-dark border">${item.cantidad}</span>
+          </td>
+          <td class="text-end">${(item.precio * item.cantidad).toFixed(2)} €</td>
+          <td class="text-end">
+            <button class="btn btn-sm text-danger border-0" onclick="TPV.requestRemove(${item.id})">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </td>
+        </tr>`;
+      });
+
+      // Actualizar Textos
+      const subtotalBruto = this.getSubtotalBruto();
+      const subtotalNeto = this.getSubtotalNeto();
+      const iva = this.getIVA();
+      const totalOriginal = subtotalBruto + iva; // Simplificado para mostrar totales
+
+      // Mostrar subtotal bruto siempre arriba
+      document.getElementById("subtotal-ticket").textContent = this.fmt(subtotalBruto);
+      document.getElementById("iva-ticket").textContent = this.fmt(iva);
+
+      // Configurar layout estático (siempre visible)
+      if (this.descuento > 0) {
+        document.getElementById("descuento-ticket").textContent = "-" + this.fmt(this.descuento);
+        document.getElementById("descuento-container").classList.remove("text-muted");
+        document.getElementById("descuento-container").classList.add("text-danger");
+      } else {
+        document.getElementById("descuento-ticket").textContent = "0,00 €";
+        document.getElementById("descuento-container").classList.remove("text-danger");
+        document.getElementById("descuento-container").classList.add("text-muted");
+      }
+
+      document.getElementById("total-ticket").textContent = this.fmt(this.getTotal());
+    },
+
+    requestRemove(id) {
+      this.productoAEliminar = id;
+      const item = this.ticket.find(x => x.id === id);
+      if (item) {
+        document.getElementById("remove-product-name").textContent = item.nombre;
+      }
+      const myModal = new bootstrap.Modal(document.getElementById('confirmRemoveModal'));
+      myModal.show();
+    },
+
+    confirmRemove() {
+      if (!this.productoAEliminar) return;
+      this.ticket = this.ticket.filter(x => x.id !== this.productoAEliminar);
+      // Si quitamos artículos y el descuento supera al total, lo reseteamos por seguridad
+      if (this.getTotal() <= 0) this.descuento = 0;
+
+      this.productoAEliminar = null;
+      this.updateTicket();
+
+      // Fallback de cierre igual que en el descuento
+      const closeBtn = document.querySelector("#confirmRemoveModal .btn-outline-secondary");
+      if (closeBtn) closeBtn.click();
+    },
+
+    addNumber(n) {
+      const input = document.getElementById("importe");
+      if (!input) return;
+      if (n === "." && input.value.includes(".")) return;
+      // Evitar que el input se vuelva demasiado largo
+      if (input.value.length < 10) {
+        input.value += n;
+      }
+    },
+
+    clearAmount() {
+      document.getElementById("importe").value = "";
+    },
+
+    applyDiscount() {
+      const inputDesc = document.getElementById('descuentoInput').value;
+      // Cambiar comas por puntos por si acaso y parsear
+      let descValue = parseFloat(inputDesc.replace(",", "."));
+      if (isNaN(descValue) || descValue < 0) descValue = 0;
+
+      // Validar que el descuento no sea mayor al subtotal bruto
+      const maxDiscount = this.getSubtotalBruto();
+      if (descValue > maxDiscount && maxDiscount > 0) {
+        alert("El descuento no puede ser superior al subtotal del ticket.");
+        return;
+      }
+
+      this.descuento = descValue;
+      this.updateTicket();
+
+      // Cierre forzado y definitivo del modal y su sombra oscura (backdrop)
+      const modalEl = document.getElementById("discountModal");
+      modalEl.classList.remove('show');
+      modalEl.setAttribute('aria-hidden', 'true');
+      modalEl.style.display = 'none';
+
+      const backdrop = document.querySelector('.modal-backdrop');
+      if (backdrop) backdrop.remove();
+
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    },
+
+    selectPayment(card) {
+      document.querySelectorAll(".payment-card").forEach(c => c.classList.remove("selected"));
+      card.classList.add("selected");
+
+      this.metodoPagoSeleccionado = {
+        id: parseInt(card.dataset.id),
+        nombre: card.dataset.nombre,
+        aceptaCambio: card.dataset.acepta_cambio === "1"
+      };
+
+      if (!this.metodoPagoSeleccionado.aceptaCambio) {
+        document.getElementById("importe").value = this.getTotal().toFixed(2);
+      }
+    },
+
+    toggleLayout() {
+      const productos = document.getElementById("productos-section");
+      const ticket = document.getElementById("ticket-section");
+      const parent = document.getElementById("main-layout");
+
+      if (!productos || !ticket || !parent) return;
+
+      this.layoutInvertido = !this.layoutInvertido;
+
+      if (this.layoutInvertido) {
+        parent.insertBefore(ticket, productos);
+      } else {
+        parent.insertBefore(productos, ticket);
+      }
+    },
+
+    filterByCategory(catId, btn) {
+      // Marcar el botón activo
+      document.querySelectorAll(".btn-filter").forEach(b => b.classList.remove("active"));
+      if (btn) btn.classList.add("active");
+
+      // Mostrar u ocultar tarjetas de producto
+      const items = document.querySelectorAll("#productos-grid .product-item");
+      items.forEach(item => {
+        if (catId === "all" || item.dataset.categoria === catId) {
+          item.style.display = "";
+        } else {
+          item.style.display = "none";
+        }
+      });
+    },
+
+    showConfirm() {
+      if (!this.ticket.length) return alert("El ticket está vacío. Añade productos para poder cobrar.");
+      if (!this.metodoPagoSeleccionado) return alert("Por favor, selecciona un Método de Pago.");
+
+      let recibido = parseFloat((document.getElementById("importe").value || "0"));
+      const total = this.getTotal();
+
+      if (!this.metodoPagoSeleccionado.aceptaCambio) {
+        recibido = total;
+      } else if (recibido < total) {
+        return alert("El importe entregado (" + recibido.toFixed(2) + "€) es menor al total del ticket (" + total.toFixed(2) + "€).");
+      }
+
+      this.ultimoRecibido = recibido;
+      const cambio = this.metodoPagoSeleccionado.aceptaCambio ? (recibido - total) : 0;
+
+      document.getElementById("conf-metodo").textContent = this.metodoPagoSeleccionado.nombre;
+      document.getElementById("conf-subtotal").textContent = this.fmt(this.getSubtotalBruto());
+      document.getElementById("conf-subtotal-neto").textContent = this.fmt(this.getSubtotalNeto());
+      document.getElementById("conf-iva").textContent = this.fmt(this.getIVA());
+
+      const confDescRow = document.getElementById("conf-descuento-row");
+      if (this.descuento > 0) {
+        confDescRow.style.display = "flex";
+        document.getElementById("conf-descuento").textContent = "-" + this.fmt(this.descuento);
+        document.getElementById("conf-subtotal-neto").parentElement.style.display = "flex";
+      } else {
+        confDescRow.style.display = "none";
+        document.getElementById("conf-subtotal-neto").parentElement.style.display = "none";
+      }
+
+      document.getElementById("conf-total").textContent = this.fmt(total);
+      document.getElementById("conf-recibido").textContent = this.fmt(recibido);
+      document.getElementById("conf-cambio").textContent = this.fmt(cambio);
+
+      new bootstrap.Modal(document.getElementById("confirmPayModal")).show();
+    },
+
+    finalizarPago() {
+      // Deshabilitamos el botón durante el proceso
+      const btn = document.getElementById("confirmarPagoBtn");
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Procesando...';
+
+      const payload = {
+        ticket: this.ticket,
+        metodo_pago: this.metodoPagoSeleccionado ? this.metodoPagoSeleccionado.id : null,
+        recibido: this.ultimoRecibido,
+        descuento: this.descuento
+      };
+
+      fetch("{% url 'home_app:guardar_venta' %}", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrftoken
+        },
+        body: JSON.stringify(payload)
+      })
+        .then(async (response) => {
+          const data = await response.json().catch(() => ({}));
+
+          if (!response.ok) {
+            alert(data.error || "Error al procesar el cobro.");
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-print me-2"></i> Emitir Ticket';
+            return null;
+          }
+          return data;
+        })
+        .then((data) => {
+          if (!data) return;
+
+          // Éxito, reiniciar terminal
+          this.ticket = [];
+          this.metodoPagoSeleccionado = null;
+          this.descuento = 0;
+          document.getElementById("importe").value = "";
+          document.querySelectorAll(".payment-card").forEach(c => c.classList.remove("selected"));
+          this.updateTicket();
+
+          // Cerrar modal de confirmación usando el fallback
+          const confCloseBtn = document.querySelector("#confirmPayModal .btn-close");
+          if (confCloseBtn) confCloseBtn.click();
+
+          // Restaurar botón
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-print me-2"></i> Emitir Ticket';
+
+          // Mostrar alerta de éxito momentánea o redirigir
+          alert("¡Cobro realizado con éxito! Venta #" + data.codigo_venta);
+          // Redirigir opcionalmente al historial:
+          // window.location.href = "{% url 'home_app:lista_ventas' %}";
+        })
+        .catch((err) => {
+          console.error(err);
+          alert("Error de conexión al servidor.");
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-print me-2"></i> Emitir Ticket';
+        });
+    }
+  };
+
+  // ============================
+  // INIT
+  // ============================
+  document.addEventListener("DOMContentLoaded", () => {
+    const btnGuardar = document.getElementById("confirmarPagoBtn");
+    if (btnGuardar) {
+      btnGuardar.addEventListener("click", () => TPV.finalizarPago());
+    }
+  });
+</script>
+
+{% endblock %}

@@ -1,0 +1,608 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block head %}
+{{ block.super }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+  :root {
+    --k-primary: #457B9D; /* Kudea Medium */
+    --k-dark: #1D3557;    /* Kudea Dark */
+    --k-success: #10b981;
+    --k-danger: #E63946;  /* Kudea Danger */
+    --k-light: #A8DADC;   /* Kudea Light */
+    --k-slate-50: #f8fafc;
+    --k-slate-100: #f1f5f9;
+    --k-slate-200: #e2e8f0;
+    --k-slate-300: #cbd5e1;
+    --k-slate-400: #94a3b8;
+    --k-slate-500: #64748b;
+  }
+
+  body {
+    background-color: var(--k-slate-50);
+    font-family: 'Inter', sans-serif;
+  }
+
+  .k-card {
+    background: white;
+    border-radius: 20px;
+    border: 1px solid var(--k-slate-200);
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    overflow: hidden;
+  }
+
+  .k-card:hover {
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+  }
+
+  .k-kpi-card {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .k-kpi-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--k-slate-500);
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+  }
+
+  .k-kpi-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--k-dark);
+    margin: 8px 0;
+  }
+
+  .k-growth-indicator {
+    font-size: 0.85rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .k-growth-up { color: var(--k-success); }
+  .k-growth-down { color: var(--k-danger); }
+
+  .k-table-header {
+    background: var(--k-slate-100);
+    padding: 12px 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--k-slate-500);
+    border-bottom: 1px solid var(--k-slate-200);
+  }
+
+  .k-table th, .k-table td {
+    padding: 16px 20px;
+    vertical-align: middle;
+  }
+
+  .k-badge {
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .k-badge-success { background: #dcfce7; color: #166534; }
+  .k-badge-danger { background: #fee2e2; color: #991b1b; }
+  .k-badge-warning { background: #fef3c7; color: #92400e; }
+  .k-badge-info { background: #e0e7ff; color: #3730a3; }
+
+  .k-pill-btn {
+    border-radius: 30px;
+    padding: 8px 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+  }
+
+  .chart-wrapper {
+    min-height: 300px;
+    width: 100%;
+  }
+
+  .k-section-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--k-dark);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .user-rank-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--k-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.8rem;
+  }
+
+  .k-input-pro {
+    border: 1.5px solid var(--k-slate-200);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .k-input-pro:focus {
+    border-color: var(--k-primary);
+    box-shadow: 0 0 0 4px rgba(69, 123, 157, 0.1);
+    outline: none;
+  }
+
+  /* History list height control */
+  #history-container {
+    max-height: 480px; /* Alrededor de 6 filas */
+    overflow: hidden;
+    transition: max-height 0.4s ease-in-out;
+    position: relative;
+    border-bottom: 1px solid transparent;
+  }
+  
+  #history-container.expanded {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .history-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 100px;
+    background: linear-gradient(transparent, white 90%);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 15px;
+    pointer-events: none;
+  }
+
+  #history-container.expanded .history-overlay {
+    display: none;
+  }
+  
+  .btn-toggle-history {
+    pointer-events: auto;
+    background: white;
+    border: 1.5px solid var(--k-slate-200);
+    border-radius: 30px;
+    padding: 8px 24px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: var(--k-primary);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: all 0.2s;
+  }
+
+  .btn-toggle-history:hover {
+    transform: translateY(-2px);
+    background: var(--k-slate-50);
+    border-color: var(--k-primary);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-xl-5">
+
+  <!-- HEADER AREA -->
+  <div class="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-4">
+    <div>
+      <h1 class="fw-900 mb-1" style="color: var(--k-dark); letter-spacing: -0.04em;">Dashboard de Cashflow</h1>
+      <p class="text-slate-500 fw-500 mb-0">Análisis financiero y control de fugas en tiempo real</p>
+    </div>
+    <div class="d-flex gap-2 align-items-center">
+      <div class="bg-white p-1 rounded-pill shadow-sm border d-flex align-items-center">
+        <a href="?periodo=hoy" class="btn k-pill-btn {% if periodo == 'hoy' %}btn-dark text-white{% else %}btn-link text-decoration-none text-slate-500{% endif %}">Hoy</a>
+        <a href="?periodo=semana" class="btn k-pill-btn {% if periodo == 'semana' %}btn-dark text-white{% else %}btn-link text-decoration-none text-slate-500{% endif %}">Semana</a>
+        <a href="?periodo=mes" class="btn k-pill-btn {% if periodo == 'mes' %}btn-dark text-white{% else %}btn-link text-decoration-none text-slate-500{% endif %}">Mes</a>
+        <a href="?periodo=anio" class="btn k-pill-btn {% if periodo == 'anio' %}btn-dark text-white{% else %}btn-link text-decoration-none text-slate-500{% endif %}">Año</a>
+        <button type="button" class="btn k-pill-btn {% if periodo == 'custom' %}btn-dark text-white{% else %}btn-link text-decoration-none text-slate-500{% endif %}" onclick="toggleCustomFilter()">Personalizado</button>
+      </div>
+      
+      <div id="custom-filter-box" class="{% if periodo != 'custom' %}d-none{% endif %} bg-white p-2 rounded-4 shadow-sm border d-flex gap-2 align-items-center ms-2 animate__animated animate__fadeIn">
+        <form action="" method="get" class="d-flex gap-2 align-items-center mb-0">
+          <input type="hidden" name="periodo" value="custom">
+          <input type="date" name="start_date" class="form-control form-control-sm border-0 bg-light rounded-3" value="{{ request.GET.start_date }}">
+          <span class="text-slate-400 small fw-bold">al</span>
+          <input type="date" name="end_date" class="form-control form-control-sm border-0 bg-light rounded-3" value="{{ request.GET.end_date }}">
+          <button type="submit" class="btn btn-sm btn-primary rounded-3 px-3 fw-bold">Filtrar</button>
+        </form>
+      </div>
+
+      <button class="btn btn-primary rounded-pill px-4 fw-800 shadow-lg ms-3" style="background-color: var(--k-primary); border: none;" data-bs-toggle="modal" data-bs-target="#nuevoMovimientoModal">
+        <i class="fa fa-plus-circle me-2"></i> Nuevo Registro
+      </button>
+    </div>
+  </div>
+
+  <!-- KPI GRID -->
+  <div class="row g-4 mb-5">
+    <!-- Balance Total -->
+    <div class="col-xl-3 col-md-6">
+      <div class="k-card k-kpi-card h-100">
+        <div>
+          <span class="k-kpi-label">Balance Actual</span>
+          <div class="k-kpi-value">{{ saldo_total|floatformat:2 }} €</div>
+        </div>
+        <div class="k-growth-indicator">
+          <i class="fa fa-wallet opacity-50"></i> Total en todas las cuentas
+        </div>
+      </div>
+    </div>
+    <!-- Ingresos Mes -->
+    <div class="col-xl-3 col-md-6">
+      <div class="k-card k-kpi-card h-100">
+        <div>
+          <span class="k-kpi-label">Ingresos del Mes</span>
+          <div class="k-kpi-value text-success">+{{ ingresos_mes|floatformat:2 }} €</div>
+        </div>
+        <div class="k-growth-indicator {% if growth >= 0 %}k-growth-up{% else %}k-growth-down{% endif %}">
+          <i class="fa {% if growth >= 0 %}fa-arrow-trend-up{% else %}fa-arrow-trend-down{% endif %}"></i>
+          {{ growth|floatformat:1 }}% vs mes anterior
+        </div>
+      </div>
+    </div>
+    <!-- Gastos Mes -->
+    <div class="col-xl-3 col-md-6">
+      <div class="k-card k-kpi-card h-100">
+        <div>
+          <span class="k-kpi-label">Gastos del Mes</span>
+          <div class="k-kpi-value text-danger">-{{ gastos_mes|floatformat:2 }} €</div>
+        </div>
+        <div class="k-growth-indicator text-slate-400">
+          <i class="fa fa-receipt opacity-50"></i> {{ total_movimientos_paginated|default:page_obj.paginator.count }} registros este mes
+        </div>
+      </div>
+    </div>
+    <!-- Rendimiento Equipo (Resumen) -->
+    <div class="col-xl-3 col-md-6">
+      <div class="k-card k-kpi-card h-100" style="background: linear-gradient(135deg, var(--k-dark) 0%, #2b3a4f 100%); border-color: rgba(255,255,255,0.1);">
+        <div>
+          <span class="k-kpi-label" style="color: rgba(255,255,255,0.7) !important;">Eficiencia Operativa</span>
+          <div class="k-kpi-value text-white" style="color: white !important;">94.2%</div>
+        </div>
+        <div class="k-growth-indicator" style="color: rgba(255,255,255,0.7) !important;">
+          <i class="fa fa-shield-check text-success me-1"></i> Sin desviaciones críticas
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARTS AREA -->
+  <div class="row g-4 mb-5">
+    <div class="col-lg-7">
+      <div class="k-card p-4 h-100">
+        <h5 class="k-section-title"><i class="fa fa-chart-line" style="color: var(--k-primary);"></i> Ingresos vs Gastos Semanal</h5>
+        <div class="chart-wrapper">
+          <canvas id="weeklyChart"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-5">
+      <div class="k-card p-4 h-100">
+        <h5 class="k-section-title"><i class="fa fa-chart-pie text-warning"></i> Distribución de Gastos</h5>
+        <div class="chart-wrapper">
+          <canvas id="expensesDonutChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN TABLES ROW -->
+  <div class="row g-4">
+    <!-- RECENT MOVEMENTS -->
+    <div class="col-lg-8">
+      <div class="k-card h-100">
+        <div class="p-4 bg-white d-flex justify-content-between align-items-center">
+          <h5 class="k-section-title mb-0"><i class="fa fa-clock" style="color: var(--k-primary);"></i> Historial de Movimientos</h5>
+          <div class="text-slate-400 small fw-600">{{ page_obj.paginator.count }} registros totales</div>
+        </div>
+        
+        <div id="history-container">
+          <div class="table-responsive">
+            <table class="table k-table table-hover mb-0">
+              <thead>
+                <tr>
+                  <th class="k-table-header">Fecha / Usuario</th>
+                  <th class="k-table-header">Concepto / Canal</th>
+                  <th class="k-table-header">Cuenta</th>
+                  <th class="k-table-header text-end">Importe</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for m in movimientos %}
+                <tr>
+                  <td>
+                    <div class="fw-800" style="color: var(--k-dark);">{{ m.fecha|date:"d/m/Y" }}</div>
+                    <div class="small fw-600 text-slate-400">{{ m.created_by.first_name|default:m.created_by.username }}</div>
+                  </td>
+                  <td>
+                    <div class="fw-700" style="color: var(--k-dark);">{{ m.concepto }}</div>
+                    <span class="badge rounded-pill border fw-800" style="font-size: 0.65rem; background-color: var(--k-slate-100); color: var(--k-dark); border-color: var(--k-slate-300) !important;">
+                      {{ m.get_canal_operacion_display|upper }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="k-badge k-badge-info" style="background-color: var(--k-light); color: var(--k-dark);">{{ m.cuenta.nombre }}</div>
+                  </td>
+                  <td class="text-end">
+                    <div class="fw-900 {% if m.tipo == 'ingreso' %}text-success{% elif m.tipo == 'gasto' %}text-danger{% else %}text-warning{% endif %}" style="font-size: 1.05rem; {% if m.tipo == 'gasto' %}color: var(--k-danger) !important;{% endif %}">
+                      {% if m.tipo == 'ingreso' %}+{% elif m.tipo == 'gasto' %}-{% else %}±{% endif %}{{ m.cantidad|floatformat:2 }} €
+                    </div>
+                    <div class="small fw-700 text-slate-400 text-uppercase" style="font-size: 0.6rem;">{{ m.get_tipo_display }}</div>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="4" class="text-center py-5">
+                    <i class="fa fa-inbox fa-3x text-slate-200 mb-3"></i>
+                    <p class="text-slate-400 fw-600">No se encontraron movimientos para este periodo</p>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% if movimientos|length > 6 %}
+          <div class="history-overlay">
+            <button class="btn-toggle-history" onclick="toggleHistory()">Ver todos los registros <i class="fa fa-chevron-down ms-1"></i></button>
+          </div>
+          {% endif %}
+        </div>
+        
+        <!-- PAGINATION -->
+        {% if is_paginated %}
+        <div class="p-4 border-top">
+          <nav>
+            <ul class="pagination pagination-sm justify-content-center mb-0">
+              {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link border-0" href="?page={{ page_obj.previous_page_number }}{% if request.GET.periodo %}&periodo={{ request.GET.periodo }}{% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}{% endif %}"><i class="fa fa-chevron-left"></i></a></li>
+              {% endif %}
+              <li class="page-item active"><span class="page-link border-0 rounded-pill mx-2" style="background-color: var(--k-primary);">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+              {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link border-0" href="?page={{ page_obj.next_page_number }}{% if request.GET.periodo %}&periodo={{ request.GET.periodo }}{% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}{% endif %}"><i class="fa fa-chevron-right"></i></a></li>
+              {% endif %}
+            </ul>
+          </nav>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- SIDEBAR: CIERRES Y RENDIMIENTO -->
+    <div class="col-lg-4">
+      <!-- CIERRES DE CAJA -->
+      <div class="k-card p-4 mb-4">
+        <h5 class="k-section-title"><i class="fa fa-lock" style="color: var(--k-dark);"></i> Últimos Cierres</h5>
+        {% for c in ultimos_cierres %}
+        <div class="d-flex justify-content-between align-items-center mb-3 p-3 rounded-4 bg-light">
+          <div>
+            <div class="fw-800" style="color: var(--k-dark); font-size: 0.85rem;">Cierre #{{ c.id }}</div>
+            <div class="small text-slate-500">{{ c.fecha_fin|date:"d M, Y" }}</div>
+          </div>
+          <div class="text-end">
+            <div class="fw-800" style="color: var(--k-dark); font-size: 0.95rem;">{{ c.total_ventas }}€</div>
+            <span class="badge bg-success bg-opacity-20 text-success fw-800" style="font-size: 0.6rem;">CUADRADO</span>
+          </div>
+        </div>
+        {% empty %}
+        <p class="small text-muted text-center py-3">No hay cierres registrados aún.</p>
+        {% endfor %}
+      </div>
+
+      <!-- TEAM RANKING -->
+      <div class="k-card p-4">
+        <h5 class="k-section-title"><i class="fa fa-award text-warning"></i> Rendimiento por Usuario</h5>
+        {% for up in user_performance %}
+        <div class="d-flex align-items-center mb-3">
+          <div class="user-rank-avatar me-3">{{ up.username|first|upper }}</div>
+          <div class="flex-grow-1">
+            <div class="fw-800" style="color: var(--k-dark); font-size: 0.85rem;">{{ up.first_name|default:up.username }}</div>
+            <div class="progress" style="height: 4px; background: var(--k-slate-100);">
+              <div class="progress-bar" style="width: 85%; background-color: var(--k-primary);"></div>
+            </div>
+          </div>
+          <div class="ms-3 fw-900" style="color: var(--k-dark);">{{ up.total_ventas|floatformat:0 }}€</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: NUEVO MOVIMIENTO -->
+<div class="modal fade" id="nuevoMovimientoModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0" style="border-radius: 28px;">
+      <div class="modal-header border-0 p-4 pb-0">
+        <h5 class="fw-900" style="color: var(--k-dark);"><i class="fa fa-exchange-alt me-2" style="color: var(--k-primary);"></i>Registrar Movimiento</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <form id="movimientoForm">
+          {% csrf_token %}
+          <div class="mb-4">
+            <label class="k-kpi-label mb-2">Concepto de Operación</label>
+            <input type="text" name="concepto" class="form-control k-input-pro" placeholder="Ej: Compra de material, Pago factura #123" required>
+          </div>
+
+          <div class="row g-3 mb-4">
+            <div class="col-6">
+              <label class="k-kpi-label mb-2">Tipo</label>
+              <select name="tipo" class="form-select k-input-pro" required>
+                <option value="ingreso">📈 Ingreso (+)</option>
+                <option value="gasto">📉 Gasto (-)</option>
+                <option value="ajuste">⚖️ Ajuste (±)</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="k-kpi-label mb-2">Monto (€)</label>
+              <input type="number" step="0.01" name="cantidad" class="form-control k-input-pro" placeholder="0.00" required>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-4">
+            <div class="col-6">
+              <label class="k-kpi-label mb-2">Canal de Operación</label>
+              <select name="canal_operacion" class="form-select k-input-pro" required>
+                {% for code, label in canales %}
+                <option value="{{ code }}">{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="k-kpi-label mb-2">Cuenta</label>
+              <select name="cuenta" class="form-select k-input-pro" required>
+                {% for cuenta in cuentas %}
+                  <option value="{{ cuenta.id }}">{{ cuenta.nombre }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <button type="button" class="btn w-100 py-3 rounded-4 fw-800 text-white shadow-lg" 
+                  style="background: var(--k-dark); border: none;" id="guardarMovimientoBtn">
+            Procesar Transacción <i class="fa fa-bolt ms-2 opacity-50"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  Chart.defaults.font.family = "'Inter', sans-serif";
+  Chart.defaults.color = "#64748b";
+
+  // --- WEEKLY BAR CHART ---
+  const weeklyCtx = document.getElementById('weeklyChart');
+  if (weeklyCtx) {
+    new Chart(weeklyCtx.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: {{ chart_bar_labels|safe }},
+        datasets: [
+          {
+            label: 'Ingresos',
+            data: {{ chart_bar_ingresos|safe }},
+            backgroundColor: '#10b981',
+            borderRadius: 6,
+            barPercentage: 0.6,
+          },
+          {
+            label: 'Gastos',
+            data: {{ chart_bar_gastos|safe }},
+            backgroundColor: '#E63946',
+            borderRadius: 6,
+            barPercentage: 0.6,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 6, font: { weight: 'bold' } } }
+        },
+        scales: {
+          x: { grid: { display: false }, border: { display: false } },
+          y: { grid: { color: '#f1f5f9' }, border: { display: false }, ticks: { callback: v => v + '€' } }
+        }
+      }
+    });
+  }
+
+  // --- EXPENSES DONUT CHART ---
+  const donutCtx = document.getElementById('expensesDonutChart');
+  if (donutCtx) {
+    new Chart(donutCtx.getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: {{ chart_donut_labels|safe }},
+        datasets: [{
+          data: {{ chart_donut_data|safe }},
+          backgroundColor: ['#457B9D', '#10b981', '#f59e0b', '#E63946', '#1D3557'],
+          borderWidth: 0,
+          weight: 0.5
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '75%',
+        plugins: {
+          legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true, boxWidth: 6, font: { weight: 'bold' } } }
+        }
+      }
+    });
+  }
+
+  // --- AJAX SUBMIT ---
+  const guardarBtn = document.getElementById('guardarMovimientoBtn');
+  const form = document.getElementById('movimientoForm');
+
+  if (guardarBtn) {
+    guardarBtn.addEventListener('click', function() {
+      if (!form.checkValidity()) { form.reportValidity(); return; }
+      
+      guardarBtn.disabled = true;
+      guardarBtn.innerHTML = '<i class="fa fa-spinner fa-spin me-2"></i> Procesando...';
+
+      fetch("{% url 'cashflow:crear_movimiento_ajax' %}", {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value }
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) { 
+          location.reload(); 
+        } else { 
+          alert('Error: ' + data.error); 
+          guardarBtn.disabled = false;
+          guardarBtn.innerHTML = 'Procesar Transacción <i class="fa fa-bolt ms-2 opacity-50"></i>';
+        }
+      });
+    });
+  }
+});
+
+function toggleCustomFilter() {
+  const box = document.getElementById('custom-filter-box');
+  box.classList.toggle('d-none');
+}
+
+function toggleHistory() {
+  const container = document.getElementById('history-container');
+  const btn = document.querySelector('.btn-toggle-history');
+  container.classList.toggle('expanded');
+  
+  if (container.classList.contains('expanded')) {
+    btn.innerHTML = 'Ver menos <i class="fa fa-chevron-up ms-1"></i>';
+  } else {
+    btn.innerHTML = 'Ver todos los registros <i class="fa fa-chevron-down ms-1"></i>';
+  }
+}
+</script>
+{% endblock %}

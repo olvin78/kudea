@@ -1,0 +1,167 @@
+{% extends 'home/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4 text-kudea"><i class="bi bi-file-earmark-plus me-2"></i> Nueva Factura</h2>
+
+    <form method="post" class="bg-white p-4 rounded shadow-sm">
+        {% csrf_token %}
+
+        <!-- === Datos del Cliente === -->
+        <div class="mb-5">
+            <h5 class="mb-4 text-kudea border-bottom pb-2">
+                <i class="bi bi-person-circle me-2"></i>Datos del Cliente
+            </h5>
+
+            <div class="row g-4">
+                {% for field in form %}
+                <div class="col-md-4 mb-3">
+                    <label for="{{ field.id_for_label }}" class="form-label fw-bold small text-muted">
+                        {{ field.label }}
+                        {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                    </label>
+                    {% if field.widget.input_type == "select" %}
+                        <select name="{{ field.html_name }}" id="{{ field.id_for_label }}" class="form-select kudea-field">
+                            {% for val, txt in field.field.choices %}
+                                <option value="{{ val }}"{% if field.value == val %} selected{% endif %}>{{ txt }}</option>
+                            {% endfor %}
+                        </select>
+                    {% elif field.field.widget.input_type == "textarea" %}
+                        <textarea name="{{ field.html_name }}" id="{{ field.id_for_label }}" class="form-control kudea-field">{{ field.value }}</textarea>
+                    {% else %}
+                        <input
+                            type="{{ field.field.widget.input_type }}"
+                            name="{{ field.html_name }}"
+                            id="{{ field.id_for_label }}"
+                            value="{{ field.value|default_if_none:'' }}"
+                            class="form-control kudea-field"
+                        >
+                    {% endif %}
+
+                    {% if field.help_text %}
+                        <div class="form-text small text-muted">{{ field.help_text }}</div>
+                    {% endif %}
+                    {% if field.errors %}
+                        <div class="invalid-feedback d-block small">{{ field.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- === Artículos === -->
+        <hr class="my-4 border-kudea">
+        <div class="mb-5">
+            <h5 class="mb-4 text-kudea border-bottom pb-2">
+                <i class="bi bi-cart-plus me-2"></i>Artículos
+            </h5>
+
+            {{ factura_items.management_form }}
+
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead class="bg-kudea text-white">
+                        <tr>
+                            <th>Producto</th>
+                            <th>Descripción</th>
+                            <th>Ref.</th>
+                            <th>Cantidad</th>
+                            <th>U.M.</th>
+                            <th>P. Unitario</th>
+                            <th>Desc. %</th>
+                            <th>IVA</th>
+                            <th>Notas</th>
+                            <th>Eliminar</th>
+                        </tr>
+                    </thead>
+                    <tbody id="items-container">
+                        {% for form in factura_items.forms %}
+                        <tr>
+                            {% for field in form.visible_fields %}
+                            <td>
+                                {% if field.widget.input_type == "select" %}
+                                    <select name="{{ field.html_name }}" id="{{ field.id_for_label }}" class="form-select kudea-field">
+                                        {% for val, txt in field.field.choices %}
+                                            <option value="{{ val }}"{% if field.value == val %} selected{% endif %}>{{ txt }}</option>
+                                        {% endfor %}
+                                    </select>
+                                {% elif field.field.widget.input_type == "textarea" %}
+                                    <textarea name="{{ field.html_name }}" id="{{ field.id_for_label }}" class="form-control kudea-field">{{ field.value }}</textarea>
+                                {% else %}
+                                    <input
+                                        type="{{ field.field.widget.input_type }}"
+                                        name="{{ field.html_name }}"
+                                        id="{{ field.id_for_label }}"
+                                        value="{{ field.value|default_if_none:'' }}"
+                                        class="form-control kudea-field"
+                                    >
+                                {% endif %}
+                                {{ field.errors }}
+                            </td>
+                            {% endfor %}
+                            <td>{{ form.DELETE }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <button type="button" id="add-item" class="btn btn-sm btn-kudea-outline mt-3">
+                <i class="bi bi-plus-circle"></i> Añadir artículo
+            </button>
+        </div>
+
+        <!-- === Acciones === -->
+        <div class="d-flex justify-content-between mt-5 pt-3 border-top">
+            <a href="{% url 'invoice_app:invoice_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle me-1"></i> Cancelar
+            </a>
+            <button type="submit" class="btn btn-kudea">
+                <i class="bi bi-check-circle me-1"></i> Guardar Factura
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+    .kudea-field {
+        border: 1px solid #ced4da;
+        border-radius: 0.3rem;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.95rem;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .kudea-field:focus {
+        border-color: #457B9D;
+        box-shadow: 0 0 0 0.2rem rgba(69, 123, 157, 0.25);
+        outline: none;
+    }
+
+    .bg-kudea { background-color: #457B9D !important; }
+    .text-kudea { color: #1D3557; }
+    .border-kudea { border-color: #1D3557 !important; }
+
+    .btn-kudea {
+        background-color: #1D3557;
+        color: white;
+        border: none;
+    }
+
+    .btn-kudea:hover {
+        background-color: #163049;
+        color: white;
+    }
+
+    .btn-kudea-outline {
+        color: #1D3557;
+        border: 1px solid #1D3557;
+    }
+
+    .btn-kudea-outline:hover {
+        background-color: #1D3557;
+        color: white;
+    }
+</style>
+{% endblock %}

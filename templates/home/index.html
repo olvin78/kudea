@@ -1,124 +1,231 @@
 {% extends "home/base.html" %}
+{% load static %}
 
-{% block title %}Página de Inicio{% endblock %}
+{% block title %}TPV - Punto de Venta{% endblock %}
 
 {% block head %}
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" href="{% static 'css/index.css' %}">
 
+<style>
+  :root {
+    --kudea-dark: #1D3557;
+    --kudea-medium: #457B9D;
+    --kudea-light: #A8DADC;
+    --kudea-accent: #F1FAEE;
+  }
+
+  .btn-outline-kudea {
+    border: 2px solid var(--kudea-medium);
+    color: var(--kudea-medium);
+    font-weight: 500;
+  }
+  .btn-outline-kudea:hover {
+    background-color: var(--kudea-medium);
+    color: white;
+  }
+
+  .bg-kudea {
+    background-color: var(--kudea-medium) !important;
+    color: white !important;
+  }
+
+  .producto-card-custom {
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+  }
+
+  .producto-card-custom:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+  }
+
+  .payment-card.selected {
+    border: 2px solid var(--kudea-medium);
+    background-color: #f1faff;
+    box-shadow: 0 0 10px rgba(69, 123, 157, 0.3);
+  }
+
+  .payment-card:hover {
+    transform: scale(1.03);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Estilos para el cambio de posición */
+  #tpv-layout {
+    display: flex;
+    flex-wrap: wrap;
+    transition: all 0.3s ease;
+  }
+
+  #products-column, #ticket-column {
+    transition: all 0.3s ease;
+  }
+
+  #tpv-layout.reverse .order-lg-1 {
+    order: 2 !important;
+  }
+
+  #tpv-layout.reverse .order-lg-2 {
+    order: 1 !important;
+  }
+
+  /* Mejoras para el scroll */
+  .table-responsive {
+    scrollbar-width: thin;
+    scrollbar-color: var(--kudea-medium) var(--kudea-accent);
+  }
+
+  .table-responsive::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .table-responsive::-webkit-scrollbar-thumb {
+    background-color: var(--kudea-medium);
+    border-radius: 3px;
+  }
+</style>
 {% endblock %}
 
 {% block content %}
-    <!-- Contenido principal -->
-    <div class="main-content collapsed" id="main-content">
+<div class="container mb-4">
+  <div class="row g-3 justify-content-center">
 
-      <!-- Filtros de tickets -->
-      <div class="bg-body-tertiary border-bottom px-4 py-3 mb-4 shadow-sm">
-        <div class="d-flex flex-wrap align-items-center gap-2">
+    <div class="col-6 col-md-4 col-lg-3">
+      <a href="{% url 'home_app:lista_productos' %}" class="btn btn-outline-kudea w-100 py-3 d-flex justify-content-center align-items-center gap-2 shadow-sm rounded-4">
+        <i class="fas fa-th fa-lg text-primary"></i>
+        <span>Productos</span>
+      </a>
+    </div>
 
-          <button class="btn btn-primary">
-            Tickets abiertos <span class="badge bg-light text-dark ms-1">49</span>
-          </button>
+    <div class="col-6 col-md-4 col-lg-3">
+      <a href="#" onclick="TPV.processPayment()" class="btn btn-outline-kudea w-100 py-3 d-flex justify-content-center align-items-center gap-2 shadow-sm rounded-4">
+        <i class="fas fa-credit-card fa-lg text-primary"></i>
+        <span>Cobrar</span>
+      </a>
+    </div>
 
-          <button class="btn btn-outline-primary">
-            Asignados a mí <span class="badge bg-light text-dark ms-1">46</span>
-          </button>
+    <div class="col-6 col-md-4 col-lg-3">
+      <a href="{% url 'home_app:lista_ventas' %}" class="btn btn-outline-kudea w-100 py-3 d-flex justify-content-center align-items-center gap-2 shadow-sm rounded-4">
+        <i class="fas fa-clock fa-lg text-primary"></i>
+        <span>Historial</span>
+      </a>
+    </div>
 
-          <button class="btn btn-outline-primary">
-            Asignados a otros <span class="badge bg-light text-dark ms-1">3</span>
-          </button>
+    <div class="col-6 col-md-4 col-lg-3">
+      <a href="#" class="btn btn-outline-kudea w-100 py-3 d-flex justify-content-center align-items-center gap-2 shadow-sm rounded-4">
+        <i class="fas fa-cash-register fa-lg text-primary"></i>
+        <span>Arqueo</span>
+      </a>
+    </div>
 
-          <button class="btn btn-outline-primary">
-            Sin asignar <span class="badge bg-light text-dark ms-1">0</span>
-          </button>
+    <div class="col-6 col-md-4 col-lg-3">
+      <a href="#" onclick="TPV.mostrarResumenDia()" class="btn btn-outline-kudea w-100 py-3 d-flex justify-content-center align-items-center gap-2 shadow-sm rounded-4">
+        <i class="fas fa-chart-bar fa-lg text-primary"></i>
+        <span>Resumen</span>
+      </a>
+    </div>
 
-          <button class="btn btn-outline-success">
-            Marcados <span class="badge bg-light text-dark ms-1">1</span>
-          </button>
+    <div class="col-6 col-md-4 col-lg-3">
+      <a href="#" data-bs-toggle="modal" data-bs-target="#discountModal" class="btn btn-outline-kudea w-100 py-3 d-flex justify-content-center align-items-center gap-2 shadow-sm rounded-4">
+        <i class="fas fa-percent fa-lg text-primary"></i>
+        <span>Descuento</span>
+      </a>
+    </div>
 
-          <button class="btn btn-outline-warning">
-            Próximos a vencer <span class="badge bg-light text-dark ms-1">0</span>
-          </button>
+    <div class="col-6 col-md-4 col-lg-3">
+      <a href="#" data-bs-toggle="modal" data-bs-target="#settingsModal" class="btn btn-outline-kudea w-100 py-3 d-flex justify-content-center align-items-center gap-2 shadow-sm rounded-4">
+        <i class="fas fa-cog fa-lg text-primary"></i>
+        <span>Configuración</span>
+      </a>
+    </div>
 
-          <button class="btn btn-outline-danger">
-            Vencidos <span class="badge bg-light text-dark ms-1">2</span>
-          </button>
+    <div class="col-6 col-md-4 col-lg-3">
+      <button onclick="TPV.toggleLayout()" class="btn btn-outline-kudea w-100 py-3 d-flex justify-content-center align-items-center gap-2 shadow-sm rounded-4">
+        <i class="fas fa-arrows-left-right fa-lg text-primary"></i>
+        <span>Cambiar posición</span>
+      </button>
+    </div>
 
-          <div class="ms-auto">
-            <div class="form-check d-inline-block">
-              <input class="form-check-input" type="checkbox" id="autoReload" />
-              <label class="form-check-label text-primary" for="autoReload">
-                Recargar automáticamente
-              </label>
-            </div>
-          </div>
-        </div>
+  </div>
+</div>
+
+
+
+
+  <!-- SECCIÓN 1 - PRESENTACIÓN CON CÍRCULO -->
+<section class="py-5" style="background:white; position:relative; overflow:hidden;">
+  <div class="container">
+    <div class="row align-items-center">
+      
+      <!-- Texto -->
+      <div class="col-md-6 p-4">
+        <h2 class="fw-bold" style="color:var(--kudea-dark);">Bienvenido a KUDEA</h2>
+        <p class="lead" style="color:#444;">
+          Gestiona tu negocio con una plataforma moderna, diseñada para que gerentes, empleados y RRHH 
+          trabajen de forma conectada y sin complicaciones.
+        </p>
       </div>
-
-      <!-- Tabla de Tickets -->
-      <div class="card border-0 shadow-sm rounded-3">
-        <div class="table-responsive">
-          <table class="table table-hover table-bordered align-middle mb-0">
-            <thead style="background-color: #195c96;" class="text-white text-uppercase small">
-              <tr>
-                <th style="width: 40px;"><input type="checkbox" class="form-check-input" /></th>
-                <th>ID</th>
-                <th>Actualizado</th>
-                <th>Cliente</th>
-                <th>Asunto</th>
-                <th>Estado</th>
-                <th>Última respuesta</th>
-                <th>Prioridad</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr class="bg-white">
-                <td><input type="checkbox" class="form-check-input" /></td>
-                <td><a href="#">RAA-J7R-7GUR</a></td>
-                <td>26 Feb 25</td>
-                <td>Demo Customer</td>
-                <td><a href="#"><i data-lucide="user" class="me-1" style="width:14px;"></i> testLT</a></td>
-                <td><span class="text-primary">En curso</span></td>
-                <td>Demo Customer</td>
-                <td><span class="badge bg-primary-subtle text-primary">Baja</span></td>
-              </tr>
-              <tr class="bg-light">
-                <td><input type="checkbox" class="form-check-input" /></td>
-                <td><a href="#">JUA-D44-JHJQ</a></td>
-                <td>23 Feb 25</td>
-                <td>Demo Customer</td>
-                <td><a href="#"><i data-lucide="user" class="me-1" style="width:14px;"></i> hola</a></td>
-                <td><span class="text-primary">En curso</span></td>
-                <td>Hesk Demo</td>
-                <td><span class="badge bg-primary-subtle text-primary">Baja</span></td>
-              </tr>
-              <tr class="bg-white">
-                <td><input type="checkbox" class="form-check-input" /></td>
-                <td><a href="#">8T3-MPW-4P27</a></td>
-                <td>07 Feb 25</td>
-                <td>123</td>
-                <td><a href="#"><i data-lucide="user" class="me-1" style="width:14px;"></i> 123</a></td>
-                <td><span class="text-primary">En curso</span></td>
-                <td>123</td>
-                <td><span class="badge bg-primary-subtle text-primary">Baja</span></td>
-              </tr>
-              <!-- Añade más filas igual -->
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Paginación -->
-        <div class="text-center py-3 bg-body-secondary small">
-          <nav>
-            <ul class="pagination justify-content-center mb-2">
-              <li class="page-item active"><a class="page-link" href="#">1</a></li>
-              <li class="page-item"><a class="page-link" href="#">2</a></li>
-              <li class="page-item"><a class="page-link" href="#">3</a></li>
-              <li class="page-item"><a class="page-link" href="#">4</a></li>
-              <li class="page-item"><a class="page-link" href="#">5</a></li>
-            </ul>
-          </nav>
-          <div class="text-muted">Número de tickets: 49 • Número de páginas: 5</div>
+      
+      <!-- Imagen dentro de un círculo -->
+      <div class="col-md-6 d-flex justify-content-center">
+        <div style="width:300px; height:300px; border-radius:50%; background:var(--kudea-light); display:flex; align-items:center; justify-content:center; box-shadow:0 0 20px rgba(0,0,0,0.1);">
+          <img src="https://illustrations.popsy.co/violet/remote-work.svg" alt="Ilustración KUDEA" style="width:70%; border-radius:50%;">
         </div>
       </div>
 
     </div>
+  </div>
+</section>
+
+<!-- SECCIÓN 2 - INFORMACIÓN Y BLOQUES -->
+<section class="py-5" style="background:var(--kudea-accent);">
+  <div class="container text-center">
+    <h3 class="fw-bold mb-4" style="color:var(--kudea-dark);">¿Por qué usar KUDEA?</h3>
+    <p class="mb-5" style="max-width:600px; margin:auto; color:#555;">
+      KUDEA centraliza toda la información de tu empresa, ofreciendo soluciones para facturación, inventario, 
+      reportes, recursos humanos y soporte, en una interfaz clara y accesible.
+    </p>
+
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="p-4 bg-white shadow rounded-4">
+          <img src="https://illustrations.popsy.co/violet/customer-support.svg" style="width:100px;" class="mb-3">
+          <h5 class="fw-bold">Reportes Inteligentes</h5>
+          <p>Visualiza métricas en tiempo real y toma mejores decisiones.</p>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="p-4 bg-white shadow rounded-4">
+          <img src="https://illustrations.popsy.co/violet/customer-support.svg" style="width:100px;" class="mb-3">
+          <h5 class="fw-bold">Colaboración</h5>
+          <p>Gerentes, RRHH y trabajadores conectados en un solo entorno.</p>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="p-4 bg-white shadow rounded-4">
+          <img src="https://illustrations.popsy.co/violet/customer-support.svg" style="width:100px;" class="mb-3">
+          <h5 class="fw-bold">Soporte 24/7</h5>
+          <p>Asistencia inmediata y resolución de incidencias sin esperas.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script>
+  gsap.from("section", {opacity:0, y:30, duration:1, stagger:0.3});
+  gsap.from("h2, h3", {opacity:0, y:-20, duration:1, delay:0.3});
+</script>
+
+
+
 {% endblock %}

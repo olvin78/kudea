@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Fichaje por QR</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 0 20px;
+      margin: 0;
+      text-align: center;
+    }
+
+    .container {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 30px;
+      max-width: 420px;
+      width: 100%;
+    }
+
+    h1 {
+      color: #2c3e50;
+      margin-bottom: 10px;
+    }
+
+    .clock {
+      font-size: 2rem;
+      color: #2c3e50;
+      margin: 1rem 0;
+    }
+
+    .qr-reader {
+      width: 100%;
+      border: 2px solid #3498db;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+
+    #qr-video {
+      width: 100%;
+      display: block;
+    }
+
+    .instructions {
+      color: #7f8c8d;
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Sistema de Fichaje</h1>
+    <div class="clock" id="clock">--:--:--</div>
+    <div class="qr-reader">
+      <video id="qr-video" playsinline></video>
+    </div>
+    <div class="instructions">Enfoca el código QR para fichar</div>
+  </div>
+
+  <script>
+    function updateClock() {
+      const now = new Date();
+      const time = now.toLocaleTimeString('es-ES', { hour12: false });
+      document.getElementById('clock').textContent = time;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+  
+    const video = document.getElementById('qr-video');
+    const canvas = document.createElement('canvas');
+    const canvasContext = canvas.getContext('2d');
+  
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+      .then(function (stream) {
+        video.srcObject = stream;
+        video.play();
+  
+        const interval = setInterval(() => {
+          if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvasContext.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = canvasContext.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height);
+  
+            if (code && code.data.trim() !== "") {
+              clearInterval(interval);
+              const scanned = code.data.trim();
+              video.pause();
+  
+              // ✅ Si es una URL completa, redirige directamente
+              if (scanned.startsWith('http://') || scanned.startsWith('https://')) {
+                window.location.href = scanned;
+              } else {
+                // ✅ Si es solo el token, construye la URL
+                window.location.href = `/attendance/fichar/${scanned}/`;
+              }
+            }
+          }
+        }, 300);
+      })
+      .catch(function (err) {
+        alert("No se pudo acceder a la cámara. Permite el acceso.");
+        console.error("Error cámara:", err);
+      });
+  </script>
+  

@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cierre de Caja — {{ tipo }} | Kudea</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+  :root {
+    --kudea-dark:   #123954;
+    --kudea-mid:    #195c96;
+    --kudea-deep:   #0f2f47;
+    --kudea-light:  #eaf2f7;
+    --kudea-bg:     #f0f5fa;
+    --border:       #dde6ef;
+    --text:         #1e293b;
+    --muted:        #64748b;
+    --green:        #16a34a;
+    --green-bg:     #dcfce7;
+    --blue:         #1d4ed8;
+    --blue-bg:      #dbeafe;
+    --violet:       #7c3aed;
+    --violet-bg:    #ede9fe;
+    --red:          #dc2626;
+    --red-bg:       #fee2e2;
+    --amber:        #d97706;
+    --amber-bg:     #fef3c7;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    background: var(--kudea-bg);
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 1.5rem 2rem;
+  }
+
+  /* ─── FAB / Botones flotantes ──────────────────────────── */
+  .fab-bar {
+    position: fixed;
+    top: 1.5rem;
+    right: 2.5rem;
+    display: flex;
+    gap: 0.75rem;
+    z-index: 9999;
+  }
+  .fab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.7rem 1.4rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: inherit;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  }
+  .fab:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
+  .fab-print { background: var(--kudea-dark); color: #fff; }
+  .fab-print:hover { background: var(--kudea-deep); }
+  .fab-save { background: var(--blue); color: #fff; }
+  .fab-save:hover { background: #1e3a8a; }
+  .fab-back  { background: #fff; color: var(--kudea-dark); border: 1px solid var(--border); }
+  .fab-back:hover { background: var(--kudea-light); }
+
+  /* ─── Mensajes (Toast) ──────────────────────────────────── */
+  .toast-container {
+    position: fixed;
+    top: 5rem; /* Moved from bottom to top so it's visible with the fixed bar */
+    right: 2.5rem;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .toast {
+    background: #10b981;
+    color: white;
+    padding: 0.85rem 1.75rem;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.25);
+    animation: slideInRight 0.3s ease, fadeOut 0.5s ease 4s forwards;
+  }
+  @keyframes slideInRight { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
+
+  /* ─── Documento ─────────────────────────────────────────── */
+  .cierre-doc {
+    max-width: 1000px;
+    margin: 4.5rem auto 2rem; /* Added top margin to clear fixed buttons */
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 12px 50px rgba(18,57,84,0.12);
+    position: relative;
+  }
+
+  .doc-header {
+    background: linear-gradient(135deg, var(--kudea-dark) 0%, var(--kudea-mid) 100%);
+    color: white;
+    padding: 2.25rem 2.5rem 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .doc-header::after {
+    content: '';
+    position: absolute;
+    top: -70px; right: -70px;
+    width: 260px; height: 260px;
+    background: radial-gradient(circle, rgba(255,255,255,.1) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+    position: relative;
+    z-index:1;
+  }
+  .brand { font-size: 1.4rem; font-weight: 900; letter-spacing: -0.3px; }
+  .brand-sub { font-size: 0.75rem; opacity: .72; margin-top: 2px; }
+  .doc-badge {
+    background: rgba(255,255,255,.18);
+    border: 1px solid rgba(255,255,255,.25);
+    padding: .35rem 1rem;
+    border-radius: 50px;
+    font-size: .7rem;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+  }
+  .header-meta {
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: .75rem;
+    position: relative;
+    z-index:1;
+  }
+  .meta-box {
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 10px;
+    padding: .65rem 1rem;
+  }
+  .meta-lbl { font-size: .65rem; text-transform: uppercase; letter-spacing: .7px; opacity: .7; margin-bottom: 3px; }
+  .meta-val { font-weight: 700; font-size: .88rem; }
+
+  /* ─── Banda KPI principal ───────────────────────────────── */
+  .kpi-band {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    border-bottom: 1px solid var(--border);
+    background: var(--kudea-light);
+  }
+  .kpi-cell {
+    padding: 1.25rem 1.25rem;
+    border-right: 1px solid var(--border);
+    text-align: center;
+  }
+  .kpi-cell:last-child { border-right: none; }
+  .kpi-val {
+    font-size: 1.65rem;
+    font-weight: 900;
+    color: var(--kudea-dark);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+  }
+  .kpi-val.positive { color: var(--green); }
+  .kpi-val.negative { color: var(--red); }
+  .kpi-lbl { font-size: .65rem; text-transform: uppercase; letter-spacing: .7px; color: var(--muted); font-weight: 700; margin-top: 4px; }
+
+  /* ─── Sección título ─────────────────────────────────────── */
+  .sec-title {
+    padding: .8rem 2rem .5rem;
+    font-size: .68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--kudea-mid);
+    background: #f6f9fc;
+    border-bottom: 1px solid var(--border);
+    border-top: 1px solid var(--border);
+    margin-top: .5rem;
+  }
+
+  /* ─── Tabla de ventas ───────────────────────────────────── */
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  thead { background: #f4f7fb; }
+  th {
+    padding: .7rem 1rem;
+    text-align: left;
+    font-weight: 700;
+    font-size: .65rem;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: var(--muted);
+    border-bottom: 2px solid var(--border);
+  }
+  td { padding: .65rem 1rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+  tbody tr:hover { background: #f8faff; }
+
+  .code { font-family: monospace; font-size: 11.5px; font-weight: 700; color: var(--kudea-mid); background: var(--kudea-light); padding: .2rem .5rem; border-radius: 5px; }
+  .tr { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  .badge {
+    display: inline-block;
+    padding: .22rem .65rem;
+    border-radius: 50px;
+    font-size: .67rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .3px;
+  }
+  .badge-efectivo      { background: var(--green-bg);  color: var(--green); }
+  .badge-tarjeta       { background: var(--blue-bg);   color: var(--blue); }
+  .badge-transferencia { background: var(--violet-bg); color: var(--violet); }
+  .badge-otro          { background: #f1f5f9; color: #475569; }
+
+  /* ─── Grids de resumen ──────────────────────────────────── */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    padding: 1.25rem 2rem;
+  }
+  .scard {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    background: #fafbff;
+  }
+  .scard-icon { font-size: 1rem; margin-bottom: .4rem; }
+  .scard-method { font-size: .68rem; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); font-weight: 700; margin-bottom: .2rem; }
+  .scard-total { font-size: 1.3rem; font-weight: 900; color: var(--kudea-dark); font-variant-numeric: tabular-nums; }
+  .scard-sub { font-size: .73rem; color: var(--muted); margin-top: 2px; }
+
+  /* ─── Tabla fiscal ──────────────────────────────────────── */
+  .fiscal-wrap { margin: 0 2rem 1.5rem; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  .fiscal-wrap table th,
+  .fiscal-wrap table td { padding: .65rem 1.25rem; font-size: 12.5px; border-bottom: 1px solid var(--border); }
+  .fiscal-wrap table tr:last-child td { border-bottom: none; }
+  .row-total td { background: var(--kudea-dark) !important; color: white !important; font-weight: 800; font-size: 13.5px; }
+  .row-total td.tr { color: white !important; }
+
+  /* ─── Top productos ─────────────────────────────────────── */
+  .prod-table { padding: 0 2rem 1.5rem; }
+  .prod-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .6rem .75rem;
+    border-radius: 8px;
+    margin-bottom: .4rem;
+    background: #fafbff;
+    border: 1px solid var(--border);
+    gap: .75rem;
+  }
+  .prod-rank { font-size: .72rem; font-weight: 800; color: var(--kudea-mid); background: var(--kudea-light); padding: .15rem .55rem; border-radius: 50px; min-width: 28px; text-align: center; }
+  .prod-name { flex: 1; font-weight: 600; font-size: 12.5px; color: var(--text); }
+  .prod-units { font-size: .75rem; color: var(--muted); }
+  .prod-income { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--kudea-dark); font-size: 12.5px; }
+
+  /* ─── Cajeros ───────────────────────────────────────────── */
+  .cajero-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .7rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    gap: .75rem;
+  }
+  .cajero-row:last-child { border-bottom: none; }
+  .cajero-avatar {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--kudea-dark), var(--kudea-mid));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 800;
+    font-size: .85rem;
+  }
+  .cajero-name { flex:1; font-weight: 600; font-size: 12.5px; }
+  .cajero-tickets { font-size: .73rem; color: var(--muted); }
+  .cajero-total { font-weight: 800; font-variant-numeric: tabular-nums; color: var(--kudea-dark); }
+
+  /* ─── Incidencias ───────────────────────────────────────── */
+  .incidents-row {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem 2rem;
+    border-top: 1px solid var(--border);
+    background: #fffbf5;
+  }
+  .incident-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .4rem .9rem;
+    border-radius: 50px;
+    font-size: .75rem;
+    font-weight: 700;
+  }
+  .incident-anuladas  { background: var(--red-bg);   color: var(--red); }
+  .incident-pendiente { background: var(--amber-bg); color: var(--amber); }
+
+  /* ─── Empty state ───────────────────────────────────────── */
+  .empty-state {
+    padding: 3rem 2rem;
+    text-align: center;
+    color: var(--muted);
+  }
+  .empty-state .ico { font-size: 2.5rem; margin-bottom: .75rem; }
+
+  /* ─── Footer ────────────────────────────────────────────── */
+  .doc-footer {
+    background: var(--kudea-dark);
+    color: rgba(255,255,255,.75);
+    padding: 1rem 2.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: .72rem;
+    font-weight: 500;
+  }
+  .doc-footer strong { color: white; }
+
+  /* ─── Print ─────────────────────────────────────────────── */
+  @media print {
+    body { background: white; padding: 0; }
+    .fab-bar { display: none !important; }
+    .cierre-doc { box-shadow: none; border-radius: 0; max-width: 100%; }
+    .kpi-val { font-size: 1.3rem; }
+    td, th { padding: .5rem .7rem; }
+    .sec-title { margin-top: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Botones flotantes -->
+<div class="fab-bar">
+  <a href="{% url 'home_app:arqueo_menu' %}" class="fab fab-back">⬅ Volver</a>
+  <form method="POST" style="margin: 0; display: inline-block;">
+    {% csrf_token %}
+    {% if fecha_inicio_raw %}<input type="hidden" name="fecha_inicio_raw" value="{{ fecha_inicio_raw }}">{% endif %}
+    {% if fecha_fin_raw %}<input type="hidden" name="fecha_fin_raw" value="{{ fecha_fin_raw }}">{% endif %}
+    <button type="submit" class="fab fab-save" onclick="return confirm('¿Confirmas guardar el cierre de caja de este periodo?');">
+      💾 Guardar Cierre
+    </button>
+  </form>
+  <button class="fab fab-print" onclick="window.print()">🖨️ Imprimir</button>
+</div>
+
+<div class="cierre-doc">
+
+  <!-- ═══════════════════════════════════════════════
+       CABECERA
+  ═══════════════════════════════════════════════ -->
+  <div class="doc-header">
+    <div class="header-top">
+      <div>
+        <div class="brand">🏪 Kudea</div>
+        <div class="brand-sub">Sistema de Gestión Comercial</div>
+      </div>
+      <div class="doc-badge">Cierre {{ tipo }}</div>
+    </div>
+    <div class="header-meta">
+      <div class="meta-box">
+        <div class="meta-lbl">Período</div>
+        <div class="meta-val">
+          {% if fecha_inicio == fecha_fin %}{{ fecha_inicio|date:"d/m/Y" }}{% else %}{{ fecha_inicio|date:"d/m/Y" }} – {{ fecha_fin|date:"d/m/Y" }}{% endif %}
+        </div>
+      </div>
+      <div class="meta-box">
+        <div class="meta-lbl">Operador</div>
+        <div class="meta-val">{% if usuario.get_full_name %}{{ usuario.get_full_name }}{% else %}{{ usuario.username }}{% endif %}</div>
+      </div>
+      <div class="meta-box">
+        <div class="meta-lbl">Hora de cierre</div>
+        <div class="meta-val" id="tsNow">—</div>
+      </div>
+      <div class="meta-box">
+        <div class="meta-lbl">Tickets emitidos</div>
+        <div class="meta-val">{{ total_tickets }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       1. CUADRE DE CAJA (RESUMEN OPERATIVO)
+  ═══════════════════════════════════════════════ -->
+  <div class="sec-title">🗂️ 1. Cuadre comparativo de caja</div>
+  <div class="fiscal-wrap" style="margin-top:1.25rem; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+    <!-- Header -->
+    <div style="display: flex; justify-content: space-between; padding: 12px 16px; background: #f8fafc; border-bottom: 1px solid var(--border); font-size: 0.85rem; font-weight: 700; color: var(--muted); text-transform: uppercase;">
+      <span>Concepto Operativo</span>
+      <span>Importe</span>
+    </div>
+    
+    <!-- Row 1 -->
+    <div style="display: flex; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border); align-items: center;">
+      <span>💰 <strong>Inicio de Caja (Fondo)</strong></span>
+      <strong>{{ fondo_inicial|default:0.00|floatformat:2 }} €</strong>
+    </div>
+
+    <!-- Row 2 -->
+    <div style="display: flex; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border); align-items: center;">
+      <span>➕ Recibido en cajón hoy (Efectivo)</span>
+      <span style="font-weight: 600;">+ {{ total_efectivo_neto|default:0.00|floatformat:2 }} €</span>
+    </div>
+
+    <!-- Row 3 (Suma) -->
+    <div style="display: flex; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border); align-items: center; font-size: 1.05rem;">
+      <span>📊 <strong>SUMA TOTAL QUE DEBERÍA HABER</strong> <span style="font-size:0.85rem; color: var(--muted); font-weight: normal; margin-left: 8px;">({{ fondo_inicial|default:0.00|floatformat:2 }} + {{ total_efectivo_neto|default:0.00|floatformat:2 }})</span></span>
+      <strong>{{ total_esperado|default:0.00|floatformat:2 }} €</strong>
+    </div>
+
+    <!-- Row 4 (Resta) -->
+    <div style="display: flex; justify-content: space-between; padding: 14px 16px; align-items: center; color: var(--muted); font-style: italic;">
+      <span>➖ Menos importe inicial retirado</span>
+      <span style="color: var(--red); font-weight: 600;">- {{ fondo_inicial|default:0.00|floatformat:2 }} €</span>
+    </div>
+
+    <!-- Footer Row (Total) -->
+    <div style="display: flex; justify-content: space-between; padding: 16px; background: #1a365d; color: #fff; align-items: center;">
+      <span style="font-weight: 700; font-size: 1.1rem;">💶 RECAUDACIÓN NETA DE HOY (EFECTIVO)</span>
+      <span style="font-weight: 800; font-size: 1.4rem;">{{ total_efectivo_neto|default:0.00|floatformat:2 }} €</span>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       2. DESGLOSE POR MÉTODO DE PAGO
+  ═══════════════════════════════════════════════ -->
+  <div class="sec-title">💳 2. Recaudación por método de pago</div>
+  <div class="summary-grid">
+    {% for m in por_metodo %}
+    <div class="scard">
+      <div class="scard-icon">{% with nombre=m.metodo_pago__nombre|lower %}{% if "efectivo" in nombre %}💵{% elif "tarjeta" in nombre or "tpv" in nombre %}💳{% elif "transfer" in nombre %}🏦{% else %}💶{% endif %}{% endwith %}</div>
+      <div class="scard-method">{{ m.metodo_pago__nombre }}</div>
+      <div class="scard-total">{{ m.importe|floatformat:2 }} €</div>
+      <div class="scard-sub">{{ m.n_tickets }} ticket{% if m.n_tickets != 1 %}s{% endif %}</div>
+    </div>
+    {% empty %}
+    <div class="empty-state" style="grid-column: 1 / -1; padding: 1rem;"><p>Sin ventas registradas por método de pago.</p></div>
+    {% endfor %}
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       3. RENDIMIENTO POR CAJERO
+  ═══════════════════════════════════════════════ -->
+  <div class="sec-title">👤 3. Rendimiento por cajero</div>
+  <div style="padding: 0.5rem 0 1rem;">
+    {% for c in por_cajero %}
+    <div class="cajero-row">
+      <div class="cajero-avatar">{{ c.nombre_display|first|upper }}</div>
+      <div class="cajero-name">{{ c.nombre_display }}<div class="cajero-tickets">{{ c.n_tickets }} tickets procesados</div></div>
+      <div class="cajero-total">{{ c.importe|floatformat:2 }} €</div>
+    </div>
+    {% empty %}
+    <div class="empty-state" style="padding: 1rem;"><p>Sin datos de cajeros disponibles.</p></div>
+    {% endfor %}
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       4. TOP 10 PRODUCTOS MÁS VENDIDOS
+  ═══════════════════════════════════════════════ -->
+  <div class="sec-title">🏆 4. Top productos más vendidos</div>
+  <div class="prod-table">
+    {% for p in top_productos|slice:":10" %}
+    <div class="prod-row">
+      <span class="prod-rank">{{ forloop.counter }}</span>
+      <span class="prod-name">{{ p.producto__nombre }}</span>
+      <span class="prod-units">{{ p.unidades }} ud.</span>
+      <span class="prod-income">{{ p.ingresos|floatformat:2 }} €</span>
+    </div>
+    {% empty %}
+    <div class="empty-state" style="padding: 1rem;"><p>No hay datos de productos vendidos.</p></div>
+    {% endfor %}
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       6. DETALLE COMPLETO DE VENTAS
+  ═══════════════════════════════════════════════ -->
+  <div class="sec-title">📋 6. Detalle de todas las transacciones</div>
+  {% if ventas %}
+  <table>
+    <thead><tr><th>Código</th><th>Hora</th><th>Cajero</th><th>Método</th><th style="text-align:right;">Subtotal</th><th style="text-align:right;">IVA</th><th style="text-align:right;">Dto.</th><th style="text-align:right;">Total</th></tr></thead>
+    <tbody>
+      {% for v in ventas %}
+      <tr>
+        <td><span class="code">{{ v.codigo }}</span></td>
+        <td>{{ v.creado_en|date:"H:i" }}</td>
+        <td>{% if v.usuario.get_full_name %}{{ v.usuario.get_full_name }}{% else %}{{ v.usuario.username }}{% endif %}</td>
+        <td>
+          {% with n=v.metodo_pago.nombre|lower %}{% if "efectivo" in n %}<span class="badge badge-efectivo">{{ v.metodo_pago.nombre }}</span>{% elif "tarjeta" in n or "tpv" in n %}<span class="badge badge-tarjeta">{{ v.metodo_pago.nombre }}</span>{% elif "transfer" in n %}<span class="badge badge-transferencia">{{ v.metodo_pago.nombre }}</span>{% else %}<span class="badge badge-otro">{{ v.metodo_pago.nombre }}</span>{% endif %}{% endwith %}
+        </td>
+        <td class="tr">{{ v.subtotal|floatformat:2 }} €</td>
+        <td class="tr">{{ v.iva|floatformat:2 }} €</td>
+        <td class="tr" style="{% if v.descuento > 0 %}color:var(--amber);{% endif %}">{% if v.descuento > 0 %}−{{ v.descuento|floatformat:2 }}{% else %}—{% endif %} €</td>
+        <td class="tr"><strong>{{ v.total|floatformat:2 }} €</strong></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr style="background:var(--kudea-light);">
+        <td colspan="4"><strong>TOTALES</strong></td>
+        <td class="tr"><strong>{{ total_subtotal|floatformat:2 }} €</strong></td>
+        <td class="tr"><strong>{{ total_iva|floatformat:2 }} €</strong></td>
+        <td class="tr"><strong>{{ total_descuentos|floatformat:2 }} €</strong></td>
+        <td class="tr"><strong>{{ total_bruto|floatformat:2 }} €</strong></td>
+      </tr>
+    </tfoot>
+  </table>
+  {% else %}<div class="empty-state"><div class="ico">🗂️</div><strong>Sin ventas registradas en este período</strong><p style="margin-top:.5rem;">No se han completado transacciones.</p></div>{% endif %}
+
+  <!-- ═══════════════════════════════════════════════
+       7. INCIDENCIAS
+  ═══════════════════════════════════════════════ -->
+  {% if ventas_anuladas or ventas_pendientes %}
+  <div class="incidents-row">
+    <span style="font-weight:700; font-size:.8rem; color:var(--text); margin-right:.5rem;">⚠️ Incidencias:</span>
+    {% if ventas_anuladas %}<span class="incident-pill incident-anuladas">🚫 {{ ventas_anuladas }} anulada{% if ventas_anuladas != 1 %}s{% endif %}</span>{% endif %}
+    {% if ventas_pendientes %}<span class="incident-pill incident-pendiente">⏳ {{ ventas_pendientes }} pendiente{% if ventas_pendientes != 1 %}s{% endif %}</span>{% endif %}
+  </div>
+  {% endif %}
+
+  <!-- ═══════════════════════════════════════════════
+       FOOTER
+  ═══════════════════════════════════════════════ -->
+  <div class="doc-footer">
+    <span>Documento oficial de cierre — <strong>Kudea</strong></span>
+    <span id="tsFooter">—</span>
+  </div>
+
+</div><!-- /cierre-doc -->
+
+<script>
+  const now = new Date();
+  const fmt = dt => dt.toLocaleString('es-ES', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  });
+  const ts = fmt(now);
+  if (document.getElementById('tsNow')) document.getElementById('tsNow').textContent = ts;
+  if (document.getElementById('tsFooter')) document.getElementById('tsFooter').textContent = 'Generado: ' + ts;
+</script>
+</body>
+</html>

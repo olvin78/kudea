@@ -1,0 +1,643 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block head %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ============================================
+     FORMAS DE PAGO — Diseño Premium v2
+  ============================================ */
+  .pm-page {
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  /* HEADER */
+  .pm-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .pm-hero-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .pm-hero-icon {
+    width: 52px;
+    height: 52px;
+    background: linear-gradient(135deg, #195c96, #123954);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 20px rgba(11, 199, 241, 0.4);
+  }
+
+  .pm-hero-icon i {
+    color: #fff;
+    font-size: 1.4rem;
+  }
+
+  .pm-hero h1 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #195c96, #123954);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0;
+  }
+
+  .pm-hero p {
+    font-size: 0.875rem;
+    color: #64748b;
+    margin: 0;
+  }
+
+  /* SEARCH + ADD BUTTON */
+  .pm-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+    flex-wrap: wrap;
+  }
+
+  .pm-search-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .pm-search-wrap i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    pointer-events: none;
+  }
+
+  .pm-search {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.75rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    background: #fff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+
+  .pm-search:focus {
+    border-color: #195c96;
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+  }
+
+  .pm-btn-add {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #195c96, #123954);
+    color: #fff;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    white-space: nowrap;
+    box-shadow: 0 4px 14px rgba(17, 177, 183, 0.778);
+  }
+
+  .pm-btn-add:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(24, 125, 103, 0.45);
+  }
+
+  /* CARDS GRID */
+  .pm-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.25rem;
+  }
+
+  /* PAYMENT CARD */
+  .pm-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    border-radius: 18px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    animation: fadeUp 0.4s ease forwards;
+    opacity: 0;
+  }
+
+  .pm-card:nth-child(1) {
+    animation-delay: 0.05s;
+  }
+
+  .pm-card:nth-child(2) {
+    animation-delay: 0.10s;
+  }
+
+  .pm-card:nth-child(3) {
+    animation-delay: 0.15s;
+  }
+
+  .pm-card:nth-child(4) {
+    animation-delay: 0.20s;
+  }
+
+  .pm-card:nth-child(5) {
+    animation-delay: 0.25s;
+  }
+
+  .pm-card:nth-child(6) {
+    animation-delay: 0.30s;
+  }
+
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .pm-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Card top row */
+  .pm-card-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .pm-icon-wrap {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #e8f0f8, #c5d8ea);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  .pm-icon-wrap img {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+  }
+
+  .pm-icon-wrap i {
+    font-size: 1.3rem;
+    color: #123954;
+  }
+
+  .pm-card-title {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #1e293b;
+    margin: 0;
+  }
+
+  .pm-card-desc {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  /* Badges */
+  .pm-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .pm-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .pm-badge-active {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  .pm-badge-inactive {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+
+  .pm-badge-change {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  /* EMPTY STATE */
+  .pm-empty {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    color: #94a3b8;
+    text-align: center;
+  }
+
+  .pm-empty i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #cbd5e1;
+  }
+
+  .pm-empty h5 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+  }
+
+  .pm-empty p {
+    font-size: 0.9rem;
+    margin: 0;
+  }
+
+  /* MODAL */
+  .pm-modal .modal-content {
+    border: none;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2);
+  }
+
+  .pm-modal .modal-header {
+    background: linear-gradient(135deg, #195c96, #123954);
+    border: none;
+    padding: 1.5rem 1.75rem;
+  }
+
+  .pm-modal .modal-title {
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+
+  .pm-modal .btn-close {
+    filter: invert(1);
+  }
+
+  .pm-modal .modal-body {
+    padding: 2rem 1.75rem;
+    background: #f8faff;
+  }
+
+  .pm-modal .form-label {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #475569;
+    margin-bottom: 0.4rem;
+  }
+
+  .pm-modal .form-control,
+  .pm-modal .form-select {
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 0.65rem 1rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .pm-modal .form-control:focus,
+  .pm-modal .form-select:focus {
+    border-color: #195c96;
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+  }
+
+  .pm-modal .modal-footer {
+    background: #f8faff;
+    border-top: 1px solid #e2e8f0;
+    padding: 1rem 1.75rem;
+  }
+
+  .pm-btn-submit {
+    background: linear-gradient(135deg, #195c96, #123954);
+    border: none;
+    color: #fff;
+    padding: 0.65rem 1.75rem;
+    border-radius: 10px;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+
+  .pm-btn-submit:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  /* COUNTER PILL */
+  .pm-counter {
+    background: linear-gradient(135deg, #195c96, #123954);
+    color: #fff;
+    padding: 0.3rem 0.85rem;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+
+  /* BOTON ELIMINAR (solo admin) */
+  .pm-card-footer {
+    padding-top: 0.75rem;
+    border-top: 1px solid #f1f5f9;
+  }
+
+  .pm-btn-delete {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: #fee2e2;
+    color: #b91c1c;
+    border: none;
+    border-radius: 8px;
+    padding: 0.45rem 1rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+  }
+
+  .pm-btn-delete:hover {
+    background: #fca5a5;
+    transform: translateY(-1px);
+  }
+
+  /* MODAL CONFIRMACION ELIMINAR */
+  .pm-modal-danger .modal-content {
+    border: none;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2);
+  }
+
+  .pm-modal-danger .modal-header {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    border: none;
+    padding: 1.25rem 1.5rem;
+  }
+
+  .pm-modal-danger .modal-title {
+    color: #fff;
+    font-weight: 700;
+  }
+
+  .pm-modal-danger .btn-close {
+    filter: invert(1);
+  }
+
+  .pm-modal-danger .modal-body {
+    padding: 1.5rem;
+  }
+
+  .pm-modal-danger .modal-footer {
+    border-top: 1px solid #f1f5f9;
+    padding: 1rem 1.5rem;
+  }
+
+  .pm-btn-danger {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    border: none;
+    color: #fff;
+    padding: 0.65rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+
+  .pm-btn-danger:hover {
+    opacity: 0.9;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pm-page container">
+
+  <!-- HERO HEADER -->
+  <div class="pm-hero">
+    <div class="pm-hero-title">
+      <div class="pm-hero-icon"><i class="fas fa-credit-card"></i></div>
+      <div>
+        <h1>Métodos de Pago</h1>
+        <p>Gestión de formas de cobro aceptadas</p>
+      </div>
+    </div>
+    <span class="pm-counter" id="paymentCounter">{{ formas_pago|length }} métodos</span>
+  </div>
+
+  <!-- TOOLBAR: Búsqueda + Botón añadir -->
+  <div class="pm-toolbar">
+    <div class="pm-search-wrap">
+      <i class="fas fa-search"></i>
+      <input id="pmSearch" type="text" class="pm-search" placeholder="Buscar método de pago..."
+        aria-label="Buscar método de pago" oninput="filterMethods()">
+    </div>
+    <button class="pm-btn-add" data-bs-toggle="modal" data-bs-target="#addMethodModal" type="button">
+      <i class="fas fa-plus"></i> Añadir método
+    </button>
+  </div>
+
+  <!-- GRID DE TARJETAS -->
+  <div class="pm-grid" id="pmGrid">
+    {% for forma in formas_pago %}
+    <div class="pm-card" data-name="{{ forma.nombre|lower }}">
+      <div class="pm-card-header">
+        <div class="pm-icon-wrap">
+          {% if forma.imagen %}
+          <img src="{{ forma.imagen.url }}" alt="{{ forma.nombre }}">
+          {% else %}
+          <i class="fas fa-wallet"></i>
+          {% endif %}
+        </div>
+        <div>
+          <p class="pm-card-title">{{ forma.nombre }}</p>
+          <p class="pm-card-desc">{{ forma.descripcion|default:"Sin descripción" }}</p>
+        </div>
+      </div>
+      <div class="pm-badges">
+        {% if forma.activo %}
+        <span class="pm-badge pm-badge-active"><i class="fas fa-circle-check"></i> Activo</span>
+        {% else %}
+        <span class="pm-badge pm-badge-inactive"><i class="fas fa-circle-xmark"></i> Inactivo</span>
+        {% endif %}
+        {% if forma.acepta_cambio %}
+        <span class="pm-badge pm-badge-change"><i class="fas fa-coins"></i> Acepta cambio</span>
+        {% endif %}
+      </div>
+      {% if request.user.is_staff %}
+      <div class="pm-card-footer">
+        <button class="pm-btn-delete" type="button" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal"
+          data-pk="{{ forma.pk }}" data-nombre="{{ forma.nombre }}">
+          <i class="fas fa-trash-can"></i> Eliminar
+        </button>
+      </div>
+      {% endif %}
+    </div>
+    {% empty %}
+    <div class="pm-empty">
+      <i class="fas fa-wallet"></i>
+      <h5>Sin métodos de pago</h5>
+      <p>Comienza añadiendo tu primer método de cobro.</p>
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+
+<!-- ========== MODAL: Añadir método ========== -->
+<div class="modal fade pm-modal" id="addMethodModal" tabindex="-1" aria-labelledby="addMethodLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title" id="addMethodLabel">
+          <i class="fas fa-credit-card me-2"></i> Nuevo método de pago
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-12">
+              <label for="id_nombre" class="form-label">Nombre</label>
+              {{ form.nombre }}
+            </div>
+            <div class="col-12">
+              <label for="id_descripcion" class="form-label">Descripción</label>
+              {{ form.descripcion }}
+            </div>
+            <div class="col-12">
+              <label for="id_imagen" class="form-label">Imagen (logo)</label>
+              {{ form.imagen }}
+            </div>
+            <div class="col-6">
+              <div class="form-check form-switch">
+                {{ form.activo }}
+                <label class="form-check-label" for="id_activo">Activo</label>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="form-check form-switch">
+                {{ form.acepta_cambio }}
+                <label class="form-check-label" for="id_acepta_cambio">Acepta cambio</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light rounded-3" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="pm-btn-submit">
+            <i class="fas fa-plus me-1"></i> Guardar método
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<!-- ========== MODAL: Confirmar eliminacion ========== -->
+<div class="modal fade pm-modal-danger" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteConfirmLabel">
+          <i class="fas fa-triangle-exclamation me-2"></i> Confirmar eliminacion
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <p>Estas seguro de que deseas eliminar el metodo de pago <strong id="deleteMethodName"></strong>?</p>
+        <p class="text-danger small mb-0"><i class="fas fa-circle-exclamation me-1"></i> Esta accion no se puede
+          deshacer.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light rounded-3" data-bs-dismiss="modal">Cancelar</button>
+        <form id="deleteMethodForm" method="post" action="">
+          {% csrf_token %}
+          <button type="submit" class="pm-btn-danger">
+            <i class="fas fa-trash-can me-1"></i> Si, eliminar
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function filterMethods() {
+    const query = document.getElementById('pmSearch').value.toLowerCase().trim();
+    const cards = document.querySelectorAll('#pmGrid .pm-card');
+    let visible = 0;
+    cards.forEach(card => {
+      const name = card.dataset.name || '';
+      const match = name.includes(query);
+      card.style.display = match ? '' : 'none';
+      if (match) visible++;
+    });
+    document.getElementById('paymentCounter').textContent = visible + ' método' + (visible !== 1 ? 's' : '');
+  }
+
+  // Rellena el modal de confirmacion con el pk y nombre del metodo a eliminar
+  const deleteModal = document.getElementById('deleteConfirmModal');
+  if (deleteModal) {
+    deleteModal.addEventListener('show.bs.modal', function (event) {
+      const trigger = event.relatedTarget;
+      const pk = trigger.getAttribute('data-pk');
+      const nombre = trigger.getAttribute('data-nombre');
+      document.getElementById('deleteMethodName').textContent = nombre;
+      document.getElementById('deleteMethodForm').action = '/payments/metodos/' + pk + '/eliminar/';
+    });
+  }
+</script>
+{% endblock %}

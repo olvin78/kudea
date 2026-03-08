@@ -9,18 +9,23 @@ SECRET_KEY = 'django-insecure-n=h4#+90b^n2xw!i@$gn935an+5pulpw9isidot+q7fr!gvc@4
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.loca.lt",
+]
 
 # Application definition
 
 INSTALLED_APPS = [
+    'applications.product',
     'applications.home',
     'applications.tpv',
     'applications.support',
     'applications.budget',
     'applications.tpv_shop',
     'applications.customer',  # ← esto debe estar exactamente así
+    'applications.attendance',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -29,6 +34,18 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'widget_tweaks',
+
+    'applications.invoice',
+    'applications.cash',
+    'applications.stock',
+    'applications.reporting',
+    'applications.cashflow',
+    'applications.payments',
+    'applications.accounts',
+    'applications.recordlog',
+    'applications.employee',
+    'applications.config',
+
 ]
 
 MIDDLEWARE = [
@@ -39,6 +56,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    'applications.home.middleware.ModuloActivoMiddleware',
 ]
 
 ROOT_URLCONF = 'kudea.urls'
@@ -48,15 +67,16 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            BASE_DIR / 'templates',  # Agrega esta línea si no está
+            BASE_DIR / 'templates',
         ],
-        'APP_DIRS': True,  # Asegúrate de que esta opción esté habilitada
+        'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'applications.home.context_processors.modulos_activos',
             ],
         },
     },
@@ -100,7 +120,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Madrid'
 
 USE_I18N = True
 
@@ -117,10 +137,9 @@ STATICFILES_DIRS = [
     BASE_DIR / "static",  # Si usas Pathlib
 ]
 
-
+# Configuración para archivos de medios (imágenes, etc.)
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
-
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Directorio donde se guardarán los archivos subidos (en tu máquina local)
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

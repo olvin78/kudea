@@ -1,0 +1,281 @@
+{% extends 'home/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="kudea-accounts">
+    <div class="kudea-accounts-header">
+        <h1>📊 Listado de Cuentas</h1>
+        <button class="kudea-new-account">+ Crear Nueva Cuenta</button>
+    </div>
+
+    <div class="kudea-accounts-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Saldo</th>
+                    <th>Última Actualización</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cuenta in object_list %}
+                <tr>
+                    <td class="account-id">#{{ cuenta.id }}</td>
+                    <td class="account-name">{{ cuenta.nombre }}</td>
+                    <td class="account-balance {% if cuenta.saldo >= 0 %}positive{% else %}negative{% endif %}">
+                        ${{ cuenta.saldo|floatformat:2 }}
+                    </td>
+                    <td class="account-updated">{{ cuenta.updated_at|date:"d/m/Y H:i" }}</td>
+                    <td class="account-actions">
+                        <button class="action-btn view">👁️ Ver</button>
+                        <button class="action-btn edit">✏️ Editar</button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr class="empty-state">
+                    <td colspan="5">
+                        <div class="empty-message">
+                            🗄️ No se encontraron cuentas
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="kudea-accounts-footer">
+        <span class="counter">{{ object_list.count }} registros</span>
+        <div class="pagination">
+            <button class="pag-btn">← Anterior</button>
+            <button class="pag-btn active">1</button>
+            <button class="pag-btn">2</button>
+            <button class="pag-btn">Siguiente →</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Paleta Kudea mejorada basada en #123954 */
+    :root {
+        --kudea-primary: #123954;       /* Azul Kudea principal */
+        --kudea-secondary: #1a5276;     /* Azul más claro */
+        --kudea-accent: #16a085;        /* Verde turquesa */
+        --kudea-light: #eaf2f8;         /* Fondo claro */
+        --kudea-text: #2c3e50;          /* Texto oscuro */
+        --kudea-text-light: #f8f9fa;    /* Texto claro */
+    }
+
+    /* Reset básico */
+    .kudea-accounts {
+        font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+        width: 100%;
+        min-height: 100vh;
+        background-color: #f5f7fa;
+        padding: 0;
+        margin: 0;
+    }
+
+    .kudea-accounts-header {
+        background: var(--kudea-primary);
+        color: white;
+        padding: 1.5rem 3rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .kudea-accounts-header h1 {
+        margin: 0;
+        font-size: 1.8rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .kudea-new-account {
+        background: var(--kudea-accent);
+        color: white;
+        border: none;
+        padding: 0.7rem 1.5rem;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .kudea-new-account:hover {
+        background: #138d75;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    .kudea-accounts-table {
+        padding: 2rem 3rem;
+        overflow-x: auto;
+    }
+
+    .kudea-accounts-table table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 1px 15px rgba(0,0,0,0.05);
+    }
+
+    .kudea-accounts-table th {
+        background: var(--kudea-secondary);
+        color: white;
+        padding: 1.2rem 1.5rem;
+        text-align: left;
+        font-weight: 500;
+    }
+
+    .kudea-accounts-table td {
+        padding: 1.2rem 1.5rem;
+        border-bottom: 1px solid #eee;
+        color: var(--kudea-text);
+    }
+
+    .kudea-accounts-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .kudea-accounts-table tr:hover {
+        background: var(--kudea-light);
+    }
+
+    .account-id {
+        color: var(--kudea-primary);
+        font-weight: 600;
+    }
+
+    .account-balance {
+        font-weight: 600;
+    }
+
+    .account-balance.positive {
+        color: var(--kudea-accent);
+    }
+
+    .account-balance.negative {
+        color: #e74c3c;
+    }
+
+    .account-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .action-btn {
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .action-btn.view {
+        background: rgba(22, 160, 133, 0.1);
+        color: var(--kudea-accent);
+    }
+
+    .action-btn.edit {
+        background: rgba(41, 128, 185, 0.1);
+        color: #2980b9;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .empty-state td {
+        padding: 3rem !important;
+        text-align: center;
+    }
+
+    .empty-message {
+        color: #7f8c8d;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .kudea-accounts-footer {
+        padding: 1.5rem 3rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: white;
+        border-top: 1px solid #eee;
+    }
+
+    .counter {
+        color: #7f8c8d;
+        font-size: 0.9rem;
+    }
+
+    .pagination {
+        display: flex;
+        gap: 8px;
+    }
+
+    .pag-btn {
+        border: 1px solid #ddd;
+        background: white;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .pag-btn:hover {
+        border-color: var(--kudea-accent);
+        color: var(--kudea-accent);
+    }
+
+    .pag-btn.active {
+        background: var(--kudea-primary);
+        color: white;
+        border-color: var(--kudea-primary);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .kudea-accounts-header,
+        .kudea-accounts-table,
+        .kudea-accounts-footer {
+            padding: 1rem;
+        }
+        
+        .kudea-accounts-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        
+        .account-actions {
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .action-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}

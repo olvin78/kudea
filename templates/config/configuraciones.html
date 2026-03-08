@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block title %}Configuraciones del Sistema — Kudea{% endblock %}
+
+{% block content %}
+<div class="config-page">
+
+  <!-- CABECERA -->
+  <div class="config-header">
+    <div class="config-header-icon">⚙️</div>
+    <div>
+      <h1 class="config-title">Configuraciones del Sistema</h1>
+      <p class="config-subtitle">Panel de control y diagnóstico de Kudea</p>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- PANEL: GUARDIÁN KUDEA — ALERTAS DEL SISTEMA  -->
+  <!-- ============================================ -->
+  <div class="config-section">
+    <div class="config-section-header">
+      <span class="config-section-icon">🛡️</span>
+      <div>
+        <h2 class="config-section-title">Guardián Kudea — Estado del Sistema</h2>
+        <p class="config-section-desc">El guardián analiza tu base de datos y código en busca de problemas.</p>
+      </div>
+      <span class="badge-alertas {% if total_alertas > 0 %}badge-danger{% else %}badge-ok{% endif %}">
+        {% if total_alertas > 0 %}
+          {{ total_alertas }} alerta{{ total_alertas|pluralize }}
+        {% else %}
+          ✅ Todo OK
+        {% endif %}
+      </span>
+    </div>
+
+    {% if alertas %}
+      <div class="alertas-list">
+        {% for alerta in alertas %}
+          <div class="alerta-card alerta-{{ alerta.tipo|lower }}">
+            <div class="alerta-badge">{{ alerta.tipo }}</div>
+            <div class="alerta-body">
+              <p class="alerta-mensaje">{{ alerta.mensaje }}</p>
+              <small class="alerta-time">🕐 {{ alerta.timestamp }}</small>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="alertas-empty">
+        <span class="alertas-empty-icon">✅</span>
+        <p>El sistema no ha detectado ningún problema. ¡Todo en orden!</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- ============================================ -->
+  <!-- PANEL: ACCIONES DE MANTENIMIENTO             -->
+  <!-- ============================================ -->
+  <div class="config-section">
+    <div class="config-section-header">
+      <span class="config-section-icon">🧠</span>
+      <div>
+        <h2 class="config-section-title">Cerebro de la IA</h2>
+        <p class="config-section-desc">Información sobre el aprendizaje automático del Mentor de Kudea.</p>
+      </div>
+    </div>
+    <div class="config-info-grid">
+      <div class="config-info-card">
+        <span class="info-icon">📂</span>
+        <span class="info-label">Fuente de datos</span>
+        <span class="info-value">dynamic_brain.json</span>
+      </div>
+      <div class="config-info-card">
+        <span class="info-icon">🔄</span>
+        <span class="info-label">Sincronización</span>
+        <span class="info-value">brain_sync.py</span>
+      </div>
+      <div class="config-info-card">
+        <span class="info-icon">🛡️</span>
+        <span class="info-label">Centinela</span>
+        <span class="info-value">kudea_guardian.py</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_styles %}
+<style>
+  .config-page { padding: 2rem; max-width: 900px; margin: 0 auto; }
+
+  .config-header {
+    display: flex; align-items: center; gap: 1.5rem;
+    margin-bottom: 2.5rem; padding: 1.5rem 2rem;
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    border-radius: 16px; border: 1px solid rgba(255,255,255,0.08);
+  }
+  .config-header-icon { font-size: 3rem; }
+  .config-title { font-size: 1.8rem; font-weight: 700; color: #fff; margin: 0; }
+  .config-subtitle { color: rgba(255,255,255,0.5); margin: 0.3rem 0 0; font-size: 0.95rem; }
+
+  .config-section {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px; padding: 1.5rem 2rem; margin-bottom: 1.5rem;
+  }
+  .config-section-header {
+    display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem;
+  }
+  .config-section-icon { font-size: 1.8rem; margin-top: 0.1rem; }
+  .config-section-title { font-size: 1.2rem; font-weight: 600; color: #fff; margin: 0; }
+  .config-section-desc { color: rgba(255,255,255,0.45); margin: 0.2rem 0 0; font-size: 0.88rem; }
+
+  .badge-alertas {
+    margin-left: auto; padding: 0.4rem 1rem; border-radius: 20px;
+    font-weight: 600; font-size: 0.85rem; white-space: nowrap;
+  }
+  .badge-danger { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+  .badge-ok { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+
+  .alertas-list { display: flex; flex-direction: column; gap: 0.75rem; }
+  .alerta-card {
+    display: flex; align-items: flex-start; gap: 1rem;
+    padding: 1rem 1.2rem; border-radius: 10px;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);
+  }
+  .alerta-card.alerta-negocio { border-left: 3px solid #f87171; }
+  .alerta-card.alerta-ingenieria { border-left: 3px solid #f59e0b; }
+  .alerta-card.alerta-operativo { border-left: 3px solid #60a5fa; }
+  .alerta-card.alerta-sistema { border-left: 3px solid #a78bfa; }
+
+  .alerta-badge {
+    font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em;
+    background: rgba(255,255,255,0.08); padding: 0.2rem 0.6rem;
+    border-radius: 6px; color: rgba(255,255,255,0.7); white-space: nowrap;
+    margin-top: 0.1rem;
+  }
+  .alerta-mensaje { color: rgba(255,255,255,0.85); margin: 0; font-size: 0.95rem; }
+  .alerta-time { color: rgba(255,255,255,0.3); font-size: 0.8rem; }
+
+  .alertas-empty {
+    text-align: center; padding: 2rem;
+    color: rgba(255,255,255,0.4);
+  }
+  .alertas-empty-icon { font-size: 2.5rem; display: block; margin-bottom: 0.5rem; }
+
+  .config-info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+  .config-info-card {
+    display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
+    padding: 1.2rem; border-radius: 12px;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
+    text-align: center;
+  }
+  .info-icon { font-size: 1.8rem; }
+  .info-label { font-size: 0.78rem; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.05em; }
+  .info-value { font-size: 0.9rem; color: rgba(255,255,255,0.8); font-family: monospace; }
+</style>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends 'tpv/base_tpv.html' %}
+{% load static %}
+
+{% block tpv_content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-header bg-white d-flex align-items-center">
+          <i class="fas fa-receipt me-2" style="color: var(--kudea-primary);"></i>
+          <h5 class="mb-0" style="color: var(--kudea-primary);">Abrir Nueva Comanda</h5>
+        </div>
+        <div class="card-body">
+
+          <form method="post" class="needs-validation" novalidate>
+            {% csrf_token %}
+
+            <div class="mb-4">
+              <label for="id_mesa" class="form-label" style="color: var(--kudea-text);">Seleccionar Mesa</label>
+              {{ form.mesa }}
+            </div>
+
+            <div class="d-none">
+              <label for="id_estado" class="form-label">Estado</label>
+              {{ form.estado }}
+            </div>
+
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn w-100" style="background-color: var(--kudea-primary); color: rgb(31, 25, 25);">
+                <i class="fas fa-plus-circle me-1"></i> Crear Comanda
+              </button>
+              <a href="{% url 'tpv_app:tpv_mesas' %}" class="btn btn-outline-secondary w-100">
+                Cancelar
+              </a>
+            </div>
+
+          </form>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

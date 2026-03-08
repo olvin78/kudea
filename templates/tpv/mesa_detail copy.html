@@ -1,0 +1,42 @@
+{% extends 'tpv/base_tpv.html' %}
+{% load static %}
+
+{% block tpv_content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-header bg-white d-flex align-items-center">
+          <i class="fas fa-chair me-2 text-kudea"></i>
+          <h5 class="mb-0 text-kudea">Detalle de Mesa</h5>
+        </div>
+        <div class="card-body">
+          <h2 class="h4 fw-bold text-kudea">{{ mesa.nombre }}</h2>
+          <p class="text-muted mb-1">Capacidad: <strong>{{ mesa.capacidad }}</strong> personas</p>
+          <p class="text-muted">
+            Estado:
+            {% if mesa.estado == 'libre' %}
+              <span class="badge" style="background-color: #A8DADC; color: #1D3557;">Libre</span>
+            {% elif mesa.estado == 'ocupada' %}
+              <span class="badge" style="background-color: #E9C46A; color: #1D3557;">Ocupada</span>
+            {% elif mesa.estado == 'reservada' %}
+              <span class="badge" style="background-color: #457B9D; color: white;">Reservada</span>
+            {% else %}
+              <span class="badge bg-secondary">Desconocido</span>
+            {% endif %}
+          </p>
+
+          <div class="d-flex gap-3 mt-4">
+            <a href="{% url 'tpv_app:tpv_mesas' %}" class="btn btn-outline-secondary">
+              <i class="fas fa-arrow-left me-2"></i> Volver a Mesas
+            </a>
+            <a href="{% url 'tpv_app:mesa_update' mesa.id %}" class="btn btn-kudea">
+              <i class="fas fa-pen me-2"></i> Editar Mesa
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

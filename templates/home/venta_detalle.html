@@ -1,0 +1,366 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Factura {{ venta.codigo }} · Kudea</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --kudea-dark: #1D3557;
+      --kudea-medium: #457B9D;
+      --kudea-light: #A8DADC;
+      --kudea-bg: #f8fafc;
+      --text-main: #334155;
+      --text-light: #64748b;
+      --border-color: #e2e8f0;
+      --tint-blue: #f1f5f9;
+    }
+
+    body {
+      background: var(--kudea-bg);
+      font-family: 'Inter', sans-serif;
+      color: var(--text-main);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Action Bar ── */
+    .action-bar {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .btn-minimal {
+      border: 1px solid var(--border-color);
+      background: white;
+      color: var(--text-main);
+      border-radius: 6px;
+      font-weight: 500;
+      font-size: 0.75rem;
+      padding: 6px 14px;
+      text-decoration: none;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-minimal:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+    }
+
+    /* ── Invoice Paper ── */
+    .invoice-wrap {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 15px;
+    }
+
+    .invoice {
+      background: white;
+      border-radius: 2px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+      border: 1px solid var(--border-color);
+    }
+
+    /* ── Header ── */
+    .invoice-header {
+      padding: 50px 50px 35px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .brand-section h1 {
+      font-size: 1.25rem;
+      font-weight: 900;
+      color: var(--kudea-dark);
+      margin: 0;
+      letter-spacing: -0.01em;
+    }
+    .brand-section p {
+      font-size: 0.75rem;
+      color: var(--text-light);
+      margin: 2px 0 0;
+      font-weight: 500;
+    }
+
+    .invoice-status-block {
+      text-align: right;
+    }
+    .invoice-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--kudea-medium);
+      margin-bottom: 2px;
+    }
+    .invoice-id {
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: var(--kudea-dark);
+      margin: 0;
+    }
+
+    /* ── Meta Section (With subtle colored headings) ── */
+    .invoice-meta {
+      padding: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-top: 1px solid #f1f5f9;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .meta-group {
+      padding: 30px 50px;
+    }
+    .meta-group:first-child {
+      border-right: 1px solid #f1f5f9;
+    }
+
+    .meta-label {
+      display: inline-block;
+      font-size: 0.6rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: var(--kudea-medium);
+      margin-bottom: 12px;
+      letter-spacing: 0.08em;
+      padding: 2px 8px;
+      background: var(--tint-blue);
+      border-radius: 4px;
+    }
+    
+    .meta-content {
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+    .meta-content div {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .meta-content span:first-child {
+      color: var(--text-light);
+      font-weight: 400;
+    }
+    .meta-content span:last-child {
+      color: var(--kudea-dark);
+      font-weight: 600;
+    }
+
+    /* ── Table (Items with colored header bar) ── */
+    .invoice-body {
+      padding: 35px 50px;
+    }
+
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .items-table thead tr {
+      background: var(--tint-blue);
+    }
+    .items-table th {
+      padding: 10px 15px;
+      font-size: 0.65rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: var(--kudea-dark);
+      border-bottom: 2px solid var(--kudea-medium);
+    }
+    .items-table td {
+      padding: 14px 15px;
+      font-size: 0.82rem;
+      border-bottom: 1px solid #f8fafc;
+    }
+
+    .col-qty { width: 60px; text-align: center; color: var(--text-light); }
+    .col-price { width: 110px; text-align: right; color: var(--text-light); }
+    .col-total { width: 110px; text-align: right; font-weight: 600; color: var(--kudea-dark); }
+
+    /* ── Summary ── */
+    .summary-section {
+      display: flex;
+      justify-content: flex-end;
+      padding: 0 50px 50px;
+    }
+
+    .summary-table {
+      width: 260px;
+    }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      font-size: 0.8rem;
+    }
+    .summary-row.total {
+      margin-top: 10px;
+      padding-top: 15px;
+      border-top: 2px solid var(--kudea-dark);
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--kudea-dark);
+    }
+    .summary-row.discount span:last-child { color: var(--kudea-danger); }
+
+    /* ── Footer ── */
+    .invoice-footer {
+      padding: 25px 50px;
+      background: #fcfdfe;
+      border-top: 1px solid #f1f5f9;
+      font-size: 0.7rem;
+      color: #94a3b8;
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    /* ── Print ── */
+    @media print {
+      body { background: white; }
+      .action-bar { display: none; }
+      .invoice-wrap { margin: 0; padding: 0; max-width: 100%; }
+      .invoice { box-shadow: none; border: none; }
+      .items-table thead tr { background: #f1f5f9 !important; -webkit-print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Acciones -->
+  <div class="action-bar no-print">
+    <a href="{% url 'home_app:lista_ventas' %}" class="btn-minimal">
+      <i class="fas fa-chevron-left"></i> Historial
+    </a>
+    <div class="d-flex gap-2">
+      <button class="btn-minimal" onclick="window.print()">
+        <i class="fas fa-print"></i> Imprimir
+      </button>
+      <button class="btn-minimal" onclick="window.print()">
+        <i class="fas fa-file-pdf"></i> PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- Factura -->
+  <div class="invoice-wrap">
+    <article class="invoice">
+      
+      <header class="invoice-header">
+        <div class="brand-section">
+          <h1>KUDEA</h1>
+          <p>Sistemas de Gestión Professional</p>
+        </div>
+        <div class="invoice-status-block">
+          <div class="invoice-label">Ticket No.</div>
+          <p class="invoice-id">{{ venta.codigo }}</p>
+        </div>
+      </header>
+
+      <!-- Meta Info con realce de encabezados -->
+      <section class="invoice-meta">
+        <div class="meta-group">
+          <div class="meta-label">Detalles de Venta</div>
+          <div class="meta-content">
+            <div><span>Fecha emisión</span><span>{{ venta.creado_en|date:"d/m/Y" }}</span></div>
+            <div><span>Hora registro</span><span>{{ venta.creado_en|date:"H:i" }}h</span></div>
+            <div><span>Punto de venta</span><span>TPV 01</span></div>
+          </div>
+        </div>
+        <div class="meta-group">
+          <div class="meta-label">Liquidación</div>
+          <div class="meta-content">
+            <div><span>Método pago</span><span>{{ venta.metodo_pago.nombre }}</span></div>
+            <div><span>Operador</span><span>{{ venta.usuario.username }}</span></div>
+            <div><span>Estado ticket</span><span style="color:#059669">Liquidado</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tabla Productos con franja de color en encabezado -->
+      <main class="invoice-body">
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th style="text-align:left">Descripción Artículo</th>
+              <th class="col-qty">Cant</th>
+              <th class="col-price">Unitario</th>
+              <th class="col-total">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in detalles %}
+            <tr>
+              <td>
+                <div style="font-weight:600; color:var(--text-main)">{{ d.producto.nombre }}</div>
+                {% if d.producto.categoria %}
+                <div style="font-size:0.65rem; color:#94a3b8">Categoría: {{ d.producto.categoria.nombre }}</div>
+                {% endif %}
+              </td>
+              <td class="col-qty">{{ d.cantidad }}</td>
+              <td class="col-price">{{ d.precio_unitario|floatformat:2 }} €</td>
+              <td class="col-total">{{ d.total|floatformat:2 }} €</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </main>
+
+      <!-- Resumen de Totales -->
+      <footer class="summary-section">
+        <div class="summary-table">
+          <div class="summary-row">
+            <span class="summary-label">Importe Base</span>
+            <span class="summary-value">{{ venta.subtotal|floatformat:2 }} €</span>
+          </div>
+          <div class="summary-row discount">
+            <span class="summary-label">Descuento aplicado</span>
+            <span class="summary-value">{% if venta.descuento %}-{{ venta.descuento|floatformat:2 }}{% else %}0,00{% endif %} €</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Total Impuestos (IVA)</span>
+            <span class="summary-value">{{ venta.iva|floatformat:2 }} €</span>
+          </div>
+          <div class="summary-row total">
+            <span class="summary-label">TOTAL FACTURA</span>
+            <span class="summary-value">{{ venta.total|floatformat:2 }} €</span>
+          </div>
+
+          {% if venta.recibido %}
+          <div style="margin-top:15px; border-top:1px dashed #f1f5f9; padding-top:10px;">
+            <div class="summary-row" style="font-size:0.7rem; opacity:0.7">
+              <span class="summary-label">Pagado</span>
+              <span class="summary-value">{{ venta.recibido|floatformat:2 }} €</span>
+            </div>
+            <div class="summary-row" style="font-size:0.7rem; opacity:0.7">
+              <span class="summary-label">Cambio</span>
+              <span class="summary-value">{{ venta.cambio|floatformat:2 }} €</span>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </footer>
+
+      <div class="invoice-footer">
+        Documento simplificado generado por KUDEA Smart POS.<br>
+        Emitido id: {{ venta.codigo }} · Gracias por su compra
+      </div>
+    </article>
+  </div>
+
+</body>
+</html>
