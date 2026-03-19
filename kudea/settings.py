@@ -4,6 +4,14 @@ import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
+def get_env_int(name, default):
+    value = os.environ.get(name, str(default))
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
 # Seguridad de Entorno (Environment Variables)
 # Estas variables deben inyectarse en el servidor o archivo .env manejado externamente
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-n=h4#+90b^n2xw!i@$gn935an+5pulpw9isidot+q7fr!gvc@4')
@@ -11,7 +19,7 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-n=h4#+90b^n2xw
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '*').split(',')
+ALLOWED_HOSTS = (os.environ.get('DJANGO_ALLOWED_HOSTS') or '*').split(',')
 
 CSRF_TRUSTED_ORIGINS = [
     "https://*.loca.lt",
@@ -52,7 +60,17 @@ INSTALLED_APPS = [
     'applications.employee',
     'applications.config',
 
+    # Django Sites
+    'django.contrib.sites',
+
+    # Allauth
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
 ]
+
+SITE_ID = get_env_int("DJANGO_SITE_ID", 3)
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -62,6 +80,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    # Allauth middleware
+    'allauth.account.middleware.AccountMiddleware',
 
     'applications.home.middleware.ModuloActivoMiddleware',
 ]
@@ -119,6 +140,36 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+# Authentication Backends
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+# Allauth Settings
+ACCOUNT_LOGOUT_ON_GET = True
+ACCOUNT_LOGIN_METHODS = {'email'}
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+LOGIN_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
+SOCIALACCOUNT_LOGIN_ON_GET = True
+SOCIALACCOUNT_ADAPTER = 'allauth.socialaccount.adapter.DefaultSocialAccountAdapter'
+
+
+# Google Provider Settings
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        }
+    }
+}
 
 
 # Internationalization

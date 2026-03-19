@@ -508,7 +508,7 @@
                     <a href="#" class="btn-kudea-outline py-2 px-4">Ir al Área de Trabajo</a>
                     {% else %}
                     <!-- Asumimos que la url de login predeterminada es '/admin/login/' o la que configures -->
-                    <a href="/admin/login/" class="btn-kudea-outline">Iniciar Sesión</a>
+                    <a href="{% url 'account_login' %}" class="btn-kudea-outline">Iniciar Sesión</a>
                     <a href="#contacto" class="btn-kudea">Contactar</a>
                     {% endif %}
                 </div>

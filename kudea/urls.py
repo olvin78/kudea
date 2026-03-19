@@ -8,8 +8,6 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
-# Vista de login incluida en Django
-from django.contrib.auth import views as auth_views
 
 
 urlpatterns = [
@@ -69,8 +67,8 @@ urlpatterns = [
     # Formas de pago
     path('payments/', include('applications.payments.urls')),
 
-    # Cuentas contables
-    path('accounts/', include('applications.accounts.urls')),
+    # Cuentas contables (Movido de accounts/ a billing/ para evitar conflicto con allauth)
+    path('billing/', include('applications.accounts.urls')),
 
     # Registro de logs
     path('recordlog/', include('applications.recordlog.urls')),
@@ -83,10 +81,10 @@ urlpatterns = [
 
 
     # ===============================
-    # LOGIN
+    # AUTHENTICATION (ALLAUTH)
     # ===============================
-    # Página de login
-    path('login/', auth_views.LoginView.as_view(), name='login'),
+    path('accounts/', include('allauth.urls')),
+
 ]
 
 

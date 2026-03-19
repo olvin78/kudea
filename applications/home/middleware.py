@@ -22,7 +22,7 @@ class ModuloActivoMiddleware:
             "reporting": "informes",
             "cashflow": "movimientos_caja",
             "payments": "formas_pago",
-            "accounts": "cuentas",
+            "billing": "cuentas",
             "recordlog": "orden_registros",
             "attendance": "registro_horas",
             "employees": "empleados",
