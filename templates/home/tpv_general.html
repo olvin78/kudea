@@ -374,13 +374,21 @@
       <i class="fas fa-lock"></i>
     </div>
     <h2>¿Quieres abrir la caja con un usuario?</h2>
-    <p>Por motivos de seguridad y control de arqueos, debes iniciar una sesión de caja antes de poder realizar ventas en el TPV.</p>
+    <p>Por motivos de seguridad y control de arqueos, te recomendamos iniciar una sesión de caja antes de poder realizar ventas en el TPV.</p>
     <div class="caja-cerrada-buttons">
-      <a href="{% url 'home_app:home' %}" class="btn btn-cancelar">Cancelar</a>
+      <button onclick="cerrarRecordatorioCaja()" class="btn btn-cancelar">Cancelar</button>
       <a href="/cash/apertura/" class="btn btn-abrir">Abrir Caja</a>
     </div>
   </div>
 </div>
+<script>
+  function cerrarRecordatorioCaja() {
+    const overlay = document.querySelector('.caja-cerrada-overlay');
+    if (overlay) {
+      overlay.style.display = 'none';
+    }
+  }
+</script>
 {% endif %}
 
 <div class="container-fluid px-8 pt-6 pb-6">
