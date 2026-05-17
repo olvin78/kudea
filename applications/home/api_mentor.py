@@ -14,6 +14,25 @@ def mentor_query(request):
         if not query:
             return JsonResponse({'error': 'No se ha proporcionado ninguna consulta.'}, status=400)
             
+        # Limpiar consulta para detectar saludos comunes
+        query_clean = query.lower().strip().replace("?", "").replace("¿", "").replace("!", "").replace("¡", "")
+        greetings = ["hola", "buenas", "hello", "hi", "que tal", "buenos dias", "buenas tardes", "buenas noches", "quien eres", "mentor"]
+        
+        if query_clean in greetings:
+            saludo_html = (
+                "### 👋 ¡Hola! Soy **Kudea Mentor**, tu copiloto de Inteligencia de Negocio.\n\n"
+                "Estoy aquí para ayudarte a dominar y operar Kudea sin esfuerzo. Puedes preguntarme sobre:\n\n"
+                "1. 💰 **Ventas y TPV**: Cómo cobrar, aplicar descuentos en ticket o productos, y eliminar ítems.\n"
+                "2. 🔓 **Control de Caja**: Aperturas de caja (¡ahora con PIN de seguridad!) y arqueos diarios.\n"
+                "3. 📦 **Inventario y Stock**: Reponer mercancía, crear artículos y alertas de stock bajo.\n"
+                "4. ⏱️ **Personal**: Fichajes QR de tus empleados y control horario.\n\n"
+                "*¿En qué te puedo ayudar hoy? Escribe tu duda o haz clic en alguna de las sugerencias de abajo.*"
+            )
+            return JsonResponse({
+                'respuesta': saludo_html,
+                'tipo': 'saludo'
+            })
+            
         # Buscar en la memoria local
         results = search_knowledge(query)
         
