@@ -106,6 +106,7 @@ class ConfiguracionTPV(models.Model):
     moneda = models.CharField(max_length=10, default="€")
     imprimir_tickets = models.BooleanField(default=True)
     mostrar_stock = models.BooleanField(default=True)
+    pin_apertura = models.CharField(max_length=4, default="1234", verbose_name="PIN de apertura de caja")
     actualizado_en = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -136,3 +137,19 @@ class CajaArqueo(models.Model):
 
     def __str__(self):
         return f"Arqueo #{self.id} - {self.creado_en.strftime('%d/%m/%Y')}"
+
+
+class Comunicacion(models.Model):
+    emisor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comunicaciones_enviadas')
+    titulo = models.CharField(max_length=200)
+    contenido = models.TextField()
+    creado_en = models.DateTimeField(auto_now_add=True)
+    visto_por = models.ManyToManyField(User, related_name='comunicaciones_vistas', blank=True)
+
+    class Meta:
+        verbose_name = "Comunicación"
+        verbose_name_plural = "Comunicaciones"
+        ordering = ['-creado_en']
+
+    def __str__(self):
+        return self.titulo

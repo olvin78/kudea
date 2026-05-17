@@ -1,158 +1,835 @@
-{% extends "base.html" %}
-{% block title %}Configuraciones del Sistema — Kudea{% endblock %}
+{% extends "home/base.html" %}
+{% block title %}Centro de Control General — Kudea{% endblock %}
 
-{% block content %}
-<div class="config-page">
-
-  <!-- CABECERA -->
-  <div class="config-header">
-    <div class="config-header-icon">⚙️</div>
-    <div>
-      <h1 class="config-title">Configuraciones del Sistema</h1>
-      <p class="config-subtitle">Panel de control y diagnóstico de Kudea</p>
-    </div>
-  </div>
-
-  <!-- ============================================ -->
-  <!-- PANEL: GUARDIÁN KUDEA — ALERTAS DEL SISTEMA  -->
-  <!-- ============================================ -->
-  <div class="config-section">
-    <div class="config-section-header">
-      <span class="config-section-icon">🛡️</span>
-      <div>
-        <h2 class="config-section-title">Guardián Kudea — Estado del Sistema</h2>
-        <p class="config-section-desc">El guardián analiza tu base de datos y código en busca de problemas.</p>
-      </div>
-      <span class="badge-alertas {% if total_alertas > 0 %}badge-danger{% else %}badge-ok{% endif %}">
-        {% if total_alertas > 0 %}
-          {{ total_alertas }} alerta{{ total_alertas|pluralize }}
-        {% else %}
-          ✅ Todo OK
-        {% endif %}
-      </span>
-    </div>
-
-    {% if alertas %}
-      <div class="alertas-list">
-        {% for alerta in alertas %}
-          <div class="alerta-card alerta-{{ alerta.tipo|lower }}">
-            <div class="alerta-badge">{{ alerta.tipo }}</div>
-            <div class="alerta-body">
-              <p class="alerta-mensaje">{{ alerta.mensaje }}</p>
-              <small class="alerta-time">🕐 {{ alerta.timestamp }}</small>
-            </div>
-          </div>
-        {% endfor %}
-      </div>
-    {% else %}
-      <div class="alertas-empty">
-        <span class="alertas-empty-icon">✅</span>
-        <p>El sistema no ha detectado ningún problema. ¡Todo en orden!</p>
-      </div>
-    {% endif %}
-  </div>
-
-  <!-- ============================================ -->
-  <!-- PANEL: ACCIONES DE MANTENIMIENTO             -->
-  <!-- ============================================ -->
-  <div class="config-section">
-    <div class="config-section-header">
-      <span class="config-section-icon">🧠</span>
-      <div>
-        <h2 class="config-section-title">Cerebro de la IA</h2>
-        <p class="config-section-desc">Información sobre el aprendizaje automático del Mentor de Kudea.</p>
-      </div>
-    </div>
-    <div class="config-info-grid">
-      <div class="config-info-card">
-        <span class="info-icon">📂</span>
-        <span class="info-label">Fuente de datos</span>
-        <span class="info-value">dynamic_brain.json</span>
-      </div>
-      <div class="config-info-card">
-        <span class="info-icon">🔄</span>
-        <span class="info-label">Sincronización</span>
-        <span class="info-value">brain_sync.py</span>
-      </div>
-      <div class="config-info-card">
-        <span class="info-icon">🛡️</span>
-        <span class="info-label">Centinela</span>
-        <span class="info-value">kudea_guardian.py</span>
-      </div>
-    </div>
-  </div>
-
-</div>
+{% block head %}
+{{ block.super }}
+<style>
+    body { font-family: 'Outfit', sans-serif; background: #f8fafc; color: #1e293b; }
+    
+    /* Integrated sub-layout */
+    .settings-container {
+        display: flex;
+        gap: 2rem;
+        margin-top: 1rem;
+    }
+    
+    /* Navigation Panel */
+    .settings-nav {
+        width: 280px;
+        flex-shrink: 0;
+    }
+    .settings-nav-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 24px;
+        padding: 1.5rem 1rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+    }
+    .settings-nav-item {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 18px;
+        color: #475569;
+        font-weight: 700;
+        font-size: 0.88rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-radius: 16px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-bottom: 6px;
+    }
+    .settings-nav-item i {
+        font-size: 1.1rem;
+        width: 24px;
+        text-align: center;
+        opacity: 0.8;
+    }
+    .settings-nav-item:hover {
+        background: #f1f5f9;
+        color: #1D3557;
+    }
+    .settings-nav-item.active {
+        background: #1D3557;
+        color: white;
+        box-shadow: 0 10px 20px -5px rgba(29, 53, 87, 0.3);
+    }
+    .settings-nav-item.active i {
+        opacity: 1;
+    }
+    
+    /* Content Canvas */
+    .settings-canvas {
+        flex-grow: 1;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 28px;
+        padding: 3.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+    }
+    
+    /* Sections */
+    .settings-tab-section {
+        display: none;
+        animation: fadeInTab 0.3s ease forwards;
+    }
+    .settings-tab-section.active {
+        display: block;
+    }
+    @keyframes fadeInTab {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Form inputs */
+    .form-group {
+        margin-bottom: 1.8rem;
+    }
+    .c-label {
+        font-size: 0.78rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #475569;
+        margin-bottom: 10px;
+        display: block;
+    }
+    .c-input {
+        width: 100%;
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 15px 20px;
+        font-weight: 700;
+        color: #1e293b;
+        transition: all 0.2s ease;
+        outline: none;
+    }
+    .c-input:focus {
+        border-color: #1D3557;
+        background: white;
+        box-shadow: 0 0 0 4px rgba(29, 53, 87, 0.08);
+    }
+    
+    /* Inline toggles (iOS switch wrapper) */
+    .toggle-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 24px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        transition: all 0.2s ease;
+    }
+    .toggle-row:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+    }
+    
+    /* Superpower switch wrappers (with red/gold borders) */
+    .superpower-box {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 20px 24px;
+        background: rgba(245, 158, 11, 0.05);
+        border: 2px dashed rgba(245, 158, 11, 0.3);
+        border-radius: 20px;
+        margin-top: 1.5rem;
+    }
+    .superpower-box input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        margin-top: 3px;
+        cursor: pointer;
+        accent-color: #1D3557;
+    }
+    
+    /* iOS Switch */
+    .switch-container {
+        position: relative;
+        display: inline-block;
+        width: 52px;
+        height: 28px;
+    }
+    .switch-container input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: #cbd5e1;
+        transition: .3s;
+        border-radius: 34px;
+    }
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 20px;
+        width: 20px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .3s;
+        border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    }
+    input:checked + .slider {
+        background-color: #1D3557;
+    }
+    input:checked + .slider:before {
+        transform: translateX(24px);
+    }
+    
+    /* Grid de Módulos & Categorías */
+    .modules-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+    }
+    .categories-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 16px;
+    }
+    
+    /* Tabla Métodos de Pago & Personal */
+    .payment-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 12px;
+    }
+    .payment-table th {
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #64748b;
+        padding: 10px 24px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    .payment-row {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s ease;
+    }
+    .payment-row:hover {
+        background: #f1f5f9;
+        transform: translateY(-1px);
+    }
+    .payment-row td {
+        padding: 18px 24px;
+    }
+    .payment-row td:first-child {
+        border-top-left-radius: 20px;
+        border-bottom-left-radius: 20px;
+        border-left: 4px solid #1D3557;
+    }
+    .payment-row td:last-child {
+        border-top-right-radius: 20px;
+        border-bottom-right-radius: 20px;
+    }
+    
+    /* Info banners */
+    .info-banner {
+        background: #eff6ff;
+        border-left: 4px solid #3b82f6;
+        padding: 20px 24px;
+        border-radius: 16px;
+        font-size: 0.88rem;
+        line-height: 1.6;
+        color: #1e3a8a;
+    }
+    
+    /* Barra de Acción */
+    .submit-bar {
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 2px solid #f1f5f9;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+    }
+    
+    /* Botón Guardar Premium */
+    .btn-save-premium {
+        position: relative;
+        background: linear-gradient(135deg, #1D3557 0%, #457B9D 100%);
+        color: white;
+        font-weight: 800;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        padding: 18px 45px;
+        border-radius: 20px;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        box-shadow: 0 10px 25px -5px rgba(29, 53, 87, 0.4), 0 8px 16px -6px rgba(69, 123, 157, 0.3);
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        overflow: hidden;
+    }
+    
+    .btn-save-premium:hover {
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 15px 30px -5px rgba(29, 53, 87, 0.5), 0 12px 20px -6px rgba(69, 123, 157, 0.4);
+        background: linear-gradient(135deg, #172A45 0%, #5C93B4 100%);
+    }
+    
+    .btn-save-premium:active {
+        transform: translateY(-1px) scale(0.98);
+        box-shadow: 0 5px 15px -5px rgba(29, 53, 87, 0.4);
+    }
+    
+    /* Shine effect animation on hover */
+    .btn-save-premium::after {
+        content: '';
+        position: absolute;
+        top: 0; left: -50%; width: 200%; height: 100%;
+        background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
+        transform: skewX(-25deg);
+        transition: 0.75s;
+        opacity: 0;
+    }
+    
+    .btn-save-premium:hover::after {
+        opacity: 1;
+        left: 125%;
+        transition: all 0.75s ease;
+    }
+    
+    @media (max-width: 900px) {
+        .settings-container {
+            flex-direction: column;
+        }
+        .settings-nav {
+            width: 100%;
+        }
+        .settings-nav-card {
+            display: flex;
+            overflow-x: auto;
+            gap: 8px;
+            padding: 1rem;
+        }
+        .settings-nav-item {
+            margin-bottom: 0;
+            white-space: nowrap;
+        }
+        .settings-canvas {
+            padding: 2rem;
+        }
+    }
+</style>
 {% endblock %}
 
-{% block extra_styles %}
-<style>
-  .config-page { padding: 2rem; max-width: 900px; margin: 0 auto; }
+{% block content %}
+<div class="bg-mesh min-h-screen p-4 md:p-8">
+    <div class="max-w-[1300px] mx-auto">
+        
+        <!-- HEADER INTEGRADO -->
+        <header class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6 border-bottom pb-6 border-slate-200">
+            <div>
+                <span class="text-xs font-black text-primary-blue uppercase tracking-widest block mb-2"><i class="fas fa-cog me-1"></i> Panel de Configuración General</span>
+                <h1 class="text-4xl font-black text-slate-900 tracking-tight">Centro de Control Kudea</h1>
+                <p class="text-slate-500 font-medium mt-1">Configuración global del negocio, cajas registradoras, políticas de impuestos, permisos de personal y catálogo.</p>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <span class="bg-slate-100 text-slate-700 px-4 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider shadow-inner">
+                    📦 {{ total_productos }} Productos en catálogo
+                </span>
+            </div>
+        </header>
 
-  .config-header {
-    display: flex; align-items: center; gap: 1.5rem;
-    margin-bottom: 2.5rem; padding: 1.5rem 2rem;
-    background: linear-gradient(135deg, #1a1a2e, #16213e);
-    border-radius: 16px; border: 1px solid rgba(255,255,255,0.08);
-  }
-  .config-header-icon { font-size: 3rem; }
-  .config-title { font-size: 1.8rem; font-weight: 700; color: #fff; margin: 0; }
-  .config-subtitle { color: rgba(255,255,255,0.5); margin: 0.3rem 0 0; font-size: 0.95rem; }
+        {% if messages %}
+        <div class="mb-8 space-y-3">
+            {% for message in messages %}
+            <div class="bg-emerald-50 border-2 border-emerald-200 text-emerald-800 px-6 py-5 rounded-2xl text-sm font-bold flex items-start gap-4 shadow-sm">
+                <i class="fas fa-check-circle text-emerald-500 text-xl mt-0.5"></i>
+                <div>
+                    <h4 class="font-black text-emerald-950 mb-0.5">¡Operación Realizada con Éxito!</h4>
+                    <p class="text-emerald-700 font-medium text-xs">{{ message }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
 
-  .config-section {
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 16px; padding: 1.5rem 2rem; margin-bottom: 1.5rem;
-  }
-  .config-section-header {
-    display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem;
-  }
-  .config-section-icon { font-size: 1.8rem; margin-top: 0.1rem; }
-  .config-section-title { font-size: 1.2rem; font-weight: 600; color: #fff; margin: 0; }
-  .config-section-desc { color: rgba(255,255,255,0.45); margin: 0.2rem 0 0; font-size: 0.88rem; }
+        <!-- CONTENEDOR INTEGRADO EN PÁGINA (SIN BORDE CARD FLOTANTE) -->
+        <form method="POST" action="{% url 'configuraciones' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="settings-container">
+                
+                <!-- SECCIÓN NAV LATERAL NATIVA -->
+                <div class="settings-nav">
+                    <div class="settings-nav-card">
+                        <div class="settings-nav-item active" onclick="changeTab('tienda', this)">
+                            <i class="fas fa-store"></i> General & TPV
+                        </div>
+                        <div class="settings-nav-item" onclick="changeTab('fiscal', this)">
+                            <i class="fas fa-calculator"></i> Impuestos & IVA
+                        </div>
+                        <div class="settings-nav-item" onclick="changeTab('modulos', this)">
+                            <i class="fas fa-toggle-on"></i> Módulos (ON/OFF)
+                        </div>
+                        <div class="settings-nav-item" onclick="changeTab('pagos', this)">
+                            <i class="fas fa-wallet"></i> Métodos de Pago
+                        </div>
+                        <div class="settings-nav-item" onclick="changeTab('personal', this)">
+                            <i class="fas fa-user-shield"></i> Personal & Roles
+                        </div>
+                        <div class="settings-nav-item" onclick="changeTab('categorias', this)">
+                            <i class="fas fa-tags"></i> Categorías Catálogo
+                        </div>
+                        <div class="settings-nav-item" onclick="changeTab('cajas', this)">
+                            <i class="fas fa-desktop"></i> Cajas Activas
+                            {% if total_cajas_activas > 0 %}
+                            <span class="bg-emerald-500 text-white font-black text-[9px] px-2 py-0.5 rounded-full ml-auto animate-pulse">
+                                {{ total_cajas_activas }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
 
-  .badge-alertas {
-    margin-left: auto; padding: 0.4rem 1rem; border-radius: 20px;
-    font-weight: 600; font-size: 0.85rem; white-space: nowrap;
-  }
-  .badge-danger { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
-  .badge-ok { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+                <!-- SECCIÓN CANVAS DE CONFIGURACIONES -->
+                <div class="settings-canvas">
+                    
+                    <!-- TAB 1: GENERAL & TPV -->
+                    <div id="sect-tienda" class="settings-tab-section active">
+                        <div class="mb-8 border-bottom pb-4 border-slate-100">
+                            <h2 class="text-2xl font-black text-slate-800 tracking-tight mb-1">🏪 Gestión Comercial & Operación TPV</h2>
+                            <p class="text-slate-500 font-medium text-sm">Controla la marca comercial y el flujo operativo de los tickets en las cajas registradoras.</p>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                            <div class="form-group">
+                                <label class="c-label">Nombre Comercial de la Tienda (Cabecera)</label>
+                                <input type="text" name="nombre_tienda" class="c-input" value="{{ config_tpv.nombre_tienda }}" placeholder="Ej: Supermercado Kudea">
+                            </div>
+                            <div class="form-group">
+                                <label class="c-label">Símbolo de Divisa Comercial</label>
+                                <select name="moneda" class="c-input">
+                                    <option value="€" {% if config_tpv.moneda == "€" %}selected{% endif %}>Euro (€)</option>
+                                    <option value="$" {% if config_tpv.moneda == "$" %}selected{% endif %}>Dólar ($)</option>
+                                    <option value="£" {% if config_tpv.moneda == "£" %}selected{% endif %}>Libra (£)</option>
+                                    <option value="¥" {% if config_tpv.moneda == "¥" %}selected{% endif %}>Yen (¥)</option>
+                                </select>
+                            </div>
+                        </div>
 
-  .alertas-list { display: flex; flex-direction: column; gap: 0.75rem; }
-  .alerta-card {
-    display: flex; align-items: flex-start; gap: 1rem;
-    padding: 1rem 1.2rem; border-radius: 10px;
-    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);
-  }
-  .alerta-card.alerta-negocio { border-left: 3px solid #f87171; }
-  .alerta-card.alerta-ingenieria { border-left: 3px solid #f59e0b; }
-  .alerta-card.alerta-operativo { border-left: 3px solid #60a5fa; }
-  .alerta-card.alerta-sistema { border-left: 3px solid #a78bfa; }
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                            <div class="form-group">
+                                <label class="c-label">PIN de Apertura de Caja (4 dígitos)</label>
+                                <input type="text" name="pin_apertura" class="c-input" value="{{ config_tpv.pin_apertura|default:'1234' }}" maxlength="4" pattern="\d{4}" title="Debe contener exactamente 4 números" placeholder="Ej: 1234">
+                            </div>
+                            <div class="form-group d-flex flex-column justify-content-end">
+                                <span class="text-xs text-slate-400 font-medium pb-2">Por motivos de seguridad, este código PIN de 4 dígitos será requerido cada vez que un usuario inicie una sesión de caja en el TPV.</span>
+                            </div>
+                        </div>
 
-  .alerta-badge {
-    font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em;
-    background: rgba(255,255,255,0.08); padding: 0.2rem 0.6rem;
-    border-radius: 6px; color: rgba(255,255,255,0.7); white-space: nowrap;
-    margin-top: 0.1rem;
-  }
-  .alerta-mensaje { color: rgba(255,255,255,0.85); margin: 0; font-size: 0.95rem; }
-  .alerta-time { color: rgba(255,255,255,0.3); font-size: 0.8rem; }
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                            <div class="toggle-row">
+                                <div>
+                                    <h4 class="font-black text-slate-800 text-sm mb-1">Mostrar Stock en Cajas</h4>
+                                    <p class="text-xs text-slate-400 font-medium">Permite ver las unidades en inventario al facturar</p>
+                                </div>
+                                <label class="switch-container">
+                                    <input type="checkbox" name="mostrar_stock" {% if config_tpv.mostrar_stock %}checked{% endif %}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="toggle-row">
+                                <div>
+                                    <h4 class="font-black text-slate-800 text-sm mb-1">Auto-Imprimir Tickets Térmicos</h4>
+                                    <p class="text-xs text-slate-400 font-medium">Lanza el ticket a la impresora al cobrar la venta</p>
+                                </div>
+                                <label class="switch-container">
+                                    <input type="checkbox" name="imprimir_tickets" {% if config_tpv.imprimir_tickets %}checked{% endif %}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
 
-  .alertas-empty {
-    text-align: center; padding: 2rem;
-    color: rgba(255,255,255,0.4);
-  }
-  .alertas-empty-icon { font-size: 2.5rem; display: block; margin-bottom: 0.5rem; }
+                        <div class="border-top pt-6 border-slate-100">
+                            <div class="form-group">
+                                <label class="c-label">Umbral de Alerta de Reposición (Stock Mínimo General)</label>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                                    <input type="number" name="stock_minimo_val" class="c-input col-span-2" value="5" placeholder="Ej: 5">
+                                    <div class="text-xs font-bold text-slate-400">unidades de aviso</div>
+                                </div>
+                            </div>
 
-  .config-info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
-  .config-info-card {
-    display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
-    padding: 1.2rem; border-radius: 12px;
-    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
-    text-align: center;
-  }
-  .info-icon { font-size: 1.8rem; }
-  .info-label { font-size: 0.78rem; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.05em; }
-  .info-value { font-size: 0.9rem; color: rgba(255,255,255,0.8); font-family: monospace; }
-</style>
+                            <!-- Superpower 1 checkbox -->
+                            <div class="superpower-box">
+                                <input type="checkbox" id="chk-forzar-stock" name="forzar_stock_minimo">
+                                <div class="text-xs">
+                                    <label for="chk-forzar-stock" class="font-black text-amber-800 uppercase tracking-wide block mb-1">⚡ Superpoder: Forzar Stock Mínimo Global</label>
+                                    <p class="text-amber-700 font-medium">Al activar esta casilla, se actualizará el stock mínimo de reposición de <strong>todos los productos actuales en inventario</strong> al valor indicado arriba.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: IMPUESTOS & IVA -->
+                    <div id="sect-fiscal" class="settings-tab-section">
+                        <div class="mb-6 border-bottom pb-4 border-slate-100">
+                            <h2 class="text-2xl font-black text-slate-800 tracking-tight mb-1">⚖️ Impuestos, IVA & Arqueo Financiero</h2>
+                            <p class="text-slate-500 font-medium text-sm">Configura la política de tributación global y el fondo fijo de apertura diaria de cajas registradoras.</p>
+                        </div>
+
+                        <!-- EXPLICACIÓN DETALLADA ESTILO SUPERMERCADO -->
+                        <div class="info-banner mb-8">
+                            <h4 class="font-black text-blue-900 mb-1.5"><i class="fas fa-info-circle me-1"></i> ¿Cómo funciona el IVA en el TPV y Cajas? (Modelo Supermercado)</h4>
+                            <p class="mb-3 font-medium">Al igual que en un supermercado, **el IVA se calcula y aplica a nivel de producto individual** (línea por línea) y no de forma genérica al total de la compra. Esto te permite tener un ticket con productos de diferentes categorías fiscales (ej: alimentos básicos al 4%, bebidas preparadas al 10% y artículos de bazar al 21%). Al finalizar la venta, las cajas suman los IVAs individuales para mostrar el desglose fiscal.</p>
+                            <p class="font-medium">El valor configurado abajo define el **IVA general por defecto** para nuevos artículos. Sin embargo, si deseas realizar un cambio fiscal completo en tu negocio, puedes usar el **Superpoder de Sincronización** para forzar el cambio en todos los productos existentes simultáneamente.</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                            <div class="form-group">
+                                <label class="c-label">Nombre del Registro Fiscal General</label>
+                                <input type="text" name="nombre_fiscal" class="c-input" value="{{ config_fiscal.nombre }}" placeholder="Ej: Ajuste General IVA">
+                            </div>
+                            <div class="form-group">
+                                <label class="c-label">IVA General Predeterminado (%)</label>
+                                <div class="relative">
+                                    <input type="number" step="0.01" name="iva_general" class="c-input" value="{{ config_fiscal.iva_general|stringformat:'.2f' }}" placeholder="Ej: 21.00">
+                                    <span class="absolute right-5 top-1/2 -translate-y-1/2 font-black text-slate-400 text-sm">%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-bottom border-slate-100">
+                            <div class="form-group">
+                                <label class="c-label">Fondo de Caja Fijo en Aperturas ({{ config_tpv.moneda }})</label>
+                                <div class="relative">
+                                    <input type="number" step="0.01" name="fondo_caja_defecto" class="c-input" value="{{ config_fiscal.fondo_caja_defecto|stringformat:'.2f' }}" placeholder="Ej: 200.00">
+                                    <span class="absolute right-5 top-1/2 -translate-y-1/2 font-black text-slate-400 text-sm">{{ config_tpv.moneda }}</span>
+                                </div>
+                                <span class="text-[10px] font-bold text-slate-400 mt-2 block ml-1"><i class="fas fa-question-circle"></i> Los cajones portamonedas se abrirán con este fondo base para dar cambio.</span>
+                            </div>
+                        </div>
+
+                        <!-- Superpower 2 checkbox -->
+                        <div class="superpower-box">
+                            <input type="checkbox" id="chk-forzar-iva" name="forzar_iva_productos">
+                            <div class="text-xs">
+                                <label for="chk-forzar-iva" class="font-black text-amber-800 uppercase tracking-wide block mb-1">⚡ Superpoder: Sincronizar e Imponer IVA Global</label>
+                                <p class="text-amber-700 font-medium">Al activar esta casilla, **se forzará y cambiará el IVA del {{ config_fiscal.iva_general }}% a TODOS los productos del catálogo actual en tu base de datos**, actualizando al instante todas tus cajas y terminales de venta.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 3: MÓDULOS (ON/OFF) -->
+                    <div id="sect-modulos" class="settings-tab-section">
+                        <div class="mb-8 border-bottom pb-4 border-slate-100">
+                            <h2 class="text-2xl font-black text-slate-800 tracking-tight mb-1">🔌 Gestión Dinámica de Módulos (Interruptores)</h2>
+                            <p class="text-slate-500 font-medium text-sm">Habilita o desahabilita en vivo las secciones del menú lateral izquierdo de toda la organización.</p>
+                        </div>
+
+                        <div class="modules-grid">
+                            {% for modulo in modulos %}
+                            <div class="toggle-row">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center border border-slate-200">
+                                        {% if modulo.clave == 'tpv' %}
+                                        <i class="fas fa-cash-register text-xs"></i>
+                                        {% elif modulo.clave == 'tpv_restaurante' %}
+                                        <i class="fas fa-utensils text-xs"></i>
+                                        {% elif modulo.clave == 'facturas' %}
+                                        <i class="fas fa-file-invoice text-xs"></i>
+                                        {% elif modulo.clave == 'stock' %}
+                                        <i class="fas fa-boxes-stacked text-xs"></i>
+                                        {% elif modulo.clave == 'registro_horas' %}
+                                        <i class="fas fa-clock text-xs"></i>
+                                        {% elif modulo.clave == 'informes' %}
+                                        <i class="fas fa-chart-pie text-xs"></i>
+                                        {% else %}
+                                        <i class="fas fa-cube text-xs"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-slate-800 text-xs mb-0">{{ modulo.nombre }}</h4>
+                                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-tight">{{ modulo.clave }}</span>
+                                    </div>
+                                </div>
+                                <label class="switch-container">
+                                    <input type="checkbox" name="modulo_{{ modulo.clave }}" {% if modulo.activo %}checked{% endif %}>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- TAB 4: MÉTODOS DE PAGO -->
+                    <div id="sect-pagos" class="settings-tab-section">
+                        <div class="mb-8 border-bottom pb-4 border-slate-100">
+                            <h2 class="text-2xl font-black text-slate-800 tracking-tight mb-1">💳 Gestión de Pasarelas & Métodos de Pago</h2>
+                            <p class="text-slate-500 font-medium text-sm">Habilita los diferentes medios de cobro al cliente y su comportamiento financiero.</p>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="payment-table">
+                                <thead>
+                                    <tr>
+                                        <th class="text-left">Método de Pago</th>
+                                        <th class="text-center">Permite Dar Cambio</th>
+                                        <th class="text-right">Estado Activo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for metodo in metodos_pago %}
+                                    <tr class="payment-row">
+                                        <td class="text-left font-black text-slate-800">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-10 h-10 bg-slate-100 border border-slate-200 rounded-xl flex items-center justify-center text-slate-600 text-lg">
+                                                    {% if metodo.nombre|lower == 'efectivo' %}
+                                                    <i class="fas fa-coins text-emerald-600"></i>
+                                                    {% elif metodo.nombre|lower == 'tarjeta' %}
+                                                    <i class="fas fa-credit-card text-blue-600"></i>
+                                                    {% else %}
+                                                    <i class="fas fa-wallet text-amber-600"></i>
+                                                    {% endif %}
+                                                </div>
+                                                {{ metodo.nombre }}
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            <label class="switch-container">
+                                                <input type="checkbox" name="metodo_cambio_{{ metodo.id }}" {% if metodo.acepta_cambio %}checked{% endif %}>
+                                                <span class="slider"></span>
+                                            </label>
+                                        </td>
+                                        <td class="text-right">
+                                            <label class="switch-container" style="margin-left: auto;">
+                                                <input type="checkbox" name="metodo_activo_{{ metodo.id }}" {% if metodo.activo %}checked{% endif %}>
+                                                <span class="slider"></span>
+                                            </label>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- TAB 5: PERSONAL & ROLES -->
+                    <div id="sect-personal" class="settings-tab-section">
+                        <div class="mb-8 border-bottom pb-4 border-slate-100">
+                            <h2 class="text-2xl font-black text-slate-800 tracking-tight mb-1">👥 Personal & Roles Operativos</h2>
+                            <p class="text-slate-500 font-medium text-sm">Gestiona y restringe los permisos de uso de tus empleados al usar las cajas registradoras.</p>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="payment-table">
+                                <thead>
+                                    <tr>
+                                        <th class="text-left">Nombre Empleado</th>
+                                        <th class="text-center">Es Administrador</th>
+                                        <th class="text-center">Salidas de Dinero</th>
+                                        <th class="text-center">Cambiar Precios</th>
+                                        <th class="text-center">¿De Baja?</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for emp in empleados %}
+                                    <tr class="payment-row">
+                                        <td class="text-left font-black text-slate-800">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-10 h-10 bg-slate-100 border border-slate-200 rounded-full flex items-center justify-center text-slate-600 font-black text-xs">
+                                                    {{ emp.nombre|slice:":2"|upper }}
+                                                </div>
+                                                <div>
+                                                    <span class="block text-slate-900">{{ emp.nombre }}</span>
+                                                    <span class="text-[9px] font-mono font-bold text-slate-400 bg-white px-2 py-0.5 rounded border border-slate-200 mt-1 inline-block">{{ emp.codigo }}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            <label class="switch-container">
+                                                <input type="checkbox" name="emp_admin_{{ emp.id }}" {% if emp.es_administrador %}checked{% endif %}>
+                                                <span class="slider"></span>
+                                            </label>
+                                        </td>
+                                        <td class="text-center">
+                                            <label class="switch-container">
+                                                <input type="checkbox" name="emp_salidas_{{ emp.id }}" {% if emp.puede_realizar_salidas %}checked{% endif %}>
+                                                <span class="slider"></span>
+                                            </label>
+                                        </td>
+                                        <td class="text-center">
+                                            <label class="switch-container">
+                                                <input type="checkbox" name="emp_subtotales_{{ emp.id }}" {% if emp.puede_cambiar_subtotales %}checked{% endif %}>
+                                                <span class="slider"></span>
+                                            </label>
+                                        </td>
+                                        <td class="text-center">
+                                            <label class="switch-container">
+                                                <input type="checkbox" name="emp_baja_{{ emp.id }}" {% if emp.esta_de_baja %}checked{% endif %}>
+                                                <span class="slider"></span>
+                                            </label>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-8 text-slate-400 font-bold">
+                                            No hay personal registrado en el sistema.
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- TAB 6: CATEGORÍAS CATÁLOGO -->
+                    <div id="sect-categorias" class="settings-tab-section">
+                        <div class="mb-8 border-bottom pb-4 border-slate-100">
+                            <h2 class="text-2xl font-black text-slate-800 tracking-tight mb-1">🏷️ Categorías del Catálogo de Productos</h2>
+                            <p class="text-slate-500 font-medium text-sm">Administra las agrupaciones del catálogo comercial y registra nuevas categorías sin salir de la configuración.</p>
+                        </div>
+
+                        <!-- GRID DE CATEGORÍAS -->
+                        <div class="categories-grid mb-8">
+                            {% for cat in categorias %}
+                            <div class="toggle-row" style="flex-direction: row; justify-content: space-between; align-items: center; padding: 18px 24px;">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center border border-slate-200">
+                                        <i class="fas fa-folder text-xs"></i>
+                                    </div>
+                                    <strong class="text-xs font-black text-slate-800">{{ cat.nombre }}</strong>
+                                </div>
+                                <span class="bg-slate-200 text-slate-700 font-black text-[9px] px-2.5 py-1 rounded-full uppercase tracking-wider">
+                                    {{ cat.total_productos }} art.
+                                </span>
+                            </div>
+                            {% empty %}
+                            <div class="col-span-full text-center py-8 text-slate-400 font-bold">
+                                No hay categorías registradas en el catálogo.
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- CREADOR DE CATEGORÍA DIRECTO (MISMO FORM) -->
+                        <div class="bg-slate-50 border border-slate-200 rounded-3xl p-6 md:p-8">
+                            <h4 class="font-black text-slate-800 text-sm mb-3">➕ Añadir Nueva Categoría de Producto</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                                <div class="md:col-span-3">
+                                    <label class="c-label">Nombre de la Categoría</label>
+                                    <input type="text" name="categoria_nombre_nuevo" class="c-input" placeholder="Ej: Bebidas Frías, Accesorios, Ofertas...">
+                                </div>
+                                <div>
+                                    <button type="submit" name="crear_categoria_btn" class="w-100 bg-emerald-600 hover:bg-emerald-700 text-white py-4.5 rounded-2xl font-black text-xs uppercase tracking-wider transition-all shadow-md flex items-center justify-center gap-2">
+                                        <i class="fas fa-plus"></i> Añadir
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 7: CAJAS ACTIVAS -->
+                    <div id="sect-cajas" class="settings-tab-section">
+                        <div class="mb-8 border-bottom pb-4 border-slate-100">
+                            <h2 class="text-2xl font-black text-slate-800 tracking-tight mb-1">💻 Cajas Registradoras Activas (Turnos)</h2>
+                            <p class="text-slate-500 font-medium text-sm">Monitorea en tiempo real qué terminales de venta se encuentran abiertas y qué empleado las opera.</p>
+                        </div>
+
+                        {% if cajas_activas %}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {% for caja in cajas_activas %}
+                            <div class="bg-slate-50 border border-slate-200 rounded-[2rem] p-6 relative overflow-hidden transition-all hover:shadow-lg">
+                                <div class="absolute top-0 right-0 w-3 h-100 bg-emerald-500"></div>
+                                <div class="flex items-start justify-between gap-4 mb-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-12 h-12 bg-white border border-slate-200 text-emerald-600 rounded-2xl flex items-center justify-center text-xl shadow-sm">
+                                            <i class="fas fa-desktop"></i>
+                                        </div>
+                                        <div>
+                                            <span class="text-[9px] font-black uppercase tracking-widest text-slate-400">Terminal Activa</span>
+                                            <h4 class="font-black text-slate-800 text-sm mt-0.5">Cajero: {{ caja.usuario.username }}</h4>
+                                        </div>
+                                    </div>
+                                    <span class="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 font-black text-[9px] px-3 py-1.5 rounded-full uppercase tracking-wider">
+                                        <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></span>
+                                        En Turno
+                                    </span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4 border-top border-slate-200 pt-4 mb-4">
+                                    <div>
+                                        <span class="text-[9px] font-bold text-slate-400 uppercase">Fondo Inicial</span>
+                                        <strong class="block text-slate-800 text-sm mt-0.5">{{ caja.fondo_inicial }} {{ config_tpv.moneda }}</strong>
+                                    </div>
+                                    <div>
+                                        <span class="text-[9px] font-bold text-slate-400 uppercase">Apertura</span>
+                                        <strong class="block text-slate-800 text-xs mt-0.5">{{ caja.hora_apertura|date:"d/m/Y H:i" }}</strong>
+                                    </div>
+                                </div>
+                                <div class="flex justify-end">
+                                    <a href="{% url 'cash_app:cash_index' %}" class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-5 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center gap-2">
+                                        <i class="fas fa-search-plus"></i> Control de Caja
+                                    </a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2.5rem] text-center py-16 px-6">
+                            <div class="w-20 h-20 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center text-3xl mx-auto mb-6">
+                                <i class="fas fa-cash-register"></i>
+                            </div>
+                            <h3 class="text-xl font-black text-slate-800 mb-2">No hay cajas abiertas actualmente</h3>
+                            <p class="text-slate-500 font-medium max-w-md mx-auto mb-8">Todos los terminales de venta se encuentran cerrados. Los empleados deberán realizar una apertura de caja para comenzar a facturar.</p>
+                            <a href="{% url 'cash_app:apertura_caja' %}" class="inline-flex items-center gap-2 bg-dark-blue hover:bg-slate-800 text-white px-8 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-dark-blue/20">
+                                <i class="fas fa-key"></i> Abrir Turno de Caja
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- BOTÓN DE ACCIÓN COMPARTIDO NATIVO -->
+                    <div class="submit-bar">
+                        <button type="submit" class="btn-save-premium">
+                            <i class="fas fa-save"></i> Guardar Ajustes Generales
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Lógica para cambiar de pestañas en el canvas nativo
+    function changeTab(tabId, clickedBtn) {
+        // Desactivar todos los botones de navegación
+        document.querySelectorAll('.settings-nav-item').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // Activar botón clicado
+        clickedBtn.classList.add('active');
+        
+        // Ocultar todas las secciones de contenido
+        document.querySelectorAll('.settings-tab-section').forEach(section => {
+            section.classList.remove('active');
+        });
+        
+        // Mostrar sección del ID correspondiente
+        const targetSect = document.getElementById('sect-' + tabId);
+        if (targetSect) {
+            targetSect.classList.add('active');
+        }
+    }
+</script>
 {% endblock %}

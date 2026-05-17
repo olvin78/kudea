@@ -216,24 +216,32 @@ class AperturaCajaView(LoginRequiredMixin, View):
             messages.warning(request, "Ya existe una apertura de caja abierta para hoy.")
             return redirect("home_app:tpv_general")
 
-        # Ver si viene del botón de recuperar cierre (campo oculto)
-        fondo_recuperado = request.POST.get('fondo_inicial')
+        # Validar PIN de apertura de caja
+        from applications.home.models import ConfiguracionTPV
+        config_tpv = ConfiguracionTPV.objects.first()
+        pin_correcto = config_tpv.pin_apertura if (config_tpv and config_tpv.pin_apertura) else "1234"
         
-        if fondo_recuperado:
-            # Crear apertura directamente con el valor recuperado
-            from decimal import Decimal
-            try:
-                fondo_val = Decimal(fondo_recuperado)
-                AperturaCaja.objects.create(
-                    usuario=request.user,
-                    fecha=localdate(),
-                    fondo_inicial=fondo_val,
-                    estado='abierta'
-                )
-                messages.success(request, f"Caja abierta con fondo recuperado de {fondo_val} €")
-                return redirect("home_app:tpv_general")
-            except Exception as e:
-                messages.error(request, f"Error al recuperar fondo: {e}")
+        pin_usuario = request.POST.get('pin_apertura', '').strip()
+        if pin_usuario != pin_correcto:
+            messages.error(request, "El PIN de seguridad de apertura introducido es incorrecto.")
+            
+            # Recargar cierres recientes para renderizar de nuevo la página con el error
+            form = AperturaCajaForm(request.POST)
+            from applications.cash.models import CierreCaja
+            ultimo_cierre = CierreCaja.objects.order_by('-hora_cierre').first()
+            
+            from datetime import timedelta
+            hace_7_dias = localdate() - timedelta(days=7)
+            cierres_recientes = CierreCaja.objects.filter(
+                fecha__gte=hace_7_dias
+            ).order_by('-fecha', '-hora_cierre')[:5]
+            
+            return render(request, self.template_name, {
+                "form": form,
+                "apertura_activa": None,
+                "ultimo_cierre": ultimo_cierre,
+                "cierres_recientes": cierres_recientes,
+            })
         
         form = AperturaCajaForm(request.POST)
         if form.is_valid():
@@ -244,7 +252,18 @@ class AperturaCajaView(LoginRequiredMixin, View):
             messages.success(request, f"Caja abierta con fondo inicial de {ap.fondo_inicial} €")
             return redirect("home_app:tpv_general")
 
+        # Recargar cierres si el formulario no es válido
+        from applications.cash.models import CierreCaja
+        ultimo_cierre = CierreCaja.objects.order_by('-hora_cierre').first()
+        from datetime import timedelta
+        hace_7_dias = localdate() - timedelta(days=7)
+        cierres_recientes = CierreCaja.objects.filter(
+            fecha__gte=hace_7_dias
+        ).order_by('-fecha', '-hora_cierre')[:5]
+
         return render(request, self.template_name, {
             "form": form,
             "apertura_activa": None,
+            "ultimo_cierre": ultimo_cierre,
+            "cierres_recientes": cierres_recientes,
         })
