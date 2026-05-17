@@ -171,11 +171,16 @@ class CashflowListView(ListView):
             total_ventas=Sum('venta__total')
         ).filter(total_ventas__gt=0).order_by('-total_ventas')[:5]
 
+        # --- CAJAS ABIERTAS ACTUALMENTE ---
+        from applications.cash.models import AperturaCaja
+        cajas_abiertas = AperturaCaja.objects.filter(estado='abierta').select_related('usuario')
+
         context.update({
             "entradas_total": entradas,
             "salidas_total": salidas_total,
             "saldo_total": saldo,
             "periodo": getattr(self, "periodo", "hoy"),
+            "hoy": now.date(),
             "cuentas": Cuenta.objects.filter(activa=True),
             "ingresos_mes": ingresos_mes,
             "gastos_mes": gastos_mes,
@@ -188,6 +193,7 @@ class CashflowListView(ListView):
             "ultimos_cierres": ultimos_cierres,
             "user_performance": user_performance,
             "canales": Movimiento.CanalOperacion.choices,
+            "cajas_abiertas": cajas_abiertas,
         })
 
         return context

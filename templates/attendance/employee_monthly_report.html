@@ -1,309 +1,412 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="h-full">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Informe Mensual</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-  <style>
-    :root {
-      --primary-color: #4361ee;
-      --secondary-color: #3f37c9;
-      --accent-color: #4cc9f0;
-      --light-color: #f8f9fa;
-      --dark-color: #212529;
-    }
+    <meta charset="UTF-8">
+    <title>Informe Mensual | KUDEA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #f5f7ff;
-      color: var(--dark-color);
-    }
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
     
-    .card-header {
-      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-      color: white;
-      border-radius: 0.5rem 0.5rem 0 0 !important;
-    }
+    <!-- Tailwind CSS & FontAwesome -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
-    .table-responsive {
-      border-radius: 0.5rem;
-      overflow: hidden;
-    }
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-blue': '#499ecf',
+                        'dark-blue': '#1D3557',
+                        'light-blue': '#A8DADC',
+                    },
+                    fontFamily: {
+                        'outfit': ['Outfit', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
     
-    .table {
-      margin-bottom: 0;
-    }
-    
-    .table thead {
-      background-color: var(--primary-color);
-      color: white;
-    }
-    
-    .table th {
-      font-weight: 500;
-    }
-    
-    .btn-primary {
-      background-color: var(--primary-color);
-      border-color: var(--primary-color);
-      transition: all 0.3s ease;
-    }
-    
-    .btn-primary:hover {
-      background-color: var(--secondary-color);
-      border-color: var(--secondary-color);
-      transform: translateY(-2px);
-    }
-    
-    .badge-missing {
-      background-color: #ffea00;
-      color: #333;
-    }
-    
-    .summary-card {
-      border-left: 4px solid var(--accent-color);
-      background-color: white;
-    }
-    
-    .week-header {
-      background-color: #e9ecef;
-      font-weight: 600;
-    }
-    
-    .week-total {
-      background-color: #f8f9fa;
-      font-weight: 600;
-    }
-    
-    .month-total {
-      background-color: var(--primary-color);
-      color: white;
-      font-weight: 600;
-    }
-    
-    .negative-time {
-      color: #dc3545;
-    }
-    
-    .active-session {
-      background-color: rgba(255, 241, 158, 0.3);
-    }
-  </style>
-</head>
-<body>
-  <div class="container py-5">
-    <div class="card border-0 shadow-lg overflow-hidden">
-      <div class="card-header border-0 py-3">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <h2 class="h4 mb-0"><i class="bi bi-calendar-check me-2"></i>Informe Mensual</h2>
-            <p class="mb-0 opacity-75">{{ employee.user.get_full_name }}</p>
-          </div>
-          <span class="badge bg-white text-primary fs-6">
-            <i class="bi bi-calendar-range me-1"></i>
-            {{ first_day|date:"d M Y" }} - {{ last_day|date:"d M Y" }}
-          </span>
-        </div>
-      </div>
-      
-      <div class="card-body">
-        {% if punches %}
-          <!-- Resumen estadístico -->
-          <div class="row mb-4">
-            <div class="col-md-4 mb-3 mb-md-0">
-              <div class="summary-card p-3 rounded shadow-sm">
-                <h6 class="text-muted mb-2">Total de días</h6>
-                <h3 class="mb-0">{{ punches|length }}</h3>
-              </div>
-            </div>
-            <div class="col-md-4 mb-3 mb-md-0">
-              <div class="summary-card p-3 rounded shadow-sm">
-                <h6 class="text-muted mb-2">Registros completos</h6>
-                <h3 class="mb-0">{{ complete_records }}</h3>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="summary-card p-3 rounded shadow-sm">
-                <h6 class="text-muted mb-2">Registros incompletos</h6>
-                <h3 class="mb-0">{{ incomplete_records }}</h3>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Tabla de registros agrupados por semanas -->
-          <div class="table-responsive">
-            <table class="table table-hover align-middle" id="timeReport">
-              <thead>
-                <tr>
-                  <th><i class="bi bi-calendar-event me-1"></i> Fecha</th>
-                  <th><i class="bi bi-clock-history me-1"></i> Entrada</th>
-                  <th><i class="bi bi-clock me-1"></i> Salida</th>
-                  <th><i class="bi bi-stopwatch me-1"></i> Horas</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% regroup punches by week_number as week_list %}
-                
-                {% for week in week_list %}
-                  <tr class="week-header" data-week="{{ week.grouper }}">
-                    <td colspan="4">
-                      <i class="bi bi-calendar-week me-2"></i>
-                      Semana {{ forloop.counter }}
-                      <small class="text-muted ms-2">
-                        {% with week.list|first as first_day %}
-                          {{ first_day.punch.clock_in|date:"d M" }} - 
-                          {% with week.list|last as last_day %}
-                            {{ last_day.punch.clock_in|date:"d M Y" }}
-                          {% endwith %}
-                        {% endwith %}
-                      </small>
-                    </td>
-                  </tr>
-              
-                  {% for item in week.list %}
-                    <tr class="{% if not item.punch.clock_out %}active-session{% endif %}">
-                      <td>{{ item.punch.clock_in|date:"d/m/Y" }}</td>
-                      <td>{{ item.punch.clock_in|date:"H:i:s" }}</td>
-                      <td>
-                        {% if item.punch.clock_out %}
-                          {{ item.punch.clock_out|date:"H:i:s" }}
-                        {% else %}
-                          <span class="badge bg-warning text-dark">En progreso</span>
-                        {% endif %}
-                      </td>
-                      <td class="hours-cell" data-seconds="{% if item.hours_worked %}{{ item.hours_worked }}{% else %}0{% endif %}">
-                        {% if item.hours_worked %}
-                          {{ item.hours_worked }}
-                        {% else %}
-                          -
-                        {% endif %}
-                      </td>
-                    </tr>
-                  {% endfor %}
-                  
-                  <tr class="week-total" data-week="{{ week.grouper }}">
-                    <td colspan="3" class="text-end">Total Semana {{ forloop.counter }}:</td>
-                    <td class="week-total-hours">00:00:00</td>
-                  </tr>
-                {% endfor %}
-              
-                <tr class="month-total">
-                  <td colspan="3" class="text-end">TOTAL MENSUAL:</td>
-                  <td id="month-total-hours">00:00:00</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        {% else %}
-          <div class="text-center py-5">
-            <div class="mb-4">
-              <i class="bi bi-calendar-x text-warning" style="font-size: 3rem;"></i>
-            </div>
-            <h4 class="mb-3">No hay registros este mes</h4>
-            <p class="text-muted">No se encontraron fichajes para el periodo seleccionado.</p>
-          </div>
-        {% endif %}
+    <style>
+        body { font-family: 'Outfit', sans-serif; background: #f8fafc; }
+        .bg-mesh {
+            background-color: #f8fafc;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(73, 158, 207, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(29, 53, 87, 0.03) 0px, transparent 50%);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(73, 158, 207, 0.2);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+        }
+        .active-session {
+            background-color: rgba(73, 158, 207, 0.05);
+            border-left: 4px solid #499ecf;
+        }
         
-        <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
-          <small class="text-muted">Generado el {% now "d/m/Y H:i" %}</small>
-          <a href="{% url 'home_attendance:fichaje_menu' %}" class="btn btn-primary px-4">
-            <i class="bi bi-arrow-left-circle me-2"></i>Volver al Menú
-          </a>
+        /* Print-only section */
+        .print-only { display: none; }
+        
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white !important; padding: 0 !important; margin: 0 !important; color: black !important; }
+            .glass-card { box-shadow: none !important; border: none !important; border-radius: 0 !important; padding: 0 !important; }
+            
+            /* Official Report Styles */
+            .print-header { border-bottom: 2px solid #333; margin-bottom: 20px; padding-bottom: 10px; }
+            .id-grid { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 10px; }
+            .id-grid th, .id-grid td { border: 1px solid #333; padding: 4px 8px; text-align: left; }
+            .id-grid th { background-color: #f1f5f9; font-weight: bold; text-transform: uppercase; }
+            
+            table#timeReport { font-size: 10px !important; border: 1px solid #333 !important; }
+            table#timeReport th { background-color: #f1f5f9 !important; color: black !important; border: 1px solid #333 !important; }
+            table#timeReport td { border: 1px solid #ccc !important; }
+            .week-header { background-color: #f8fafc !important; font-weight: bold !important; border-top: 2px solid #333 !important; }
+            .week-total { background-color: #f1f5f9 !important; font-weight: bold !important; }
+            .month-total { background-color: #333 !important; color: white !important; font-weight: bold !important; -webkit-print-color-adjust: exact; }
+            .active-session { background: transparent !important; border-left: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-mesh min-h-full pb-12">
+
+    <!-- HEADER -->
+    <header class="bg-white/70 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <a href="{% url 'home_attendance:fichaje_menu' %}" class="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:bg-primary-blue hover:text-white flex items-center justify-center transition-all">
+                    <i class="fas fa-arrow-left text-sm"></i>
+                </a>
+                <div>
+                    <h1 class="text-xl font-black text-slate-800 tracking-tight leading-none mb-1">Informe Mensual</h1>
+                    <p class="text-[10px] font-black text-primary-blue uppercase tracking-widest">{{ employee.user.get_full_name }}</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="hidden md:inline-block text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+                    {{ first_day|date:"d M Y" }} - {{ last_day|date:"d M Y" }}
+                </span>
+                <button onclick="window.print()" class="bg-dark-blue hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl font-bold transition-all shadow-xl shadow-dark-blue/10 flex items-center gap-2">
+                    <i class="fas fa-print"></i> <span class="hidden sm:inline">Imprimir</span>
+                </button>
+            </div>
         </div>
-      </div>
-    </div>
-  </div>
+    </header>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        
+        <!-- PRINT ONLY HEADER (OFFICIAL STYLE) -->
+        <div class="print-only">
+            <div class="flex justify-between items-start print-header mb-8">
+                <div class="flex items-center gap-4">
+                    <div class="w-16 h-16 bg-slate-900 text-white rounded-lg flex items-center justify-center font-black text-2xl">K</div>
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-500 uppercase">KUDEA INVENTORY SYSTEMS</p>
+                        <p class="text-[8px] text-slate-400">CONTROL DE ASISTENCIA Y REGISTRO HORARIO</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <h1 class="text-2xl font-black text-slate-900 tracking-tight">INFORME DE REGISTRO HORARIO</h1>
+                    <p class="text-xs font-bold text-slate-500 uppercase">Documento de Validez Interna</p>
+                </div>
+            </div>
 
-  <script>
+            <table class="id-grid mb-8">
+                <tr>
+                    <th colspan="2">Datos identificativos del Trabajador</th>
+                    <th>Nº Identificador</th>
+                    <th>Periodo del Informe</th>
+                </tr>
+                <tr>
+                    <td colspan="2" class="font-bold">{{ employee.user.get_full_name }}</td>
+                    <td>{{ employee.codigo }}</td>
+                    <td>{{ first_day|date:"d/m/Y" }} - {{ last_day|date:"d/m/Y" }}</td>
+                </tr>
+                <tr>
+                    <th>Empresa / Razón Social</th>
+                    <th>Centro de Trabajo</th>
+                    <th>Cargo / Puesto</th>
+                    <th>Fecha de Generación</th>
+                </tr>
+                <tr>
+                    <td class="font-bold">KUDEA SL</td>
+                    <td>CENTRAL</td>
+                    <td>{{ employee.cargo|default:"OPERARIO" }}</td>
+                    <td>{% now "d/m/Y" %}</td>
+                </tr>
+            </table>
+
+            <!-- ANNUAL SUMMARY TABLE (SOCIAL SECURITY STYLE) -->
+            <div class="mb-8 overflow-x-auto">
+                <table class="id-grid w-full text-center">
+                    <tr class="bg-slate-50 font-bold">
+                        <th class="text-left">Año / Mes</th>
+                        <th>Enero</th>
+                        <th>Febrero</th>
+                        <th>Marzo</th>
+                        <th>Abril</th>
+                        <th>Mayo</th>
+                        <th>Junio</th>
+                        <th>Julio</th>
+                        <th>Agosto</th>
+                        <th>Septiembre</th>
+                        <th>Octubre</th>
+                        <th>Noviembre</th>
+                        <th>Diciembre</th>
+                    </tr>
+                    <tr>
+                        <td class="font-bold bg-slate-50 text-left">{{ current_year }}</td>
+                        <td class="text-[10px]">{{ annual_summary.1 }}</td>
+                        <td class="text-[10px]">{{ annual_summary.2 }}</td>
+                        <td class="text-[10px]">{{ annual_summary.3 }}</td>
+                        <td class="text-[10px]">{{ annual_summary.4 }}</td>
+                        <td class="text-[10px]">{{ annual_summary.5 }}</td>
+                        <td class="text-[10px]">{{ annual_summary.6 }}</td>
+                        <td class="text-[10px]">{{ annual_summary.7 }}</td>
+                        <td class="text-[10px]">{{ annual_summary.8 }}</td>
+                        <td class="text-[10px]">{{ annual_summary.9 }}</td>
+                        <td class="text-[10px]">{{ annual_summary.10 }}</td>
+                        <td class="text-[10px]">{{ annual_summary.11 }}</td>
+                        <td class="text-[10px]">{{ annual_summary.12 }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        {% if punches %}
+        <!-- STATS CARDS -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 no-print">
+            <div class="glass-card rounded-3xl p-6 flex items-center gap-5">
+                <div class="w-12 h-12 bg-blue-50 text-primary-blue rounded-2xl flex items-center justify-center text-xl">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Jornadas</p>
+                    <h3 class="text-2xl font-black text-slate-800">{{ punches|length }}</h3>
+                </div>
+            </div>
+            <div class="glass-card rounded-3xl p-6 flex items-center gap-5 border-l-4 border-emerald-400">
+                <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-xl">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Registros Completos</p>
+                    <h3 class="text-2xl font-black text-slate-800">{{ complete_records }}</h3>
+                </div>
+            </div>
+            <div class="glass-card rounded-3xl p-6 flex items-center gap-5 border-l-4 border-amber-400">
+                <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-xl">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Incompletos / Activos</p>
+                    <h3 class="text-2xl font-black text-slate-800">{{ incomplete_records }}</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- REPORT TABLE -->
+        <div class="glass-card rounded-[2.5rem] overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse" id="timeReport">
+                    <thead>
+                        <tr class="bg-slate-50/50 border-b border-slate-100">
+                            <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Fecha</th>
+                            <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Entrada</th>
+                            <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Salida</th>
+                            <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Horas Trabajadas</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-50">
+                        {% regroup punches by week_number as week_list %}
+                        {% for week in week_list %}
+                        <!-- Week Header -->
+                        <tr class="bg-slate-100/30 week-header" data-week="{{ week.grouper }}">
+                            <td colspan="4" class="px-8 py-4">
+                                <div class="flex items-center gap-3">
+                                    <span class="bg-dark-blue text-white text-[10px] font-black px-3 py-1 rounded-lg uppercase tracking-widest">
+                                        Semana {{ forloop.counter }} de {{ first_day|date:"F" }}
+                                    </span>
+                                    <span class="text-xs font-bold text-slate-400">
+                                        {% with week.list|first as first_punch %}
+                                            {{ first_punch.punch.clock_in|date:"d M" }} - 
+                                            {% with week.list|last as last_punch %}
+                                                {{ last_punch.punch.clock_in|date:"d M Y" }}
+                                            {% endwith %}
+                                        {% endwith %}
+                                    </span>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Daily Punches -->
+                        {% for item in week.list %}
+                        <tr class="hover:bg-slate-50/50 transition-colors {% if not item.punch.clock_out %}active-session{% endif %}">
+                            <td class="px-8 py-5">
+                                <span class="text-sm font-black text-slate-700">{{ item.punch.clock_in|date:"d/m/Y" }}</span>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{{ item.punch.clock_in|date:"l" }}</p>
+                            </td>
+                            <td class="px-8 py-5">
+                                <span class="text-sm font-bold text-slate-600">{{ item.punch.clock_in|date:"H:i:s" }}</span>
+                            </td>
+                            <td class="px-8 py-5">
+                                {% if item.punch.clock_out %}
+                                <span class="text-sm font-bold text-slate-600">{{ item.punch.clock_out|date:"H:i:s" }}</span>
+                                {% else %}
+                                <span class="bg-amber-100 text-amber-700 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest animate-pulse">En curso</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-8 py-5 text-right font-mono font-bold text-slate-800 hours-cell" data-seconds="{% if item.hours_worked %}{{ item.hours_worked }}{% else %}0{% endif %}">
+                                {{ item.hours_worked|default:"--" }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+
+                        <!-- Week Total -->
+                        <tr class="bg-slate-50/50 border-t border-slate-100 week-total" data-week="{{ week.grouper }}">
+                            <td colspan="3" class="px-8 py-4 text-right">
+                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Semana {{ forloop.counter }}</span>
+                            </td>
+                            <td class="px-8 py-4 text-right">
+                                <span class="text-base font-black text-primary-blue tabular-nums week-total-hours">00:00:00</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+
+                        <!-- Monthly Final Total -->
+                        <tr class="bg-dark-blue no-print">
+                            <td colspan="3" class="px-8 py-6 text-right">
+                                <span class="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">TOTAL ACUMULADO MENSUAL</span>
+                            </td>
+                            <td class="px-8 py-6 text-right">
+                                <span class="text-2xl font-black text-white tabular-nums" id="month-total-hours">00:00:00</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center py-20 glass-card rounded-[3rem] border-2 border-dashed border-slate-200">
+            <div class="text-5xl mb-6 text-slate-200"><i class="fas fa-calendar-times"></i></div>
+            <h3 class="text-xl font-black text-slate-800 mb-2">No hay registros este mes</h3>
+            <p class="text-slate-500 font-medium">No se encontraron fichajes para el periodo seleccionado.</p>
+        </div>
+        {% endif %}
+
+        <footer class="mt-12 flex flex-col md:flex-row items-center justify-between gap-6 no-print">
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                <i class="fas fa-info-circle mr-1"></i> Generado el {% now "d/m/Y H:i" %}
+            </p>
+            <div class="flex gap-4">
+                <a href="{% url 'home_attendance:fichaje_menu' %}" class="bg-white border border-slate-200 text-slate-600 px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-all">
+                    Volver al Menú
+                </a>
+            </div>
+        </footer>
+    </main>
+
+    <!-- ORIGINAL LOGIC PRESERVED -->
+    <script>
     document.addEventListener('DOMContentLoaded', function() {
-      function timeToSeconds(timeStr) {
-        if (!timeStr || timeStr.trim() === '-' || timeStr.trim() === '00:00:00') return 0;
-        const [hours, minutes, seconds] = timeStr.trim().split(':').map(Number);
-        return (hours * 3600) + (minutes * 60) + seconds;
-      }
+        function timeToSeconds(timeStr) {
+            if (!timeStr || typeof timeStr !== 'string') return 0;
+            const cleanStr = timeStr.trim();
+            if (cleanStr === '-' || cleanStr === '00:00:00' || cleanStr === '--' || cleanStr === '') return 0;
+            
+            const parts = cleanStr.split(':').map(Number);
+            if (parts.some(isNaN)) return 0;
+            
+            const [hours, minutes, seconds] = parts;
+            return (hours * 3600) + (minutes * 60) + (seconds || 0);
+        }
     
-      function secondsToTime(totalSeconds) {
-        const isNegative = totalSeconds < 0;
-        totalSeconds = Math.abs(totalSeconds);
-        const hours = Math.floor(totalSeconds / 3600);
-        const minutes = Math.floor((totalSeconds % 3600) / 60);
-        const seconds = totalSeconds % 60;
-        return `${isNegative ? '-' : ''}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-      }
+        function secondsToTime(totalSeconds) {
+            if (isNaN(totalSeconds)) return '00:00:00';
+            const isNegative = totalSeconds < 0;
+            totalSeconds = Math.abs(totalSeconds);
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            return `${isNegative ? '-' : ''}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
     
-      function calculateTotals() {
-        let weekTotals = {};
-        let monthTotalSeconds = 0;
-        let currentWeek = null;
+        function calculateTotals() {
+            let weekTotals = {};
+            let monthTotalSeconds = 0;
+            let currentWeek = null;
     
-        document.querySelectorAll('#timeReport tbody tr').forEach(row => {
-          if (row.classList.contains('week-header')) {
-            currentWeek = row.getAttribute('data-week');
-          }
+            document.querySelectorAll('#timeReport tbody tr').forEach(row => {
+                if (row.classList.contains('week-header')) {
+                    currentWeek = row.getAttribute('data-week');
+                }
     
-          if (row.classList.contains('week-total') || row.classList.contains('month-total')) {
-            return;
-          }
+                if (row.classList.contains('week-total') || row.classList.contains('month-total') || row.classList.contains('week-header')) {
+                    return;
+                }
     
-          const timeCell = row.querySelector('td.hours-cell');
-          if (timeCell) {
-            const timeStr = timeCell.textContent.trim();
-            const seconds = timeToSeconds(timeStr);
+                const timeCell = row.querySelector('td.hours-cell');
+                if (timeCell) {
+                    const seconds = timeToSeconds(timeCell.textContent);
+                    if (currentWeek) {
+                        if (!weekTotals[currentWeek]) weekTotals[currentWeek] = 0;
+                        weekTotals[currentWeek] += seconds;
+                    }
+                    monthTotalSeconds += seconds;
+                }
+            });
     
-            if (currentWeek) {
-              if (!weekTotals[currentWeek]) weekTotals[currentWeek] = 0;
-              weekTotals[currentWeek] += seconds;
+            for (const week in weekTotals) {
+                const weekTotalRow = document.querySelector(`.week-total[data-week="${week}"] .week-total-hours`);
+                if (weekTotalRow) {
+                    weekTotalRow.textContent = secondsToTime(weekTotals[week]);
+                }
             }
     
-            monthTotalSeconds += seconds;
-          }
-        });
-    
-        for (const week in weekTotals) {
-          const weekTotalRow = document.querySelector(`.week-total[data-week="${week}"] .week-total-hours`);
-          if (weekTotalRow) {
-            weekTotalRow.textContent = secondsToTime(weekTotals[week]);
-          }
+            const monthTotalElement = document.getElementById('month-total-hours');
+            if (monthTotalElement) {
+                monthTotalElement.textContent = secondsToTime(monthTotalSeconds);
+            }
         }
     
-        const monthTotalElement = document.getElementById('month-total-hours');
-        if (monthTotalElement) {
-          monthTotalElement.textContent = secondsToTime(monthTotalSeconds);
+        function updateActiveSessions() {
+            const now = new Date();
+            document.querySelectorAll('.active-session').forEach(row => {
+                const dateSpan = row.cells[0].querySelector('span');
+                const timeSpan = row.cells[1].querySelector('span');
+                
+                if (!dateSpan || !timeSpan) return;
+
+                const dateStr = dateSpan.textContent.trim();
+                const timeStr = timeSpan.textContent.trim();
+    
+                const [day, month, year] = dateStr.split('/');
+                const [hours, minutes, seconds] = timeStr.split(':');
+                
+                const clockIn = new Date(year, month-1, day, hours, minutes, seconds);
+                const diffSeconds = Math.floor((now - clockIn) / 1000);
+    
+                const timeCell = row.querySelector('td.hours-cell');
+                if (timeCell && !isNaN(diffSeconds)) {
+                    timeCell.textContent = secondsToTime(diffSeconds);
+                }
+            });
+    
+            calculateTotals();
         }
-      }
-    
-      function updateActiveSessions() {
-        const now = new Date();
-        document.querySelectorAll('.active-session').forEach(row => {
-          const dateStr = row.cells[0].textContent.trim();
-          const timeStr = row.cells[1].textContent.trim();
-    
-          const [day, month, year] = dateStr.split('/');
-          const [hours, minutes, seconds] = timeStr.split(':');
-          
-          const clockIn = new Date(year, month-1, day, hours, minutes, seconds);
-          const diffSeconds = Math.floor((now - clockIn) / 1000);
-    
-          const timeCell = row.querySelector('td.hours-cell');
-          if (timeCell) {
-            timeCell.textContent = secondsToTime(diffSeconds);
-          }
-        });
     
         calculateTotals();
-      }
-    
-      calculateTotals();
-      updateActiveSessions();
-      setInterval(updateActiveSessions, 1000);
+        updateActiveSessions();
+        setInterval(updateActiveSessions, 1000);
     });
     </script>
-
 
 </body>
 </html>

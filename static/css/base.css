@@ -55,6 +55,8 @@ body {
 /* ===== TOPBAR (BARRA SUPERIOR) ===== */
 /* Barra superior con botón menú y perfil */
 .topbar {
+  position: relative;
+  z-index: 1000;
   height: 60px;
   background-color: #eaf2f7;
   display: flex;
@@ -104,8 +106,8 @@ body {
 /* Área donde va el contenido de cada página */
 .main-content {
   margin-left: 280px;           /* Deja espacio para el sidebar */
-  margin-top: 60px;             /* Deja espacio para el topbar */
-  padding: 2rem;
+  margin-top: 0;                /* Eliminamos el margen fantasma */
+  padding: 0;                   /* El padding lo maneja cada página */
   transition: all 0.3s ease;
 }
 

@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 # Importamos todos los modelos que vamos a gestionar desde el panel admin
-from .models import MetodoPago, Venta, DetalleVenta, ConfiguracionTPV, Modulo
+from .models import MetodoPago, Venta, DetalleVenta, Comunicacion, ConfiguracionTPV, Modulo
 
 
 # ============================================================
@@ -115,3 +115,16 @@ class ModuloAdmin(admin.ModelAdmin):
 
     # Buscador
     search_fields = ('nombre', 'clave')
+
+
+@admin.register(Comunicacion)
+class ComunicacionAdmin(admin.ModelAdmin):
+    list_display = ('titulo', 'emisor', 'creado_en')
+    list_filter = ('creado_en', 'emisor')
+    search_fields = ('titulo', 'contenido')
+    filter_horizontal = ('visto_por',)
+    
+    def save_model(self, request, obj, form, change):
+        if not obj.pk:
+            obj.emisor = request.user
+        super().save_model(request, obj, form, change)

@@ -213,6 +213,19 @@ class EmployeeMonthlyReportView(TemplateView):
         }
         monthly_total = format_seconds(month_total_seconds)
 
+        # Resumen Anual para la tabla tipo Seguridad Social
+        annual_punches = Punch.objects.filter(
+            employee=employee,
+            clock_in__year=now.year
+        )
+        annual_seconds = {m: 0 for m in range(1, 13)}
+        for p in annual_punches:
+            if p.clock_out:
+                duration = (p.clock_out - p.clock_in).total_seconds()
+                annual_seconds[p.clock_in.month] += int(duration)
+        
+        annual_summary = {m: format_seconds(s) for m, s in annual_seconds.items()}
+
         context.update({
             'employee': employee,
             'punches': punches_list or [{'hours_worked': '00:00:00'}],  # Valor por defecto
@@ -222,6 +235,8 @@ class EmployeeMonthlyReportView(TemplateView):
             'incomplete_records': incomplete_records,
             'week_totals': formatted_week_totals or {'1': '00:00:00'},  # Valor por defecto
             'monthly_total': monthly_total or '00:00:00',  # Valor por defecto
+            'annual_summary': annual_summary,
+            'current_year': now.year,
             'current_time': now
         })
         return context

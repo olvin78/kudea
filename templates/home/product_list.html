@@ -4,623 +4,458 @@
 {% block title %}Inventario - Kudea{% endblock %}
 
 {% block head %}
-<link rel="stylesheet" href="{% static 'css/kudea-cash-dashboard.css' %}">
 <!-- JsBarcode -->
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <style>
-  /* Local refinements for high-density list */
-  .k-product-table {
-    width: 100%;
-    margin-top: 24px;
-  }
-  
-  .k-product-header {
-    display: flex;
-    align-items: center;
-    padding: 0 16px 10px 16px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--k-slate-400);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  .k-product-row {
-    background: white;
-    border-radius: 12px;
-    margin-bottom: 6px; /* Tightened density */
-    padding: 10px 16px;
-    display: flex;
-    align-items: center;
-    border: 1px solid rgba(0,0,0,0.04);
-    transition: all 0.2s ease;
-  }
-
-  .k-product-row:hover {
-    border-color: var(--k-navy-950);
-    box-shadow: var(--k-shadow-md);
-    background: #fafafa;
-  }
-
-  /* PRINT OPTIMIZATION */
+  /* Print optimizations */
   @media print {
-    .k-header, .k-filter-dock, .k-alert-strip, .col-action, .pagination, .sidebar, .navbar, .btn-new-product, .hide-print, .btn-edit-pro {
+    @page { margin: 1.5cm; }
+    .hide-print, .sidebar, .topbar, .pagination, .btn-action, .k-filter-dock, header, .filter-section, .btn-new-product, .col-action, .k-alert-strip, .col-barcode, .k-product-img, .bg-white\/70, .display-4, .k-product-row::after, .k-product-row .absolute, .col-action {
       display: none !important;
     }
-    .k-wrap { padding: 0 !important; margin: 0 !important; }
-    .k-product-row { break-inside: avoid; border: 1px solid #eee !important; }
-    body { background: white !important; }
-    .k-product-header { color: black !important; border-bottom: 2px solid black !important; }
+    
+    body { background: white !important; font-family: 'Outfit', sans-serif !important; color: #1a1a1a !important; }
+    
     .print-only { display: block !important; }
+    .k-wrap { padding: 0 !important; margin: 0 !important; }
+    
+    /* Audit Table Styles */
+    .audit-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        font-size: 11px;
+    }
+    
+    .audit-table th {
+        background: #1d3557 !important;
+        color: white !important;
+        padding: 10px 8px;
+        text-align: left;
+        text-transform: uppercase;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+    }
+    
+    .audit-table td {
+        padding: 10px 8px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .audit-table tr:nth-child(even) { background: #fcfcfc !important; }
+    
+    .check-box {
+        width: 16px;
+        height: 16px;
+        border: 2px solid #1d3557;
+        border-radius: 4px;
+        display: inline-block;
+    }
+    
+    .text-red-pro { color: #8b0000 !important; font-weight: 700; }
+    .text-cat { color: #457b9d !important; font-weight: 600; font-size: 10px; }
+    
+    /* Stats Bar Print */
+    .k-stats-print {
+        display: flex;
+        justify-content: space-between;
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+    
+    .stat-card-print {
+        flex: 1;
+        padding: 12px;
+        background: #f8f9fa;
+        border-left: 4px solid #1d3557;
+        text-align: center;
+    }
+    
+    .stat-card-print span { display: block; font-size: 9px; font-weight: 800; color: #6c757d; text-transform: uppercase; margin-bottom: 4px; }
+    .stat-card-print strong { font-size: 18px; color: #1d3557; }
+    
+    /* Signatures */
+    .signature-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 50px;
+        margin: 40px 0;
+        padding: 20px;
+        background: #fbfcfd;
+        border-radius: 15px;
+    }
+    
+    .sig-field { border-bottom: 1.5px solid #1d3557; height: 30px; margin-bottom: 8px; }
+    .sig-label { font-size: 9px; font-weight: 800; color: #457b9d; text-transform: uppercase; }
   }
-
+  
   .print-only { display: none; }
-
-  .k-product-img {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
-    object-fit: cover;
-    background: var(--k-slate-100);
-    margin-right: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--k-slate-400);
-    flex-shrink: 0;
-  }
-
-  .jsbarcode {
-    max-width: 100%;
-    height: auto;
-  }
-
-  .k-badge {
-    font-size: 0.65rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    padding: 3px 8px;
-    border-radius: 6px;
-  }
-
-  .k-badge-success { background: #dcfce7; color: #166534; }
-  .k-badge-warning { background: #fef3c7; color: #92400e; }
-  .k-badge-danger { background: #fee2e2; color: #991b1b; }
-
-  .k-search-bar {
-    background: white;
-    border: 1px solid rgba(0,0,0,0.06);
-    border-radius: 14px;
-    padding: 10px 20px;
-    width: 100%;
-    font-size: 0.9rem;
-    font-weight: 500;
-  }
-
-  .btn-edit-pro {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--k-slate-400);
-    border: 1px solid transparent;
-    transition: all 0.2s;
-  }
-
-  .btn-edit-pro:hover {
-    color: var(--k-navy-950);
-    background: white;
-    border-color: rgba(0,0,0,0.1);
-  }
-
-  /* Robust flexible columns to prevent overlap */
-  .col-info { flex: 2; min-width: 150px; overflow: hidden; }
-  .col-barcode { flex: 2; min-width: 180px; text-align: center; overflow: hidden; padding: 0 10px; }
-  .col-stock { width: 90px; text-align: center; flex-shrink: 0; }
-  .col-price { width: 100px; text-align: right; flex-shrink: 0; }
-  .col-status { width: 110px; text-align: center; flex-shrink: 0; }
-  .col-action { width: 50px; text-align: right; flex-shrink: 0; }
-
-  /* COMMAND HUB REDESIGN - VIBRANT & PRO */
-  .k-header {
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-    border: 1px solid rgba(0,0,0,0.04);
-    border-radius: 20px;
-    padding: 32px;
-    margin-bottom: 32px;
-    box-shadow: var(--k-shadow-sm);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .btn-new-product {
-    background: linear-gradient(135deg, var(--k-navy-950) 0%, #1e293b 100%);
-    color: white !important;
-    padding: 12px 28px;
-    border-radius: 12px;
-    font-weight: 700;
-    font-size: 0.95rem;
-    border: none;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.2);
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-  }
-
-  .btn-new-product:hover {
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 8px 30px rgba(15, 23, 42, 0.3);
-    filter: brightness(1.2);
-  }
-
-  /* INTEGRATED FILTER DOCK */
-  .k-filter-dock {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(0,0,0,0.06);
-    border-radius: 20px;
-    padding: 10px;
-    margin-bottom: 32px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-    display: flex;
-    gap: 10px;
-    align-items: center;
-  }
-
-  .k-filter-input-group {
-    position: relative;
-    flex: 1;
-  }
-
-  .k-filter-input-group i {
-    position: absolute;
-    left: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--k-slate-400);
-    z-index: 10;
-    pointer-events: none;
-    font-size: 1rem;
-  }
-
-  .k-command-input {
-    background: #ffffff;
-    border: 1px solid rgba(0,0,0,0.08);
-    border-radius: 14px;
-    padding: 14px 20px 14px 52px;
-    width: 100%;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--k-navy-950);
-    transition: all 0.3s;
-  }
-
-  .k-command-input:focus {
-    outline: none;
-    border-color: var(--k-navy-950);
-    box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.05);
-    background: #fff;
-  }
-
-  /* CUSTOM PREMIUM DROPDOWN */
-  .k-custom-select {
-    position: relative;
-    width: 100%;
-    cursor: pointer;
-    user-select: none;
-  }
-
-  .k-dropdown-trigger {
-    background: #ffffff;
-    border: 1px solid rgba(0,0,0,0.08);
-    border-radius: 14px;
-    padding: 14px 20px 14px 52px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--k-navy-950);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: all 0.3s;
-  }
-
-  .k-custom-select:hover .k-dropdown-trigger {
-    border-color: var(--k-navy-950);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  }
-
-  .k-dropdown-list {
-    position: absolute;
-    top: calc(100% + 8px);
-    left: 0;
-    right: 0;
-    background: #ffffff;
-    border: 1px solid rgba(0,0,0,0.08);
-    border-radius: 14px;
-    box-shadow: 0 10px 32px rgba(15, 23, 42, 0.12);
-    z-index: 1000;
-    padding: 8px;
-    max-height: 250px;
-    overflow-y: auto;
-    opacity: 0;
-    transform: translateY(-10px);
-    pointer-events: none;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  .k-custom-select.active .k-dropdown-list {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-  }
-
-  .k-dropdown-item {
-    padding: 10px 16px;
-    border-radius: 10px;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--k-slate-600);
-    transition: all 0.2s;
-  }
-
-  .k-dropdown-item:hover {
-    background: var(--k-slate-100);
-    color: var(--k-navy-950);
-  }
-
-  .k-dropdown-item.selected {
-    background: var(--k-navy-950);
-    color: #ffffff;
-  }
-
-  .k-dropdown-arrow {
-    transition: transform 0.3s;
-    font-size: 0.8rem;
-    color: var(--k-slate-400);
-  }
-
-  .k-custom-select.active .k-dropdown-arrow {
-    transform: rotate(180deg);
-  }
-  /* STOCK BAJO BUTTON - VIBRANT */
-  .btn-stock-pill {
-    height: 52px;
-    padding: 0 24px;
-    border-radius: 14px;
-    border: 1.5px solid rgba(245, 158, 11, 0.2);
-    background: rgba(245, 158, 11, 0.03);
-    color: #92400e;
-    font-weight: 800;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    transition: all 0.3s;
-    text-decoration: none;
-    white-space: nowrap;
-  }
-
-  .btn-stock-pill:hover {
-    background: rgba(245, 158, 11, 0.08);
-    border-color: #f59e0b;
-    transform: translateY(-2px);
-  }
-
-  .btn-stock-pill.active {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    border-color: #f59e0b;
-    color: white;
-    box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
-  }
-
-  /* ALERT BANNER RENDERED AS TOP STRIP */
-  .k-alert-strip {
-    background: #fffbeb;
-    border: 1px solid #fef3c7;
-    border-radius: 16px;
-    padding: 16px 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 24px;
-    animation: slideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  @keyframes slideIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="k-wrap">
-  <!-- HEADER "COMMAND HUB" -->
-  <div class="k-header">
-    <div>
-      <h1 class="k-header-title">Gestión de Inventario</h1>
-      <p class="muted mb-0">Control operativo y análisis de existencias</p>
-    </div>
-    <div class="d-flex gap-2">
-      <button onclick="window.print()" class="btn btn-light border fw-bold px-4" style="border-radius: 12px;">
-        <i class="fas fa-print me-2"></i> Imprimir Pedido
-      </button>
-      <a href="{% url 'home_app:crear_producto' %}" class="btn-new-product">
-        <i class="fas fa-plus me-2"></i> Nuevo Artículo
-      </a>
-    </div>
-  </div>
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
 
-  <div class="print-only text-center mb-4">
-    <h2 class="fw-bold">LISTADO DE PEDIDO / INVENTARIO</h2>
-    <p class="mb-0">Kudea Software - Fecha: {% now "d/m/Y H:i" %}</p>
-    <hr>
-  </div>
-
-  <!-- STOCK ALERT BANNER -->
-  {% if low_stock_count > 0 and request.GET.stock_bajo != 'true' %}
-  <div class="k-alert-strip">
-    <div class="d-flex align-items-center gap-3">
-      <div class="bg-warning-subtle text-warning p-2 rounded-circle" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
-        <i class="fas fa-exclamation-triangle"></i>
-      </div>
-      <div>
-        <span class="fw-bold text-dark">Alerta de Insumos:</span>
-        <span class="text-muted">Inconsistencia en <strong>{{ low_stock_count }}</strong> artículos de inventario.</span>
-      </div>
-    </div>
-    <a href="?stock_bajo=true" class="btn btn-sm btn-warning fw-bold px-3 py-1" style="border-radius: 10px;">Corregir Stock</a>
-  </div>
-  {% endif %}
-
-  <!-- FILTER DOCK -->
-  <div class="k-filter-dock">
-    <div class="k-filter-input-group">
-      <form method="GET" action="{% url 'home_app:lista_productos' %}">
-        <i class="fas fa-search"></i>
-        <input type="text" name="search" class="k-command-input" placeholder="Referencia o EAN..." value="{{ request.GET.search }}">
-        {% if request.GET.stock_bajo %}<input type="hidden" name="stock_bajo" value="true">{% endif %}
-      </form>
-    </div>
-
-    <div class="k-filter-input-group">
-      <div class="k-custom-select" id="categoryDropdown">
-        <i class="fas fa-layer-group"></i>
-        <div class="k-dropdown-trigger">
-          <span id="selectedCategoryName">
-            {% if request.GET.categoria_id %}
-              {% for cat in categorias %}
-                {% if request.GET.categoria_id == cat.id|stringformat:'s' %}{{ cat.nombre }}{% endif %}
-              {% endfor %}
-            {% else %}
-              Todas las Categorías
-            {% endif %}
-          </span>
-          <i class="fas fa-chevron-down k-dropdown-arrow"></i>
+    <!-- PRINT ONLY HEADER -->
+    <div class="print-only">
+        <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="font-size: 42px; font-weight: 900; color: #1d3557; margin-bottom: 0;">KUDEA</h1>
+            <p style="font-size: 18px; color: #457b9d; font-weight: 500; margin-top: -5px; letter-spacing: 2px;">Hoja de Conteo Físico</p>
+            <div style="width: 100%; height: 2px; background: linear-gradient(to right, transparent, #1d3557, transparent); margin: 15px 0;"></div>
+            <div style="display: flex; justify-content: flex-end; font-size: 10px; color: #6c757d; font-weight: 700;">
+                FECHA: {% now "d/m/Y H:i" %}
+            </div>
         </div>
-        <div class="k-dropdown-list">
-          <div class="k-dropdown-item {% if not request.GET.categoria_id %}selected{% endif %}" data-value="0">Todas las Categorías</div>
-          {% for cat in categorias %}
-          <div class="k-dropdown-item {% if request.GET.categoria_id == cat.id|stringformat:'s' %}selected{% endif %}" data-value="{{ cat.id }}">{{ cat.nombre }}</div>
-          {% endfor %}
-        </div>
-      </div>
-    </div>
 
-    <a href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}{% if request.GET.categoria_id %}categoria_id={{ request.GET.categoria_id }}&{% endif %}{% if request.GET.stock_bajo == 'true' %}stock_bajo=false{% else %}stock_bajo=true{% endif %}" 
-       class="btn-stock-pill {% if request.GET.stock_bajo == 'true' %}active{% endif %}" 
-       title="Filtrar por stock bajo">
-      <i class="fas fa-box-open"></i>
-      <span>Stock Bajo</span>
-    </a>
-  </div>
-
-  <!-- PRODUCT LIST HEADERS -->
-  <div class="k-product-header">
-    <div style="width: 56px;"></div> <!-- Image space -->
-    <div class="col-info">Producto / Categoría</div>
-    <div class="col-barcode">Código / Visual</div>
-    <div class="col-stock">Stock</div>
-    <div class="col-price">Precio</div>
-    <div class="col-status">Estado</div>
-    <div class="col-action"></div>
-  </div>
-
-  <!-- PRODUCT LIST -->
-  {% if productos %}
-    <div class="k-product-table">
-      {% for producto in productos %}
-      <div class="k-product-row">
-        <div class="k-product-img">
-          {% if producto.imagen %}
-            <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="w-100 h-100 rounded">
-          {% else %}
-            <i class="fas fa-box"></i>
-          {% endif %}
-        </div>
+        <div class="signature-grid">
+            <div>
+                <div class="sig-field"></div>
+                <div class="sig-label">Responsable del Conteo</div>
+            </div>
+            <div>
+                <div class="sig-field"></div>
+                <div class="sig-label">Supervisor de Inventario</div>
+            </div>
+        </div>        {% regroup all_products by categoria.nombre as product_groups %}
         
-        <div class="col-info">
-          <div class="fw-bold text-dark fs-6">{{ producto.nombre }}</div>
-          <span class="small text-muted fw-bold">{{ producto.categoria.nombre|default:"General" }}</span>
-        </div>
+        <table class="audit-table">
+            <thead>
+                <tr>
+                    <th style="width: 40px; text-align: center;">✔</th>
+                    <th>Código</th>
+                    <th>Producto</th>
+                    <th style="text-align: center;">Stock</th>
+                    <th style="text-align: right;">Precio</th>
+                    <th style="text-align: right;">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for group in product_groups %}
+                <tr>
+                    <td colspan="6" style="background: #f1f5f9 !important; padding: 12px 15px; border-bottom: 2px solid #1d3557;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-layer-group" style="color: #457b9d;"></i>
+                            <span style="font-size: 14px; font-weight: 900; color: #1d3557; text-transform: uppercase; letter-spacing: 1px;">
+                                {{ group.grouper|default:"GENERAL" }}
+                            </span>
+                            <span style="font-size: 10px; color: #64748b; font-weight: 700; margin-left: auto;">
+                                {{ group.list|length }} ÍTEMS
+                            </span>
+                        </div>
+                    </td>
+                </tr>
+                {% for producto in group.list %}
+                <tr>
+                    <td style="text-align: center;"><div class="check-box"></div></td>
+                    <td style="font-family: monospace; font-weight: 700; color: #457b9d; font-size: 10px;">{{ producto.codigo_barras|default:"N/A" }}</td>
+                    <td>
+                        <div class="text-red-pro" style="font-size: 12px;">{{ producto.nombre }}</div>
+                    </td>
+                    <td style="text-align: center; font-weight: 800; font-size: 14px;">{{ producto.stock }}</td>
+                    <td style="text-align: right;">€{{ producto.precio|floatformat:2 }}</td>
+                    <td style="text-align: right; font-weight: 800; color: #1d3557;">€{{ producto.total_por_producto|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+                {% endfor %}
+            </tbody>
+        </table>
 
-        <div class="col-barcode">
-          {% if producto.codigo_barras %}
-            <div class="d-flex flex-column align-items-center mb-1">
-              <canvas class="jsbarcode"
-                   data-value="{{ producto.codigo_barras }}"
-                   data-format="CODE128"
-                   data-height="25"
-                   data-width="1.2"
-                   data-displayvalue="false"
-                   data-margin="0"></canvas>
-              <div style="font-size: 10px; color: var(--k-slate-400); font-family: monospace; font-weight: 700;">{{ producto.codigo_barras }}</div>
+        <div class="k-stats-print">
+            <div class="stat-card-print">
+                <span>Total Productos</span>
+                <strong>{{ total_products }}</strong>
             </div>
-            <div class="d-flex justify-content-center gap-2">
-              <button onclick="downloadBarcode('{{ producto.codigo_barras }}', this)" class="btn btn-xs btn-light text-slate-500 border-0 p-1" title="Descargar PNG">
-                <i class="fas fa-download" style="font-size: 0.7rem;"></i>
-              </button>
-              <button onclick="printBarcode('{{ producto.codigo_barras }}', '{{ producto.nombre }}', this)" class="btn btn-xs btn-light text-slate-500 border-0 p-1" title="Imprimir Etiqueta">
-                <i class="fas fa-print" style="font-size: 0.7rem;"></i>
-              </button>
+            <div class="stat-card-print">
+                <span>Stock Bajo</span>
+                <strong style="color: #e63946;">{{ low_stock_count }}</strong>
             </div>
-          {% else %}
-            <span class="text-muted small">N/A</span>
-          {% endif %}
+            <div class="stat-card-print">
+                <span>Valor Inventario</span>
+                <strong>€{{ total_inventory_value|floatformat:2 }}</strong>
+            </div>
         </div>
-
-        <div class="col-stock">
-          <div class="fw-bold text-dark">{{ producto.stock }}</div>
-          <span class="small muted">unidades</span>
-        </div>
-
-        <div class="col-price">
-          <div class="fw-bold text-navy-950 fs-6">€{{ producto.precio|floatformat:2 }}</div>
-          {% if producto.precio_compra %}
-          <span class="small text-muted">C: €{{ producto.precio_compra|floatformat:2 }}</span>
-          {% endif %}
-        </div>
-
-        <div class="col-status">
-          {% if producto.stock == 0 %}
-            <span class="k-badge k-badge-danger">Agotado</span>
-          {% elif producto.stock < producto.stock_minimo %}
-            <span class="k-badge k-badge-warning">Bajo Stock</span>
-          {% else %}
-            <span class="k-badge k-badge-success">Disponible</span>
-          {% endif %}
-        </div>
-
-        <div class="col-action">
-          <a href="#" class="btn-edit-pro" title="Editar Producto">
-            <i class="fas fa-edit"></i>
-          </a>
-        </div>
-      </div>
-      {% endfor %}
     </div>
-  {% else %}
-    <div class="k-card text-center py-5">
-      <div class="display-1 mb-4">📦</div>
-      <h3 class="fw-bold">No se encontraron productos</h3>
-      <p class="muted">Ajusta los filtros o añade un nuevo artículo al catálogo.</p>
-    </div>
-  {% endif %}
 
-  <!-- PAGINATION -->
-  {% if is_paginated %}
-  <div class="d-flex justify-content-center mt-5">
-    <nav>
-      <ul class="pagination pagination-sm gap-1">
-        {% if page_obj.has_previous %}
-        <li class="page-item">
-          <a class="page-link border-0 rounded-3 px-3 py-2 text-dark bg-light" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
-        </li>
-        {% endif %}
-        <li class="page-item active">
-          <span class="page-link border-0 rounded-3 px-3 py-2 fw-bold text-white" style="background: var(--k-navy-950);">{{ page_obj.number }}</span>
-        </li>
-        {% if page_obj.has_next %}
-        <li class="page-item">
-          <a class="page-link border-0 rounded-3 px-3 py-2 text-dark bg-light" href="?page={{ page_obj.next_page_number }}">Siguiente</a>
-        </li>
-        {% endif %}
-      </ul>
-    </nav>
-  </div>
-  {% endif %}
-</div>
+    <!-- HEADER "COMMAND HUB" -->
+    <div class="bg-white/70 backdrop-blur-xl border border-white/40 rounded-[2.5rem] p-8 md:p-10 shadow-2xl shadow-slate-900/5 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6 hide-print">
+        <div>
+            <h1 class="text-3xl font-black text-slate-800 tracking-tight mb-1">Gestión de Inventario</h1>
+            <p class="text-slate-500 font-medium">Control operativo y análisis de existencias</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <button onclick="window.print()" class="bg-white hover:bg-slate-50 text-slate-700 px-6 py-3 rounded-2xl font-bold border border-slate-200 transition-all shadow-sm flex items-center gap-2">
+                <i class="fas fa-print opacity-50"></i> Imprimir Pedido
+            </button>
+            <a href="{% url 'home_app:crear_producto' %}" class="bg-dark-blue hover:bg-slate-800 text-white px-6 py-3 rounded-2xl font-bold transition-all shadow-xl shadow-dark-blue/20 flex items-center gap-2">
+                <i class="fas fa-plus"></i> Nuevo Artículo
+            </a>
+        </div>
+    </div>
+
+    <!-- STOCK ALERT BANNER -->
+    {% if low_stock_count > 0 and request.GET.stock_bajo != 'true' %}
+    <div class="k-alert-strip bg-amber-50 border border-amber-100 rounded-3xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 bg-amber-500 text-white rounded-xl flex items-center justify-center shadow-lg">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div>
+                <span class="block text-amber-900 font-black uppercase text-[10px] tracking-widest">Alerta de Insumos:</span>
+                <p class="text-sm text-amber-800 font-medium">Inconsistencia en <span class="font-bold underline">{{ low_stock_count }}</span> artículos de inventario.</p>
+            </div>
+        </div>
+        <a href="{% url 'stock_app:movement_list' %}" class="bg-amber-500 hover:bg-amber-600 text-white px-6 py-2 rounded-xl text-xs font-black shadow-md shadow-amber-500/20 text-center transition-all">Corregir Stock</a>
+    </div>
+    {% endif %}
+
+    <!-- FILTER DOCK -->
+    <div class="bg-white border border-slate-100 rounded-3xl p-3 shadow-sm flex flex-col lg:flex-row gap-3 mb-10 filter-section">
+        <div class="flex-1 relative">
+            <form method="GET" action="{% url 'home_app:lista_productos' %}">
+                <i class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" name="search" class="w-full bg-slate-50 border-transparent focus:bg-white focus:border-primary-blue rounded-2xl py-4 pl-14 pr-6 text-sm font-bold text-slate-700 outline-none transition-all" placeholder="Referencia o EAN..." value="{{ request.GET.search|default:'' }}">
+                {% if request.GET.stock_bajo %}<input type="hidden" name="stock_bajo" value="true">{% endif %}
+            </form>
+        </div>
+
+        <div class="w-full lg:w-72 relative group" id="categoryDropdown">
+            <div class="w-full bg-slate-50 border-transparent rounded-2xl py-4 px-6 text-sm font-bold text-slate-700 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition-all" id="dropdownTrigger">
+                <div class="flex items-center gap-3 overflow-hidden">
+                    <i class="fas fa-layer-group text-slate-400"></i>
+                    <span id="selectedCategoryName" class="truncate">
+                        {% if request.GET.categoria_id %}
+                            {% for cat in categorias %}
+                                {% if request.GET.categoria_id == cat.id|stringformat:'s' %}{{ cat.nombre }}{% endif %}
+                            {% endfor %}
+                        {% else %}
+                            Todas las Categorías
+                        {% endif %}
+                    </span>
+                </div>
+                <i class="fas fa-chevron-down text-[10px] text-slate-400 transition-transform"></i>
+            </div>
+            <div class="k-dropdown-list absolute top-full left-0 right-0 mt-2 bg-white border border-slate-100 rounded-2xl shadow-2xl z-50 py-2 opacity-0 pointer-events-none transition-all translate-y-2 max-h-80 overflow-y-auto">
+                <div class="px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50 mb-1">Filtrar por Categoría</div>
+                <div class="k-dropdown-item px-4 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 cursor-pointer transition-colors {% if not request.GET.categoria_id %}bg-blue-50/50 text-primary-blue{% endif %}" data-value="0">Todas las Categorías</div>
+                {% for cat in categorias %}
+                <div class="k-dropdown-item px-4 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 cursor-pointer transition-colors {% if request.GET.categoria_id == cat.id|stringformat:'s' %}bg-blue-50/50 text-primary-blue{% endif %}" data-value="{{ cat.id }}">{{ cat.nombre }}</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <a href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}{% if request.GET.categoria_id %}categoria_id={{ request.GET.categoria_id }}&{% endif %}{% if request.GET.stock_bajo == 'true' %}stock_bajo=false{% else %}stock_bajo=true{% endif %}" 
+           class="flex items-center justify-center gap-3 px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-wider transition-all border-2
+           {% if request.GET.stock_bajo == 'true' %}bg-amber-500 border-amber-500 text-white shadow-lg shadow-amber-500/30{% else %}bg-white border-amber-100 text-amber-600 hover:border-amber-400 hover:bg-amber-50{% endif %}">
+          <i class="fas fa-box-open text-sm"></i>
+          <span>Stock Bajo</span>
+        </a>
+    </div>
+
+    <!-- PRODUCT LIST HEADERS -->
+    <div class="hidden lg:flex items-center px-8 py-3 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 hide-print">
+        <div class="w-16"></div>
+        <div class="flex-1 px-4">Producto / Categoría</div>
+        <div class="w-48 text-center px-4">Código / Visual</div>
+        <div class="w-32 text-center px-4">Stock</div>
+        <div class="w-32 text-right px-4">Precio</div>
+        <div class="w-40 text-center px-4">Estado</div>
+        <div class="w-16"></div>
+    </div>
+
+    <!-- PRODUCT LIST -->
+    {% if productos %}
+        <div class="space-y-3 hide-print">
+            {% for producto in productos %}
+            <div class="k-product-row group bg-white border border-slate-100 rounded-3xl p-4 lg:p-5 hover:shadow-xl hover:shadow-slate-200 transition-all duration-300 flex flex-col lg:flex-row lg:items-center gap-6 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-1 h-full bg-slate-100 group-hover:bg-dark-blue transition-colors"></div>
+                
+                <div class="k-product-img w-16 h-16 bg-slate-50 rounded-2xl flex-shrink-0 flex items-center justify-center overflow-hidden border border-slate-100">
+                    {% if producto.imagen %}
+                        <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="w-full h-full object-cover">
+                    {% else %}
+                        <i class="fas fa-box text-xl text-slate-300"></i>
+                    {% endif %}
+                </div>
+                
+                <div class="col-info flex-1">
+                    <div class="text-lg font-black text-slate-800 leading-tight mb-1">{{ producto.nombre }}</div>
+                    <span class="inline-flex items-center gap-1.5 bg-slate-50 text-slate-500 text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider">{{ producto.categoria.nombre|default:"General" }}</span>
+                </div>
+
+                <div class="col-barcode w-full lg:w-48 flex flex-col items-center justify-center gap-2 border-l border-r border-slate-50">
+                    {% if producto.codigo_barras %}
+                        <canvas class="jsbarcode opacity-90 hover:opacity-100 transition-opacity"
+                             data-value="{{ producto.codigo_barras }}"
+                             data-format="CODE128"
+                             data-height="30"
+                             data-width="1.5"
+                             data-displayvalue="true"
+                             data-background="#ffffff"
+                             data-linecolor="#000000"
+                             data-margin="10"></canvas>
+                        <div class="flex items-center gap-3">
+                            <span class="text-[10px] font-black font-mono text-slate-600 bg-slate-100 px-2 py-0.5 rounded">{{ producto.codigo_barras }}</span>
+                            <div class="flex gap-1.5">
+                                <button onclick="downloadBarcode('{{ producto.codigo_barras }}', this)" class="w-7 h-7 rounded-lg bg-slate-100 text-slate-500 hover:bg-dark-blue hover:text-white flex items-center justify-center transition-all border border-slate-200 shadow-sm" title="Descargar PNG">
+                                    <i class="fas fa-download text-[10px]"></i>
+                                </button>
+                                <button onclick="printBarcode('{{ producto.codigo_barras }}', '{{ producto.nombre }}', this)" class="w-7 h-7 rounded-lg bg-slate-100 text-slate-500 hover:bg-dark-blue hover:text-white flex items-center justify-center transition-all border border-slate-200 shadow-sm" title="Imprimir Etiqueta">
+                                    <i class="fas fa-print text-[10px]"></i>
+                                </button>
+                            </div>
+                        </div>
+                    {% else %}
+                        <span class="text-xs font-bold text-slate-300 tracking-widest italic uppercase">N/A</span>
+                    {% endif %}
+                </div>
+
+                <div class="col-stock w-full lg:w-32 flex lg:flex-col items-center justify-between lg:justify-center text-center">
+                    <div class="text-2xl font-black text-slate-800">{{ producto.stock }}</div>
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">unidades</span>
+                </div>
+
+                <div class="col-price w-full lg:w-32 flex lg:flex-col items-center justify-between lg:justify-center text-right">
+                    <div class="text-2xl font-black text-dark-blue">€{{ producto.precio|floatformat:2 }}</div>
+                    {% if producto.precio_compra %}
+                    <span class="text-[10px] font-bold text-slate-400">C: €{{ producto.precio_compra|floatformat:2 }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="col-status w-full lg:w-40 flex items-center justify-center">
+                    {% if producto.stock == 0 %}
+                        <span class="w-full text-center bg-red-50 text-red-600 text-[10px] font-black py-2 rounded-xl uppercase tracking-widest border border-red-100">Agotado</span>
+                    {% elif producto.stock < producto.stock_minimo %}
+                        <span class="w-full text-center bg-amber-50 text-amber-600 text-[10px] font-black py-2 rounded-xl uppercase tracking-widest border border-amber-100">Bajo Stock</span>
+                    {% else %}
+                        <span class="w-full text-center bg-emerald-50 text-emerald-600 text-[10px] font-black py-2 rounded-xl uppercase tracking-widest border border-emerald-100">Disponible</span>
+                    {% endif %}
+                </div>
+
+                <div class="col-action w-full lg:w-16 flex items-center justify-end">
+                    <a href="{% url 'home_app:crear_producto' %}?edit={{ producto.id }}" class="w-12 h-12 rounded-2xl bg-white text-primary-blue hover:bg-dark-blue hover:text-white flex items-center justify-center shadow-md border border-slate-100 transition-all scale-110" title="Editar Producto">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="bg-white border-2 border-dashed border-slate-200 rounded-[3rem] text-center py-24 px-6">
+            <div class="w-24 h-24 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">📦</div>
+            <h3 class="text-2xl font-black text-slate-800 mb-2">No se encontraron productos</h3>
+            <p class="text-slate-500 font-medium">Ajusta los filtros o añade un nuevo artículo al catálogo.</p>
+        </div>
+    {% endif %}
+
+    <!-- PAGINATION -->
+    {% if is_paginated %}
+    <div class="flex justify-center mt-12">
+        <nav>
+            <ul class="flex items-center gap-2">
+                {% if page_obj.has_previous %}
+                <li>
+                    <a class="px-6 py-3 bg-white border border-slate-100 rounded-2xl text-slate-600 font-bold hover:bg-dark-blue hover:text-white transition-all shadow-sm" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+                </li>
+                {% endif %}
+                
+                <li>
+                    <span class="px-6 py-3 bg-dark-blue text-white rounded-2xl font-black shadow-xl shadow-dark-blue/20">{{ page_obj.number }}</span>
+                </li>
+
+                {% if page_obj.has_next %}
+                <li>
+                    <a class="px-6 py-3 bg-white border border-slate-100 rounded-2xl text-slate-600 font-bold hover:bg-dark-blue hover:text-white transition-all shadow-sm" href="?page={{ page_obj.next_page_number }}">Siguiente</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+
+</main>
+
 <script>
-  // EXPORTAR CÓDIGO DE BARRAS
-  function downloadBarcode(code, btn) {
-    const row = btn.closest('.k-product-row');
-    const canvas = row.querySelector('.jsbarcode');
-    if (!canvas) return;
-    
-    const link = document.createElement('a');
-    link.download = `barcode-${code}.png`;
-    link.href = canvas.toDataURL("image/png");
-    link.click();
-  }
-
-  function printBarcode(code, name, btn) {
-    const row = btn.closest('.k-product-row');
-    const canvas = row.querySelector('.jsbarcode');
-    if (!canvas) return;
-
-    const printWindow = window.open('', '_blank', 'width=400,height=300');
-    const imgUrl = canvas.toDataURL("image/png");
-    
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Imprimir Código - ${name}</title>
-          <style>
-            body { margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; }
-            .container { text-align: center; border: 1px solid #eee; padding: 20px; border-radius: 10px; }
-            img { width: 250px; height: auto; }
-            .name { font-weight: bold; margin-bottom: 10px; font-size: 14px; color: #333; }
-            .code { font-family: monospace; margin-top: 5px; font-size: 12px; color: #666; }
-            @media print { .no-print { display: none; } }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="name">${name}</div>
-            <img src="${imgUrl}">
-            <div class="code">${code}</div>
-            <div class="no-print" style="margin-top: 20px;">
-              <button onclick="window.print()" style="padding: 8px 16px; background: #000; color: #fff; border: none; border-radius: 6px; cursor: pointer;">Imprimir ahora</button>
-            </div>
-          </div>
-          <script>
-            // Autoorientación
-          <\/script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-  }
-
-  document.addEventListener('DOMContentLoaded', function() {
-    // Inicializar JsBarcode
-    if (typeof JsBarcode !== 'undefined') {
-      JsBarcode(".jsbarcode").init();
-    }
-
-    const dropdown = document.getElementById('categoryDropdown');
-    const trigger = dropdown ? dropdown.querySelector('.k-dropdown-trigger') : null;
-    const items = dropdown ? dropdown.querySelectorAll('.k-dropdown-item') : [];
-
-    if (trigger) {
-      trigger.addEventListener('click', function(e) {
-        e.stopPropagation();
-        dropdown.classList.toggle('active');
-      });
-    }
-
-    items.forEach(item => {
-      item.addEventListener('click', function() {
-        const val = this.dataset.value;
-        const url = new URL(window.location.href);
-        if (val === "0") {
-          url.searchParams.delete('categoria_id');
-        } else {
-          url.searchParams.set('categoria_id', val);
+    // JSBARCODE INITIALIZATION
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof JsBarcode !== 'undefined') {
+            JsBarcode(".jsbarcode").init();
         }
-        window.location.href = url.toString();
-      });
+
+        // CATEGORY DROPDOWN LOGIC
+        const dropdown = document.getElementById('categoryDropdown');
+        const trigger = document.getElementById('dropdownTrigger');
+        const items = document.querySelectorAll('.k-dropdown-item');
+
+        if (trigger) {
+            trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdown.classList.toggle('active');
+            });
+        }
+
+        items.forEach(item => {
+            item.addEventListener('click', function() {
+                const val = this.dataset.value;
+                const url = new URL(window.location.href);
+                if (val === "0") {
+                    url.searchParams.delete('categoria_id');
+                } else {
+                    url.searchParams.set('categoria_id', val);
+                }
+                url.searchParams.delete('page');
+                window.location.href = url.toString();
+            });
+        });
+
+        document.addEventListener('click', () => {
+            if (dropdown) dropdown.classList.remove('active');
+        });
     });
 
-    document.addEventListener('click', function() {
-      if (dropdown) dropdown.classList.remove('active');
-    });
-  });
+    // BARCODE UTILS
+    function downloadBarcode(code, btn) {
+        const row = btn.closest('.k-product-row');
+        const canvas = row.querySelector('.jsbarcode');
+        if (!canvas) return;
+        const link = document.createElement('a');
+        link.download = `barcode-${code}.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+    }
+
+    function printBarcode(code, name, btn) {
+        const row = btn.closest('.k-product-row');
+        const canvas = row.querySelector('.jsbarcode');
+        if (!canvas) return;
+        const imgUrl = canvas.toDataURL("image/png");
+        const printWindow = window.open('', '_blank', 'width=400,height=300');
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Imprimir Código - ${name}</title>
+                    <style>
+                        body { margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; }
+                        .container { text-align: center; border: 1px solid #eee; padding: 20px; border-radius: 10px; }
+                        img { width: 250px; height: auto; }
+                        .name { font-weight: bold; margin-bottom: 10px; font-size: 14px; color: #333; }
+                        .code { font-family: monospace; margin-top: 5px; font-size: 12px; color: #666; }
+                        @media print { .no-print { display: none; } }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="name">${name}</div>
+                        <img src="${imgUrl}">
+                        <div class="code">${code}</div>
+                        <div class="no-print" style="margin-top: 20px;">
+                            <button onclick="window.print()" style="padding: 8px 16px; background: #000; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">Imprimir ahora</button>
+                        </div>
+                    </div>
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
+    }
 </script>
 {% endblock %}

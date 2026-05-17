@@ -4,173 +4,174 @@
 {% block title %}Panel Central KUDEA{% endblock %}
 
 {% block head %}
+<!-- Font Awesome already in base? No, I'll keep it here just in case, but base should have it -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-<link rel="stylesheet" href="{% static 'css/kudea-cash-dashboard.css' %}">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 {% endblock %}
 
 {% block content %}
-<main class="k-wrap pb-5">
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
 
-    <!-- HEADER SECTON -->
-    <header class="k-header mb-5 mt-4">
-        <div>
-            <div class="d-flex align-items-center gap-3">
-                <div class="k-logo">K</div>
-                <div>
-                    <h1 class="k-header-title">Panel Central</h1>
-                    <p class="muted m-0">Control general del sistema y gestión operativa</p>
-                </div>
-            </div>
-        </div>
-        <div class="d-none d-md-block">
-            <div class="badge bg-white text-dark border p-2 px-3 rounded-pill shadow-sm">
-                <i class="fas fa-user-circle me-1 text-kudea-medium"></i>
-                <span class="fw-bold">{{ request.user.username }}</span>
-            </div>
-        </div>
-    </header>
+    <!-- HEADER SECTION REMOVED -->
 
     <!-- OPERATIONAL ALERTS -->
     {% if alertas_stock %}
-    <section class="alert-strip mb-4">
-        <div class="alert-dot"></div>
-        <div class="small fw-bold text-danger">ALERTA DE REPOSICIÓN:</div>
-        <div class="d-flex gap-3 overflow-hidden">
-            {% for item in alertas_stock %}
-            <span class="small text-dark fw-medium">{{ item.nombre }} ({{ item.stock }} uds)</span>
-            {% endfor %}
+    <section class="mb-6 overflow-hidden">
+        <div class="bg-red-50 border border-red-100 rounded-2xl p-4 flex items-center gap-4 animate-pulse-slow">
+            <div class="flex-shrink-0 w-10 h-10 bg-red-500 text-white rounded-xl flex items-center justify-center">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="flex-1 overflow-hidden">
+                <div class="text-xs font-black text-red-600 uppercase tracking-wider mb-1">Alerta de Reposición</div>
+                <div class="flex gap-4 overflow-x-auto whitespace-nowrap pb-1 no-scrollbar">
+                    {% for item in alertas_stock %}
+                    <span class="text-sm font-bold text-red-900 bg-red-100/50 px-3 py-1 rounded-lg">
+                        {{ item.nombre }} ({{ item.stock }} uds)
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
         </div>
     </section>
     {% endif %}
 
     <!-- CASH STATUS DYNAMICS -->
-    <section class="mb-4">
+    <section class="mb-8">
         {% if apertura_hoy %}
-            <div class="status-strip success">
-                <div class="status-dot pulse-success"></div>
-                <div class="d-flex justify-content-between align-items-center w-100">
-                    <div>
-                        <span class="fw-bold">CAJA ABIERTA:</span>
-                        <span class="small text-muted ms-2">Iniciada por {{ apertura_hoy.usuario.username }} el {{ apertura_hoy.fecha|date:"d/m/Y" }}</span>
+            <div class="bg-emerald-50 border border-emerald-100 rounded-3xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm shadow-emerald-500/5">
+                <div class="flex items-center gap-4">
+                    <div class="relative flex h-3 w-3">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
                     </div>
-                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">Operativa</span>
+                    <div>
+                        <div class="text-emerald-900 font-black uppercase text-xs tracking-widest mb-0.5">Caja Abierta</div>
+                        <div class="text-sm text-emerald-700/80 font-medium">
+                            Iniciada por <span class="font-bold">{{ apertura_hoy.usuario.username }}</span> el {{ apertura_hoy.fecha|date:"d/m/Y" }}
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-emerald-500 text-white px-6 py-2 rounded-2xl font-bold text-sm shadow-lg shadow-emerald-500/20">
+                    Operativa
                 </div>
             </div>
         {% else %}
-            <div class="status-strip danger">
-                <div class="status-dot pulse-danger"></div>
-                <div class="d-flex justify-content-between align-items-center w-100">
-                    <div>
-                        <span class="fw-bold text-danger">CAJA CERRADA:</span>
-                        <span class="small text-muted ms-2">Es necesario registrar la apertura para comenzar a operar hoy.</span>
+            <div class="bg-slate-50 border border-slate-200 rounded-3xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
+                <div class="flex items-center gap-4">
+                    <div class="relative flex h-3 w-3">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
                     </div>
-                    <a href="{% url 'cash_app:apertura_caja' %}" class="btn btn-dark btn-sm rounded-pill px-4 shadow-sm">
-                        <i class="fas fa-unlock me-2"></i>Abrir Caja
-                    </a>
+                    <div>
+                        <div class="text-slate-900 font-black uppercase text-xs tracking-widest mb-0.5">Caja Cerrada</div>
+                        <div class="text-sm text-slate-500 font-medium">
+                            Es necesario registrar la apertura para comenzar a operar hoy.
+                        </div>
+                    </div>
                 </div>
+                <a href="{% url 'cash_app:apertura_caja' %}" class="bg-dark-blue hover:bg-slate-800 text-white px-8 py-3 rounded-2xl font-bold text-sm transition-all shadow-lg shadow-dark-blue/20 flex items-center gap-2">
+                    <i class="fas fa-unlock"></i> Abrir Caja
+                </a>
             </div>
         {% endif %}
     </section>
 
     <!-- KPI STATS SECTION -->
-    <section class="mb-5">
-        <div class="row g-3">
-            <div class="col-md-3">
-                <div class="kpi-card">
-                    <div class="kpi-label">Facturación Hoy</div>
-                    <div class="kpi-value text-success">€{{ kpi_hoy.total|default:0|floatformat:2 }}</div>
-                    <div class="mt-2">
-                        {% if kpi_hoy.crecimiento >= 0 %}
-                        <span class="badge bg-success-subtle text-success border border-success-subtle small">
-                            <i class="fas fa-arrow-up"></i> {{ kpi_hoy.crecimiento|floatformat:1 }}% vs ayer
-                        </span>
-                        {% else %}
-                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle small">
-                            <i class="fas fa-arrow-down"></i> {{ kpi_hoy.crecimiento|floatformat:1 }}% vs ayer
-                        </span>
-                        {% endif %}
-                    </div>
-                </div>
+    <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        <!-- Facturación -->
+        <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+            <div class="text-slate-400 text-xs font-black uppercase tracking-widest mb-4">Facturación Hoy</div>
+            <div class="text-3xl font-black text-emerald-600 mb-2">€{{ kpi_hoy.total|default:0|floatformat:2 }}</div>
+            <div>
+                {% if kpi_hoy.crecimiento >= 0 %}
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                    <i class="fas fa-arrow-up mr-1 text-[10px]"></i> {{ kpi_hoy.crecimiento|floatformat:1 }}% vs ayer
+                </span>
+                {% else %}
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-100">
+                    <i class="fas fa-arrow-down mr-1 text-[10px]"></i> {{ kpi_hoy.crecimiento|floatformat:1 }}% vs ayer
+                </span>
+                {% endif %}
             </div>
-            <div class="col-md-3">
-                <div class="kpi-card">
-                    <div class="kpi-label">Tickets / Promedio</div>
-                    <div class="d-flex align-items-baseline gap-2">
-                        <span class="kpi-value">{{ kpi_hoy.tickets|default:0 }}</span>
-                        <span class="muted small fw-bold">/ €{{ kpi_hoy.ticket_medio|floatformat:2 }}</span>
-                    </div>
-                </div>
+        </div>
+
+        <!-- Tickets / Promedio -->
+        <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+            <div class="text-slate-400 text-xs font-black uppercase tracking-widest mb-4">Tickets / Promedio</div>
+            <div class="flex items-baseline gap-2">
+                <span class="text-3xl font-black text-slate-800">{{ kpi_hoy.tickets|default:0 }}</span>
+                <span class="text-slate-400 font-bold">/ €{{ kpi_hoy.ticket_medio|floatformat:2 }}</span>
             </div>
-            <div class="col-md-3">
-                <div class="kpi-card">
-                    <div class="kpi-label">Arts. Vendidos</div>
-                    <div class="kpi-value">{{ kpi_hoy.productos|default:0 }}</div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="kpi-card">
-                    <div class="kpi-label">Balance en Caja</div>
-                    <div class="kpi-value text-primary">€{{ kpi_hoy.total|floatformat:2 }}</div>
-                </div>
-            </div>
+        </div>
+
+        <!-- Arts. Vendidos -->
+        <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+            <div class="text-slate-400 text-xs font-black uppercase tracking-widest mb-4">Arts. Vendidos</div>
+            <div class="text-3xl font-black text-slate-800">{{ kpi_hoy.productos|default:0 }}</div>
+        </div>
+
+        <!-- Balance en Caja -->
+        <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+            <div class="text-slate-400 text-xs font-black uppercase tracking-widest mb-4">Balance en Caja</div>
+            <div class="text-3xl font-black text-primary-blue">€{{ kpi_hoy.total|floatformat:2 }}</div>
         </div>
     </section>
 
-    <div class="row g-4 mb-5">
-        <!-- QUICK ACTIONS (Left side) -->
-        <div class="col-lg-7">
-            <div class="k-card h-100">
-                <div class="k-card-body p-4">
-                    <h2 class="k-title mb-4">
-                        <i class="fas fa-bolt text-warning"></i> Operaciones Rápidas
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-10">
+        <!-- QUICK ACTIONS -->
+        <div class="lg:col-span-7">
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm h-full overflow-hidden">
+                <div class="p-8">
+                    <h2 class="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
+                        <i class="fas fa-bolt text-amber-400"></i> Operaciones Rápidas
                     </h2>
-                    <div class="row g-3">
-                        <div class="col-6 col-md-3">
-                            <a href="{% url 'home_app:tpv' %}" class="action-card">
-                                <span class="action-icon">🧾</span>
-                                <span class="action-name">TPV</span>
-                            </a>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <a href="{% url 'home_app:lista_productos' %}" class="action-card">
-                                <span class="action-icon">📦</span>
-                                <span class="action-name">Stock</span>
-                            </a>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <a href="{% url 'home_app:lista_ventas' %}" class="action-card">
-                                <span class="action-icon">📊</span>
-                                <span class="action-name">Ventas</span>
-                            </a>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <a href="{% url 'home_app:arqueo_menu' %}" class="action-card">
-                                <span class="action-icon">💰</span>
-                                <span class="action-name">Caja</span>
-                            </a>
-                        </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <a href="{% url 'home_app:tpv_general' %}" class="group bg-slate-50 hover:bg-dark-blue p-6 rounded-3xl transition-all duration-300 text-center flex flex-col items-center gap-3 border border-slate-100 shadow-sm">
+                            <span class="text-3xl group-hover:scale-110 transition-transform duration-300">🧾</span>
+                            <span class="font-bold text-slate-700 group-hover:text-white transition-colors">TPV</span>
+                        </a>
+                        <a href="{% url 'home_app:lista_productos' %}" class="group bg-slate-50 hover:bg-dark-blue p-6 rounded-3xl transition-all duration-300 text-center flex flex-col items-center gap-3 border border-slate-100 shadow-sm">
+                            <span class="text-3xl group-hover:scale-110 transition-transform duration-300">📦</span>
+                            <span class="font-bold text-slate-700 group-hover:text-white transition-colors">Stock</span>
+                        </a>
+                        <a href="{% url 'home_app:lista_ventas' %}" class="group bg-slate-50 hover:bg-dark-blue p-6 rounded-3xl transition-all duration-300 text-center flex flex-col items-center gap-3 border border-slate-100 shadow-sm">
+                            <span class="text-3xl group-hover:scale-110 transition-transform duration-300">📊</span>
+                            <span class="font-bold text-slate-700 group-hover:text-white transition-colors">Ventas</span>
+                        </a>
+                        <a href="{% url 'home_app:arqueo_menu' %}" class="group bg-slate-50 hover:bg-dark-blue p-6 rounded-3xl transition-all duration-300 text-center flex flex-col items-center gap-3 border border-slate-100 shadow-sm">
+                            <span class="text-3xl group-hover:scale-110 transition-transform duration-300">💰</span>
+                            <span class="font-bold text-slate-700 group-hover:text-white transition-colors">Caja</span>
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- REVENUE CONTROL (Right side) -->
-        <div class="col-lg-5">
-            <div class="k-card h-100">
-                <div class="k-card-body p-4">
-                    <h3 class="k-title mb-3">
-                        <i class="fas fa-wallet text-primary"></i> Control de Recaudación
+        <!-- REVENUE CONTROL -->
+        <div class="lg:col-span-5">
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm h-full overflow-hidden">
+                <div class="p-8">
+                    <h3 class="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
+                        <i class="fas fa-wallet text-primary-blue"></i> Control de Recaudación
                     </h3>
                     {% if recaudacion_hoy %}
-                        {% for item in recaudacion_hoy %}
-                        <div class="payment-row mb-2">
-                            <div class="small fw-bold text-muted">{{ item.metodo_pago__nombre }}</div>
-                            <div class="fw-bold fs-5">€{{ item.total|floatformat:2 }}</div>
+                        <div class="space-y-4">
+                            {% for item in recaudacion_hoy %}
+                            <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                <div>
+                                    <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ item.metodo_pago__nombre }}</div>
+                                    <div class="text-lg font-black text-slate-800">€{{ item.total|floatformat:2 }}</div>
+                                </div>
+                                <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-primary-blue shadow-sm">
+                                    <i class="fas fa-coins"></i>
+                                </div>
+                            </div>
+                            {% endfor %}
                         </div>
-                        {% endfor %}
                     {% else %}
-                        <p class="muted text-center py-4">Sin datos de cobros hoy</p>
+                        <div class="flex flex-col items-center justify-center py-10 opacity-40">
+                            <i class="fas fa-folder-open text-4xl mb-4"></i>
+                            <p class="font-bold">Sin datos de cobros hoy</p>
+                        </div>
                     {% endif %}
                 </div>
             </div>
@@ -179,64 +180,63 @@
 
     <!-- RECENT SALES LIST -->
     <section>
-        <div class="k-card">
-            <div class="k-card-body">
-                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
-                    <h2 class="k-title m-0">
-                        <i class="fas fa-receipt text-kudea-medium"></i> Últimas Operaciones
+        <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+            <div class="p-8">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
+                    <h2 class="text-2xl font-black text-slate-800 flex items-center gap-3">
+                        <i class="fas fa-receipt text-primary-blue"></i> Últimas Operaciones
                     </h2>
 
-                    <div class="d-flex gap-2 bg-light p-1 rounded-pill border">
+                    <div class="inline-flex p-1 bg-slate-100 rounded-2xl border border-slate-200">
                         <a href="?periodo=hoy"
-                            class="btn btn-sm px-3 rounded-pill {% if periodo_actual == 'hoy' %}btn-dark{% else %}btn-light{% endif %}">Hoy</a>
+                            class="px-5 py-2 rounded-xl text-sm font-bold transition-all {% if periodo_actual == 'hoy' %}bg-dark-blue text-white shadow-lg shadow-dark-blue/20{% else %}text-slate-500 hover:text-slate-700{% endif %}">Hoy</a>
                         <a href="?periodo=semana"
-                            class="btn btn-sm px-3 rounded-pill {% if periodo_actual == 'semana' %}btn-dark{% else %}btn-light{% endif %}">Semana</a>
+                            class="px-5 py-2 rounded-xl text-sm font-bold transition-all {% if periodo_actual == 'semana' %}bg-dark-blue text-white shadow-lg shadow-dark-blue/20{% else %}text-slate-500 hover:text-slate-700{% endif %}">Semana</a>
                         <a href="?periodo=mes"
-                            class="btn btn-sm px-3 rounded-pill {% if periodo_actual == 'mes' %}btn-dark{% else %}btn-light{% endif %}">Mes</a>
+                            class="px-5 py-2 rounded-xl text-sm font-bold transition-all {% if periodo_actual == 'mes' %}bg-dark-blue text-white shadow-lg shadow-dark-blue/20{% else %}text-slate-500 hover:text-slate-700{% endif %}">Mes</a>
                     </div>
                 </div>
 
                 <!-- DATE FILTER FORM -->
-                <div class="bg-light p-3 rounded-4 border mb-4">
-                    <form method="get" class="row g-2 align-items-center">
+                <div class="bg-slate-50 p-6 rounded-3xl border border-slate-100 mb-8">
+                    <form method="get" class="flex flex-wrap items-end gap-4">
                         <input type="hidden" name="periodo" value="personalizado">
-                        <div class="col-auto"><span class="small fw-bold text-muted">Intervalo:</span></div>
-                        <div class="col-auto">
-                            <input type="date" name="fecha_inicio" class="form-control form-control-sm rounded-pill"
-                                required>
+                        <div class="flex-1 min-w-[200px]">
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Fecha Inicio</label>
+                            <input type="date" name="fecha_inicio" class="w-full bg-white border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-blue/20 focus:border-primary-blue outline-none transition-all" required>
                         </div>
-                        <div class="col-auto">
-                            <input type="date" name="fecha_fin" class="form-control form-control-sm rounded-pill"
-                                required>
+                        <div class="flex-1 min-w-[200px]">
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Fecha Fin</label>
+                            <input type="date" name="fecha_fin" class="w-full bg-white border border-slate-200 rounded-2xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-blue/20 focus:border-primary-blue outline-none transition-all" required>
                         </div>
-                        <div class="col-auto">
-                            <button type="submit" class="btn btn-dark btn-sm rounded-pill px-3">Consultar</button>
-                        </div>
+                        <button type="submit" class="bg-dark-blue hover:bg-slate-800 text-white px-8 py-3.5 rounded-2xl font-bold text-sm transition-all shadow-lg shadow-dark-blue/20">
+                            Consultar
+                        </button>
                     </form>
                 </div>
 
                 <!-- SALES GRID -->
                 {% if ventas_recientes %}
-                <div id="ventas-container" class="mb-4">
+                <div id="ventas-container" class="space-y-4 mb-8">
                     {% for venta in ventas_recientes %}
-                    <div class="venta-item {% if forloop.counter > 5 %}d-none-important{% endif %}" data-index="{{ forloop.counter }}">
-                        <div class="d-flex align-items-center gap-3">
-                        <div class="venta-icon-wrapper">
+                    <div class="venta-item group flex items-center justify-between p-5 bg-white hover:bg-slate-50 rounded-2xl border border-slate-100 transition-all {% if forloop.counter > 5 %}hidden{% endif %}" data-index="{{ forloop.counter }}">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-slate-100 text-slate-400 rounded-xl flex items-center justify-center text-xl group-hover:bg-primary-blue group-hover:text-white transition-all">
                                 <i class="fas fa-file-invoice"></i>
                             </div>
                             <div>
-                                <div class="fw-bold fs-6">{{ venta.codigo }}</div>
-                                <div class="muted small">
-                                <span class="text-dark fw-bold">{{ venta.usuario.username }}</span> · 
-                                {{ venta.metodo_pago.nombre }} · 
-                                <span class="text-muted">{{ venta.creado_en|date:"H:i" }}</span>
+                                <div class="font-black text-slate-800">{{ venta.codigo }}</div>
+                                <div class="text-xs text-slate-500 font-medium mt-0.5">
+                                    <span class="text-dark-blue font-bold">{{ venta.usuario.username }}</span> · 
+                                    {{ venta.metodo_pago.nombre }} · 
+                                    <span class="text-slate-400">{{ venta.creado_en|date:"H:i" }}</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="text-end">
-                            <div class="fw-bold fs-5 text-kudea-dark">€{{ venta.total|floatformat:2 }}</div>
+                        <div class="text-right">
+                            <div class="text-xl font-black text-dark-blue">€{{ venta.total|floatformat:2 }}</div>
                             <a href="{% url 'home_app:venta_detalle' venta.id %}"
-                                class="text-kudea-medium small text-decoration-none hover-underline">Ver detalle</a>
+                                class="text-primary-blue font-bold text-xs hover:underline decoration-2 underline-offset-4">Detalles</a>
                         </div>
                     </div>
                     {% endfor %}
@@ -244,16 +244,17 @@
 
                 {% if ventas_recientes|length > 5 %}
                 <div class="text-center">
-                    <button id="toggle-ventas-btn" class="btn btn-outline-dark btn-sm rounded-pill px-4">
-                        Mostrar más <i class="fas fa-chevron-down ms-2"></i>
+                    <button id="toggle-ventas-btn" class="bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 px-8 py-3 rounded-2xl font-bold text-sm transition-all flex items-center gap-2 mx-auto">
+                        <span>Mostrar más</span> <i class="fas fa-chevron-down text-[10px]"></i>
                     </button>
                 </div>
                 {% endif %}
                 {% else %}
-                <div class="text-center py-5">
-                    <img src="https://cdni.iconscout.com/illustration/premium/thumb/no-data-found-8867280-7223330.png"
-                        style="max-width:180px; opacity:0.6;" alt="No data" class="mb-3">
-                    <p class="muted">No se han encontrado registros para este periodo.</p>
+                <div class="flex flex-col items-center justify-center py-16">
+                    <div class="w-32 h-32 bg-slate-50 rounded-full flex items-center justify-center mb-6">
+                        <i class="fas fa-database text-slate-200 text-4xl"></i>
+                    </div>
+                    <p class="text-slate-400 font-bold">No se han encontrado registros para este periodo.</p>
                 </div>
                 {% endif %}
             </div>
@@ -262,10 +263,7 @@
 
 </main>
 
-<script src="https://unpkg.com/lucide@latest"></script>
 <script>
-    lucide.createIcons();
-
     // Simple toggle logic for sales list
     document.addEventListener("DOMContentLoaded", function () {
         const btn = document.getElementById("toggle-ventas-btn");
@@ -275,14 +273,16 @@
         btn.addEventListener("click", function () {
             const items = document.querySelectorAll(".venta-item");
             if (!expanded) {
-                items.forEach(item => item.classList.remove("d-none-important"));
-                btn.innerHTML = 'Mostrar menos <i class="fas fa-chevron-up ms-2"></i>';
+                items.forEach(item => item.classList.remove("hidden"));
+                btn.querySelector('span').innerText = 'Mostrar menos';
+                btn.querySelector('i').classList.replace('fa-chevron-down', 'fa-chevron-up');
                 expanded = true;
             } else {
                 items.forEach(item => {
-                    if (parseInt(item.dataset.index) > 5) item.classList.add("d-none-important");
+                    if (parseInt(item.dataset.index) > 5) item.classList.add("hidden");
                 });
-                btn.innerHTML = 'Mostrar más <i class="fas fa-chevron-down ms-2"></i>';
+                btn.querySelector('span').innerText = 'Mostrar más';
+                btn.querySelector('i').classList.replace('fa-chevron-up', 'fa-chevron-down');
                 expanded = false;
             }
         });

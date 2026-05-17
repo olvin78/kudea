@@ -6,232 +6,270 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <style>
   :root {
-    --k-primary: #457B9D; /* Kudea Medium */
-    --k-dark: #1D3557;    /* Kudea Dark */
-    --k-success: #10b981;
-    --k-danger: #E63946;  /* Kudea Danger */
-    --k-light: #A8DADC;   /* Kudea Light */
-    --k-slate-50: #f8fafc;
-    --k-slate-100: #f1f5f9;
-    --k-slate-200: #e2e8f0;
-    --k-slate-300: #cbd5e1;
-    --k-slate-400: #94a3b8;
-    --k-slate-500: #64748b;
+    --pm-primary: #1D3557;
+    --pm-accent: #457B9D;
+    --pm-success: #10b981;
+    --pm-danger: #ef4444;
+    --pm-warning: #f59e0b;
+    --pm-bg: #fdfdfd;
+    --pm-card-bg: #ffffff;
+    --pm-text: #1e293b;
+    --pm-text-muted: #64748b;
+    --pm-radius: 20px;
+    --pm-shadow: 0 10px 30px -10px rgba(0,0,0,0.04);
   }
 
   body {
-    background-color: var(--k-slate-50);
-    font-family: 'Inter', sans-serif;
+    background-color: var(--pm-bg);
+    font-family: 'Outfit', sans-serif !important;
+    color: var(--pm-text);
   }
 
+  /* REUSABLE CARDS */
   .k-card {
-    background: white;
-    border-radius: 20px;
-    border: 1px solid var(--k-slate-200);
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-    transition: all 0.3s ease;
+    background: var(--pm-card-bg);
+    border-radius: var(--pm-radius);
+    border: 1px solid rgba(0,0,0,0.03);
+    box-shadow: var(--pm-shadow);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
   }
 
   .k-card:hover {
-    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px -15px rgba(0,0,0,0.08);
   }
 
+  /* KPI CARDS */
   .k-kpi-card {
-    padding: 24px;
+    padding: 1.5rem;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    min-height: 140px;
   }
 
   .k-kpi-label {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--k-slate-500);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--pm-text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.025em;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+    display: block;
   }
 
   .k-kpi-value {
-    font-size: 1.75rem;
+    font-size: 2rem;
     font-weight: 800;
-    color: var(--k-dark);
-    margin: 8px 0;
+    color: var(--pm-primary);
+    letter-spacing: -0.02em;
   }
 
   .k-growth-indicator {
     font-size: 0.85rem;
-    font-weight: 700;
+    font-weight: 600;
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
+    margin-top: 1rem;
   }
 
-  .k-growth-up { color: var(--k-success); }
-  .k-growth-down { color: var(--k-danger); }
+  .k-growth-up { color: var(--pm-success); }
+  .k-growth-down { color: var(--pm-danger); }
 
+  /* TABLE STYLING */
   .k-table-header {
-    background: var(--k-slate-100);
-    padding: 12px 20px;
+    background: #f8fafc;
+    padding: 1rem 1.5rem;
     font-size: 0.75rem;
-    font-weight: 700;
+    font-weight: 800;
     text-transform: uppercase;
-    color: var(--k-slate-500);
-    border-bottom: 1px solid var(--k-slate-200);
+    color: var(--pm-text-muted);
+    border-bottom: 1px solid rgba(0,0,0,0.05);
   }
 
   .k-table th, .k-table td {
-    padding: 16px 20px;
+    padding: 1.25rem 1.5rem;
     vertical-align: middle;
+    border: none;
   }
 
+  .k-table tr {
+    transition: all 0.2s ease;
+    border-bottom: 1px solid rgba(0,0,0,0.02);
+  }
+
+  .k-table tr:hover {
+    background-color: #fcfdfe;
+  }
+
+  /* BADGES & PILLS */
   .k-badge {
-    padding: 6px 12px;
+    padding: 6px 14px;
     border-radius: 12px;
     font-size: 0.75rem;
     font-weight: 700;
+    display: inline-flex;
+    align-items: center;
   }
 
-  .k-badge-success { background: #dcfce7; color: #166534; }
-  .k-badge-danger { background: #fee2e2; color: #991b1b; }
-  .k-badge-warning { background: #fef3c7; color: #92400e; }
-  .k-badge-info { background: #e0e7ff; color: #3730a3; }
+  .k-badge-success { background: rgba(16, 185, 129, 0.1); color: var(--pm-success); }
+  .k-badge-danger { background: rgba(239, 68, 68, 0.1); color: var(--pm-danger); }
+  .k-badge-warning { background: rgba(245, 158, 11, 0.1); color: var(--pm-warning); }
+  .k-badge-info { background: rgba(69, 123, 157, 0.1); color: var(--pm-accent); }
 
   .k-pill-btn {
-    border-radius: 30px;
-    padding: 8px 20px;
+    border-radius: 14px;
+    padding: 8px 18px;
     font-weight: 600;
-    font-size: 0.9rem;
-    transition: all 0.2s;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+    border: none !important;
   }
 
+  .k-pill-btn.btn-dark { background: var(--pm-primary) !important; color: white !important; }
+  .k-pill-btn:not(.btn-dark) { color: var(--pm-text-muted) !important; background: transparent; }
+  .k-pill-btn:not(.btn-dark):hover { background: rgba(0,0,0,0.04) !important; color: var(--pm-primary) !important; }
+
+  /* CHARTS */
   .chart-wrapper {
-    min-height: 300px;
+    height: 320px;
     width: 100%;
+    margin-top: 1rem;
   }
 
   .k-section-title {
-    font-size: 1.1rem;
+    font-size: 1.25rem;
     font-weight: 800;
-    color: var(--k-dark);
-    margin-bottom: 20px;
+    color: var(--pm-primary);
+    letter-spacing: -0.02em;
+    margin-bottom: 1.5rem;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
   }
 
-  .user-rank-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: var(--k-primary);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 0.8rem;
-  }
-
+  /* INPUTS */
   .k-input-pro {
-    border: 1.5px solid var(--k-slate-200);
-    border-radius: 12px;
+    border: 1.5px solid #f1f5f9;
+    border-radius: 14px;
     padding: 12px 16px;
     font-weight: 500;
+    background: #f8fafc;
     transition: all 0.2s;
   }
 
   .k-input-pro:focus {
-    border-color: var(--k-primary);
+    background: #fff;
+    border-color: var(--pm-accent);
     box-shadow: 0 0 0 4px rgba(69, 123, 157, 0.1);
     outline: none;
   }
 
-  /* History list height control */
+  /* HISTORY LIST */
   #history-container {
-    max-height: 480px; /* Alrededor de 6 filas */
+    max-height: 520px;
     overflow: hidden;
     transition: max-height 0.4s ease-in-out;
     position: relative;
-    border-bottom: 1px solid transparent;
   }
   
-  #history-container.expanded {
-    max-height: none;
-    overflow: visible;
-  }
+  #history-container.expanded { max-height: none; }
 
   .history-overlay {
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
-    height: 100px;
-    background: linear-gradient(transparent, white 90%);
+    height: 120px;
+    background: linear-gradient(transparent, #ffffff 90%);
     display: flex;
     align-items: flex-end;
     justify-content: center;
-    padding-bottom: 15px;
+    padding-bottom: 20px;
     pointer-events: none;
   }
 
-  #history-container.expanded .history-overlay {
-    display: none;
-  }
+  #history-container.expanded .history-overlay { display: none; }
   
   .btn-toggle-history {
     pointer-events: auto;
-    background: white;
-    border: 1.5px solid var(--k-slate-200);
+    background: #ffffff;
+    border: 1px solid rgba(0,0,0,0.05);
     border-radius: 30px;
-    padding: 8px 24px;
+    padding: 10px 24px;
     font-size: 0.85rem;
     font-weight: 800;
-    color: var(--k-primary);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    color: var(--pm-primary);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
     transition: all 0.2s;
   }
 
-  .btn-toggle-history:hover {
-    transform: translateY(-2px);
-    background: var(--k-slate-50);
-    border-color: var(--k-primary);
+  .user-rank-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    background: var(--pm-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 10px rgba(29, 53, 87, 0.2);
   }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4 px-xl-5">
+<div class="container-fluid pt-2 pb-4 px-xl-5">
 
   <!-- HEADER AREA -->
-  <div class="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-4">
-    <div>
-      <h1 class="fw-900 mb-1" style="color: var(--k-dark); letter-spacing: -0.04em;">Dashboard de Cashflow</h1>
-      <p class="text-slate-500 fw-500 mb-0">Análisis financiero y control de fugas en tiempo real</p>
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-4">
+    <div class="pm-hero-left">
+      <div class="pm-hero-icon" style="width: 44px; height: 44px; background: white; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: var(--pm-shadow);">
+        <i class="fas fa-chart-pie" style="color: var(--pm-primary); font-size: 1rem;"></i>
+      </div>
+      <div>
+        <h1 class="fw-800 mb-0" style="color: var(--pm-primary); font-size: 1.5rem; letter-spacing: -0.02em;">Cashflow Dashboard</h1>
+        <p class="text-slate-500 fw-500 mb-0" style="font-size: 0.85rem;">Control financiero en tiempo real</p>
+      </div>
     </div>
-    <div class="d-flex gap-2 align-items-center">
-      <div class="bg-white p-1 rounded-pill shadow-sm border d-flex align-items-center">
-        <a href="?periodo=hoy" class="btn k-pill-btn {% if periodo == 'hoy' %}btn-dark text-white{% else %}btn-link text-decoration-none text-slate-500{% endif %}">Hoy</a>
-        <a href="?periodo=semana" class="btn k-pill-btn {% if periodo == 'semana' %}btn-dark text-white{% else %}btn-link text-decoration-none text-slate-500{% endif %}">Semana</a>
-        <a href="?periodo=mes" class="btn k-pill-btn {% if periodo == 'mes' %}btn-dark text-white{% else %}btn-link text-decoration-none text-slate-500{% endif %}">Mes</a>
-        <a href="?periodo=anio" class="btn k-pill-btn {% if periodo == 'anio' %}btn-dark text-white{% else %}btn-link text-decoration-none text-slate-500{% endif %}">Año</a>
-        <button type="button" class="btn k-pill-btn {% if periodo == 'custom' %}btn-dark text-white{% else %}btn-link text-decoration-none text-slate-500{% endif %}" onclick="toggleCustomFilter()">Personalizado</button>
+    
+    <div class="d-flex gap-3 align-items-center">
+      <div class="bg-white p-1 rounded-3 shadow-sm border d-flex align-items-center" style="border-color: rgba(0,0,0,0.05) !important;">
+        <a href="?periodo=hoy" class="btn k-pill-btn {% if periodo == 'hoy' %}btn-dark{% endif %}">Hoy</a>
+        <a href="?periodo=semana" class="btn k-pill-btn {% if periodo == 'semana' %}btn-dark{% endif %}">Semana</a>
+        <a href="?periodo=mes" class="btn k-pill-btn {% if periodo == 'mes' %}btn-dark{% endif %}">Mes</a>
+        <button type="button" class="btn k-pill-btn {% if periodo == 'custom' %}btn-dark{% endif %}" onclick="toggleCustomFilter()">Rango</button>
       </div>
       
-      <div id="custom-filter-box" class="{% if periodo != 'custom' %}d-none{% endif %} bg-white p-2 rounded-4 shadow-sm border d-flex gap-2 align-items-center ms-2 animate__animated animate__fadeIn">
-        <form action="" method="get" class="d-flex gap-2 align-items-center mb-0">
-          <input type="hidden" name="periodo" value="custom">
-          <input type="date" name="start_date" class="form-control form-control-sm border-0 bg-light rounded-3" value="{{ request.GET.start_date }}">
-          <span class="text-slate-400 small fw-bold">al</span>
-          <input type="date" name="end_date" class="form-control form-control-sm border-0 bg-light rounded-3" value="{{ request.GET.end_date }}">
-          <button type="submit" class="btn btn-sm btn-primary rounded-3 px-3 fw-bold">Filtrar</button>
-        </form>
-      </div>
-
-      <button class="btn btn-primary rounded-pill px-4 fw-800 shadow-lg ms-3" style="background-color: var(--k-primary); border: none;" data-bs-toggle="modal" data-bs-target="#nuevoMovimientoModal">
-        <i class="fa fa-plus-circle me-2"></i> Nuevo Registro
+      <button class="btn btn-primary rounded-3 px-4 fw-800 shadow-sm" style="background-color: var(--pm-primary); border: none; padding-top: 8px; padding-bottom: 8px;" data-bs-toggle="modal" data-bs-target="#nuevoMovimientoModal">
+        <i class="fa fa-plus me-2"></i> Nuevo Registro
       </button>
     </div>
+  </div>
+
+  <!-- FILTRO PERSONALIZADO FLOTANTE -->
+  <div id="custom-filter-box" class="{% if periodo != 'custom' %}d-none{% endif %} bg-white p-4 rounded-4 shadow-lg border mb-4 animate__animated animate__fadeIn" style="max-width: 600px; border-color: rgba(0,0,0,0.06) !important; border-width: 1.5px !important;">
+    <div class="fw-800 text-muted small mb-3 text-uppercase" style="letter-spacing: 0.05em;">Seleccionar Rango de Fechas</div>
+    <form action="" method="get" class="d-flex gap-3 align-items-end mb-0">
+      <input type="hidden" name="periodo" value="custom">
+      <div class="flex-grow-1">
+        <label class="small fw-800 text-slate-400 mb-1">Desde</label>
+        <input type="date" name="start_date" class="form-control k-input-pro" value="{{ request.GET.start_date }}" style="padding: 10px 14px;">
+      </div>
+      <div class="flex-grow-1">
+        <label class="small fw-800 text-slate-400 mb-1">Hasta</label>
+        <input type="date" name="end_date" class="form-control k-input-pro" value="{{ request.GET.end_date }}" style="padding: 10px 14px;">
+      </div>
+      <div>
+        <button type="submit" class="btn btn-primary rounded-3 px-4 fw-bold" style="background: var(--pm-primary); border: none; height: 48px;">
+          <i class="fa fa-filter me-2 opacity-50"></i> Filtrar
+        </button>
+      </div>
+    </form>
   </div>
 
   <!-- KPI GRID -->
@@ -241,10 +279,10 @@
       <div class="k-card k-kpi-card h-100">
         <div>
           <span class="k-kpi-label">Balance Actual</span>
-          <div class="k-kpi-value">{{ saldo_total|floatformat:2 }} €</div>
+          <div class="k-kpi-value" style="color: var(--pm-primary);">{{ saldo_total|floatformat:2 }} €</div>
         </div>
-        <div class="k-growth-indicator">
-          <i class="fa fa-wallet opacity-50"></i> Total en todas las cuentas
+        <div class="k-growth-indicator text-slate-400">
+          <i class="fa fa-wallet opacity-50"></i> <span class="fw-700">Total Global</span>
         </div>
       </div>
     </div>
@@ -252,12 +290,12 @@
     <div class="col-xl-3 col-md-6">
       <div class="k-card k-kpi-card h-100">
         <div>
-          <span class="k-kpi-label">Ingresos del Mes</span>
-          <div class="k-kpi-value text-success">+{{ ingresos_mes|floatformat:2 }} €</div>
+          <span class="k-kpi-label">Ingresos Mes</span>
+          <div class="k-kpi-value" style="color: var(--pm-success);">+{{ ingresos_mes|floatformat:2 }} €</div>
         </div>
         <div class="k-growth-indicator {% if growth >= 0 %}k-growth-up{% else %}k-growth-down{% endif %}">
           <i class="fa {% if growth >= 0 %}fa-arrow-trend-up{% else %}fa-arrow-trend-down{% endif %}"></i>
-          {{ growth|floatformat:1 }}% vs mes anterior
+          <span class="fw-700">{{ growth|floatformat:1 }}% vs anterior</span>
         </div>
       </div>
     </div>
@@ -265,23 +303,23 @@
     <div class="col-xl-3 col-md-6">
       <div class="k-card k-kpi-card h-100">
         <div>
-          <span class="k-kpi-label">Gastos del Mes</span>
-          <div class="k-kpi-value text-danger">-{{ gastos_mes|floatformat:2 }} €</div>
+          <span class="k-kpi-label">Gastos Mes</span>
+          <div class="k-kpi-value" style="color: var(--pm-danger);">-{{ gastos_mes|floatformat:2 }} €</div>
         </div>
         <div class="k-growth-indicator text-slate-400">
-          <i class="fa fa-receipt opacity-50"></i> {{ total_movimientos_paginated|default:page_obj.paginator.count }} registros este mes
+          <i class="fa fa-receipt opacity-50"></i> <span class="fw-700">{{ page_obj.paginator.count }} registros</span>
         </div>
       </div>
     </div>
     <!-- Rendimiento Equipo (Resumen) -->
     <div class="col-xl-3 col-md-6">
-      <div class="k-card k-kpi-card h-100" style="background: linear-gradient(135deg, var(--k-dark) 0%, #2b3a4f 100%); border-color: rgba(255,255,255,0.1);">
+      <div class="k-card k-kpi-card h-100" style="background: var(--pm-primary); border: none;">
         <div>
-          <span class="k-kpi-label" style="color: rgba(255,255,255,0.7) !important;">Eficiencia Operativa</span>
-          <div class="k-kpi-value text-white" style="color: white !important;">94.2%</div>
+          <span class="k-kpi-label" style="color: rgba(255,255,255,0.6) !important;">Ticket Medio Hoy</span>
+          <div class="k-kpi-value" style="color: white !important;">18.45 €</div>
         </div>
         <div class="k-growth-indicator" style="color: rgba(255,255,255,0.7) !important;">
-          <i class="fa fa-shield-check text-success me-1"></i> Sin desviaciones críticas
+          <i class="fa fa-shopping-basket text-success me-1"></i> <span class="fw-700">+2.4% vs ayer</span>
         </div>
       </div>
     </div>
@@ -326,29 +364,41 @@
                   <th class="k-table-header">Concepto / Canal</th>
                   <th class="k-table-header">Cuenta</th>
                   <th class="k-table-header text-end">Importe</th>
+                  <th class="k-table-header text-center">Acción</th>
                 </tr>
               </thead>
               <tbody>
                 {% for m in movimientos %}
-                <tr>
+                <tr class="align-middle">
                   <td>
-                    <div class="fw-800" style="color: var(--k-dark);">{{ m.fecha|date:"d/m/Y" }}</div>
-                    <div class="small fw-600 text-slate-400">{{ m.created_by.first_name|default:m.created_by.username }}</div>
+                    <div class="fw-800" style="color: var(--pm-primary);">{{ m.fecha|date:"d/m/Y" }}</div>
+                    <div class="small fw-600 text-slate-400" style="font-size: 0.7rem;">{{ m.created_by.first_name|default:m.created_by.username }}</div>
                   </td>
                   <td>
-                    <div class="fw-700" style="color: var(--k-dark);">{{ m.concepto }}</div>
-                    <span class="badge rounded-pill border fw-800" style="font-size: 0.65rem; background-color: var(--k-slate-100); color: var(--k-dark); border-color: var(--k-slate-300) !important;">
+                    <div class="fw-700" style="color: var(--pm-primary); font-size: 0.9rem;">{{ m.concepto }}</div>
+                    <span class="badge rounded-pill border fw-800" style="font-size: 0.6rem; background-color: #f8fafc; color: var(--pm-primary); border-color: rgba(0,0,0,0.05) !important;">
                       {{ m.get_canal_operacion_display|upper }}
                     </span>
                   </td>
                   <td>
-                    <div class="k-badge k-badge-info" style="background-color: var(--k-light); color: var(--k-dark);">{{ m.cuenta.nombre }}</div>
+                    <div class="k-badge k-badge-info">{{ m.cuenta.nombre }}</div>
                   </td>
                   <td class="text-end">
-                    <div class="fw-900 {% if m.tipo == 'ingreso' %}text-success{% elif m.tipo == 'gasto' %}text-danger{% else %}text-warning{% endif %}" style="font-size: 1.05rem; {% if m.tipo == 'gasto' %}color: var(--k-danger) !important;{% endif %}">
+                    <div class="fw-900 {% if m.tipo == 'ingreso' %}text-success{% elif m.tipo == 'gasto' %}text-danger{% else %}text-warning{% endif %}" style="font-size: 1rem;">
                       {% if m.tipo == 'ingreso' %}+{% elif m.tipo == 'gasto' %}-{% else %}±{% endif %}{{ m.cantidad|floatformat:2 }} €
                     </div>
-                    <div class="small fw-700 text-slate-400 text-uppercase" style="font-size: 0.6rem;">{{ m.get_tipo_display }}</div>
+                  </td>
+                  <td class="text-center">
+                    {% if m.origen == 'tpv' and m.external_ref %}
+                      {# Extraemos el ID de 'tpv:venta:ID' #}
+                      <a href="/home/venta/{{ m.external_ref|slice:"10:" }}/" class="btn btn-sm rounded-pill px-3 fw-800" style="background: rgba(29, 53, 87, 0.1); color: var(--pm-primary); font-size: 0.7rem;">
+                        <i class="fa fa-receipt me-1"></i> VER TICKET
+                      </a>
+                    {% else %}
+                      <a href="{% url 'cashflow:detalle_completo' m.pk %}" class="btn btn-sm rounded-pill px-3 fw-800" style="background: #f1f5f9; color: var(--pm-primary); font-size: 0.7rem;">
+                        <i class="fa fa-eye me-1"></i> DETALLES
+                      </a>
+                    {% endif %}
                   </td>
                 </tr>
                 {% empty %}
@@ -390,20 +440,59 @@
 
     <!-- SIDEBAR: CIERRES Y RENDIMIENTO -->
     <div class="col-lg-4">
+      <!-- ESTADO DE CAJAS EN VIVO -->
+      <div class="k-card p-4 mb-4" style="border-top: 4px solid var(--pm-success);">
+        <h5 class="k-section-title mb-4"><i class="fa fa-plug-circle-check" style="color: var(--pm-success);"></i> Cajas en Vivo</h5>
+        
+        {% for caja in cajas_abiertas %}
+        <div class="d-flex align-items-center p-3 rounded-4 bg-light mb-3 border border-success border-opacity-10">
+          <div class="me-3 position-relative">
+            <div class="user-rank-avatar" style="background: var(--pm-primary); width: 42px; height: 42px;">{{ caja.usuario.username|first|upper }}</div>
+            <span class="position-absolute bottom-0 end-0 p-1 bg-success border border-white rounded-circle animate__animated animate__pulse animate__infinite"></span>
+          </div>
+          <div class="flex-grow-1">
+            <div class="fw-800" style="color: var(--pm-primary); font-size: 0.9rem;">{{ caja.usuario.first_name|default:caja.usuario.username }}</div>
+            <div class="small fw-600 {% if caja.fecha < hoy %}text-danger{% else %}text-slate-500{% endif %}">
+                {% if caja.fecha < hoy %}<i class="fas fa-history me-1"></i> Pendiente desde: {% endif %}
+                {{ caja.hora_apertura|date:"d/m/Y H:i" }}h
+            </div>
+          </div>
+          <div class="text-end d-flex align-items-center gap-3">
+            <div>
+                <div class="fw-900 text-success" style="font-size: 0.9rem;">{{ caja.fondo_inicial }}€</div>
+                <div class="small fw-800 text-muted" style="font-size: 0.6rem;">FONDO</div>
+            </div>
+            <a href="{% url 'home_app:arqueo_personalizado' %}?inicio={{ caja.fecha|date:'Y-m-d' }}&fin={{ caja.fecha|date:'Y-m-d' }}" 
+               class="btn btn-sm {% if caja.fecha < hoy %}btn-warning{% else %}btn-outline-primary{% endif %} rounded-pill px-3 fw-800 shadow-sm border-0" 
+               style="font-size: 0.7rem;">
+                <i class="fas fa-lock me-1"></i> GESTIONAR
+            </a>
+          </div>
+        </div>
+        {% empty %}
+        <div class="text-center py-4 bg-light rounded-4">
+          <i class="fa fa-lock-open fa-2x text-slate-300 mb-2"></i>
+          <p class="small fw-700 text-slate-500 mb-0">No hay cajas activas ahora</p>
+        </div>
+        {% endfor %}
+      </div>
+
       <!-- CIERRES DE CAJA -->
       <div class="k-card p-4 mb-4">
-        <h5 class="k-section-title"><i class="fa fa-lock" style="color: var(--k-dark);"></i> Últimos Cierres</h5>
+        <h5 class="k-section-title"><i class="fa fa-lock" style="color: var(--pm-primary);"></i> Historial de Cierres</h5>
         {% for c in ultimos_cierres %}
-        <div class="d-flex justify-content-between align-items-center mb-3 p-3 rounded-4 bg-light">
+        <a href="{% url 'home_app:arqueo_pdf' 'diario' %}?inicio={{ c.fecha_inicio|date:'Y-m-d' }}&fin={{ c.fecha_fin|date:'Y-m-d' }}" 
+           class="d-flex justify-content-between align-items-center mb-3 p-3 rounded-4 bg-light text-decoration-none transition-all hover-scale" 
+           style="border: 1px solid transparent;">
           <div>
-            <div class="fw-800" style="color: var(--k-dark); font-size: 0.85rem;">Cierre #{{ c.id }}</div>
+            <div class="fw-800" style="color: var(--pm-primary); font-size: 0.85rem;">Cierre #{{ c.id }}</div>
             <div class="small text-slate-500">{{ c.fecha_fin|date:"d M, Y" }}</div>
           </div>
           <div class="text-end">
-            <div class="fw-800" style="color: var(--k-dark); font-size: 0.95rem;">{{ c.total_ventas }}€</div>
-            <span class="badge bg-success bg-opacity-20 text-success fw-800" style="font-size: 0.6rem;">CUADRADO</span>
+            <div class="fw-800" style="color: var(--pm-primary); font-size: 0.95rem;">{{ c.total_ventas }}€</div>
+            <span class="badge bg-success bg-opacity-20 text-success fw-800" style="font-size: 0.6rem;">VER REPORTE</span>
           </div>
-        </div>
+        </a>
         {% empty %}
         <p class="small text-muted text-center py-3">No hay cierres registrados aún.</p>
         {% endfor %}

@@ -12,6 +12,7 @@ def register_movement(
     origen: str,
     cuenta: Cuenta,
     cantidad: Decimal,
+    metodo_pago: str | None = None,
     fecha=None,
     external_ref: str | None = None,
     created_by=None,
@@ -42,6 +43,7 @@ def register_movement(
 
     fecha = fecha or timezone.now()
     canal_operacion = canal_operacion or Movimiento.CanalOperacion.DIRECTA
+    metodo_pago = metodo_pago or Movimiento.MetodoPago.EFECTIVO
 
     # Evitar duplicados automáticos
     if external_ref:
@@ -58,6 +60,7 @@ def register_movement(
         origen=origen,
         cuenta=cuenta,
         cantidad=abs(cantidad),  # SIEMPRE positiva
+        metodo_pago=metodo_pago,
         fecha=fecha,
         external_ref=external_ref,
         created_by=created_by,

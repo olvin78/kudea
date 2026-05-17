@@ -1,0 +1,349 @@
+{% extends 'home/base.html' %}
+{% load static %}
+
+{% block title %}Acerca de | KUDEA PRO{% endblock %}
+
+{% block head %}
+<style>
+    :root {
+        --k-primary: #1d3557;
+        --k-accent: #457b9d;
+        --k-bg: #f8f9fa;
+        --k-card-bg: rgba(255, 255, 255, 0.8);
+        --k-border: rgba(29, 53, 87, 0.1);
+        --k-text: #2b2d42;
+    }
+
+    body {
+        background-color: var(--k-bg);
+        font-family: 'Outfit', sans-serif !important;
+        color: var(--k-text);
+    }
+
+    .k-about-container {
+        max-width: 1100px;
+        margin: 3rem auto;
+        padding: 0 1.5rem;
+        animation: fadeIn 0.8s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* HERO BANNER */
+    .k-hero-banner {
+        background: linear-gradient(135deg, var(--k-primary) 0%, #1a2a46 100%);
+        border-radius: 35px;
+        padding: 4rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 25px 60px rgba(29, 53, 87, 0.15);
+        margin-bottom: 3rem;
+        display: flex;
+        align-items: center;
+        min-height: 400px;
+    }
+
+    .k-hero-image-container {
+        position: absolute;
+        right: 0;
+        top: 0;
+        height: 100%;
+        width: 50%;
+        z-index: 1;
+    }
+
+    .k-hero-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.6;
+        mask-image: linear-gradient(to left, rgba(0,0,0,1) 50%, rgba(0,0,0,0));
+        -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,1) 50%, rgba(0,0,0,0));
+    }
+
+    .k-hero-content {
+        position: relative;
+        z-index: 2;
+        max-width: 60%;
+    }
+
+    .k-hero-banner::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+
+    .k-version-tag {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        padding: 0.6rem 1.2rem;
+        border-radius: 14px;
+        font-weight: 800;
+        font-size: 0.85rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-bottom: 1.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .k-hero-title {
+        font-size: 3.5rem;
+        font-weight: 900;
+        margin-bottom: 1rem;
+        letter-spacing: -1px;
+    }
+
+    .k-hero-subtitle {
+        font-size: 1.2rem;
+        opacity: 0.8;
+        max-width: 600px;
+        line-height: 1.6;
+        font-weight: 500;
+    }
+
+    /* STATS GRID */
+    .k-stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+
+    .k-stat-card {
+        background: white;
+        border-radius: 24px;
+        padding: 2rem;
+        border: 1px solid var(--k-border);
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .k-stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.04);
+    }
+
+    .k-stat-icon {
+        width: 60px;
+        height: 60px;
+        background: rgba(29, 53, 87, 0.05);
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: var(--k-primary);
+    }
+
+    .k-stat-info span {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 800;
+        color: #adb5bd;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 0.3rem;
+    }
+
+    .k-stat-info strong {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--k-primary);
+    }
+
+    /* INFO SECTION */
+    .k-info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 2rem;
+    }
+
+    .k-info-panel {
+        background: var(--k-card-bg);
+        backdrop-filter: blur(12px);
+        border-radius: 30px;
+        padding: 2.5rem;
+        border: 1px solid white;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+    }
+
+    .k-panel-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .k-panel-header i {
+        font-size: 1.5rem;
+        color: var(--k-accent);
+    }
+
+    .k-panel-header h3 {
+        font-weight: 900;
+        font-size: 1.4rem;
+        margin: 0;
+        color: var(--k-primary);
+    }
+
+    .k-feature-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .k-feature-list li {
+        padding: 0.75rem 0;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        color: #4a4e69;
+        font-weight: 500;
+        border-bottom: 1px solid rgba(0,0,0,0.03);
+    }
+
+    .k-feature-list li:last-child { border: none; }
+
+    .k-feature-list li::before {
+        content: '✓';
+        color: #2a9d8f;
+        font-weight: 900;
+    }
+
+    .k-btn-help {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        background: var(--k-primary);
+        color: white;
+        padding: 1rem 1.75rem;
+        border-radius: 16px;
+        text-decoration: none !important;
+        font-weight: 800;
+        margin-top: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .k-btn-help:hover {
+        background: #142a46;
+        transform: scale(1.05);
+        color: white;
+    }
+
+    .k-footer-note {
+        text-align: center;
+        margin-top: 4rem;
+        padding: 2rem;
+        background: rgba(29, 53, 87, 0.03);
+        border-radius: 20px;
+        color: var(--k-accent);
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="k-about-container">
+    <!-- HERO -->
+    <div class="k-hero-banner">
+        <div class="k-hero-image-container">
+            <img src="{% static 'img/kudea_vision.png' %}" alt="Vision" class="k-hero-image">
+        </div>
+        <div class="k-hero-content">
+            <div class="k-version-tag">Edición Pro v{{ app_version }}</div>
+            <h1 class="k-hero-title">KUDEA Ecosystem</h1>
+            <p class="k-hero-subtitle">
+                Plataforma inteligente de gestión retail y financiera, diseñada para optimizar la operativa diaria con tecnología de vanguardia.
+            </p>
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="k-stats-row">
+        <div class="k-stat-card">
+            <div class="k-stat-icon"><i class="fas fa-microchip"></i></div>
+            <div class="k-stat-info">
+                <span>Entorno Actual</span>
+                <strong>{{ runtime_env|upper }}</strong>
+            </div>
+        </div>
+        <div class="k-stat-card">
+            <div class="k-stat-icon"><i class="fas fa-rocket"></i></div>
+            <div class="k-stat-info">
+                <span>Release Status</span>
+                <strong>COMMERCIAL v1.0</strong>
+            </div>
+        </div>
+        <div class="k-stat-card">
+            <div class="k-stat-icon"><i class="fas fa-globe-europe"></i></div>
+            <div class="k-stat-info">
+                <span>Core Development</span>
+                <strong>EUROPE HQ</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- INFO GRID -->
+    <div class="k-info-grid">
+        <!-- PRODUCTO -->
+        <div class="k-info-panel">
+            <div class="k-panel-header">
+                <i class="fas fa-star"></i>
+                <h3>Producto Core</h3>
+            </div>
+            <ul class="k-feature-list">
+                <li>TPV Pro de alto rendimiento para operativa en mostrador.</li>
+                <li>Módulo financiero avanzado con arqueos y flujos de caja.</li>
+                <li>Control de inventario en tiempo real con alertas críticas.</li>
+                <li>Reporting analítico para la toma de decisiones estratégicas.</li>
+            </ul>
+        </div>
+
+        <!-- TECNOLOGIA -->
+        <div class="k-info-panel">
+            <div class="k-panel-header">
+                <i class="fas fa-shield-alt"></i>
+                <h3>Infraestructura</h3>
+            </div>
+            <ul class="k-feature-list">
+                <li>Autenticación multi-capa con soporte de login social.</li>
+                <li>Arquitectura modular escalable basada en micro-servicios.</li>
+                <li>Motor de base de datos optimizado para alta concurrencia.</li>
+                <li>Interfaz responsiva de alta fidelidad adaptada a táctiles.</li>
+            </ul>
+        </div>
+
+        <!-- SOPORTE -->
+        <div class="k-info-panel">
+            <div class="k-panel-header">
+                <i class="fas fa-heartbeat"></i>
+                <h3>Ecosistema</h3>
+            </div>
+            <p style="color: #64748b; font-size: 0.95rem; line-height: 1.6;">
+                Nuestra misión es la estabilidad absoluta. Contamos con un centro de ayuda integrado y un canal de mejora continua basado en feedback real.
+            </p>
+            <a href="{% url 'home_app:ayuda' %}" class="k-btn-help">
+                <i class="fas fa-life-ring"></i> Centro de Asistencia
+            </a>
+        </div>
+    </div>
+
+    <div class="k-footer-note">
+        <i class="fas fa-info-circle me-2"></i> 
+        Identidad de versión: {{ build_id }} | Esta página refleja la edición oficial y el estado comercial de KUDEA PRO.
+    </div>
+</div>
+{% endblock %}

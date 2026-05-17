@@ -1,158 +1,98 @@
 {% load static %}
 {% load socialaccount %}
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="h-full bg-slate-50">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar Sesión - KUDEA</title>
-    <!-- Bootstrap 5 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Estética: Google Fonts Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS Output -->
+    <link rel="stylesheet" href="{% static 'css/output.css' %}">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
     <style>
-        :root {
-            --kudea-dark: #1D3557;
-            --kudea-medium: #457B9D;
-            --kudea-light: #A8DADC;
-            --kudea-accent: #F1FAEE;
-            --kudea-red: #E63946;
-        }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, rgba(29, 53, 87, 0.05) 0%, rgba(168, 218, 220, 0.2) 100%);
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .login-card {
+        body { font-family: 'Outfit', sans-serif; }
+        .login-card-cute {
             background: white;
-            border-radius: 24px;
-            box-shadow: 0 20px 40px rgba(29, 53, 87, 0.1);
-            padding: 40px;
-            width: 100%;
-            max-width: 450px;
-            border: 1px solid rgba(0,0,0,0.05);
-        }
-        .brand-name {
-            font-weight: 700;
-            font-size: 2rem;
-            color: var(--kudea-dark);
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .btn-google {
-            background: white;
-            color: #444;
-            border: 1px solid #ddd;
-            padding: 12px;
-            border-radius: 12px;
-            font-weight: 600;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            transition: all 0.3s;
-            margin-bottom: 25px;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        .btn-google:hover {
-            background: #f8f9fa;
-            border-color: #ccc;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            color: #444;
-        }
-        .divider {
-            display: flex;
-            align-items: center;
-            text-align: center;
-            margin-bottom: 25px;
-            color: #888;
-            font-size: 0.9rem;
-        }
-        .divider::before, .divider::after {
-            content: '';
-            flex: 1;
-            border-bottom: 1px solid #eee;
-        }
-        .divider:not(:empty)::before { margin-right: .5em; }
-        .divider:not(:empty)::after { margin-left: .5em; }
-        
-        .form-control {
-            border-radius: 12px;
-            padding: 12px 16px;
-            border: 1px solid #eee;
-            margin-bottom: 20px;
-        }
-        .form-control:focus {
-            border-color: var(--kudea-medium);
-            box-shadow: 0 0 0 4px rgba(69, 123, 157, 0.1);
-        }
-        .btn-kudea {
-            background: var(--kudea-dark);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 12px;
-            font-weight: 600;
-            width: 100%;
-            transition: all 0.3s;
-        }
-        .btn-kudea:hover {
-            background: var(--kudea-medium);
-            transform: translateY(-2px);
-        }
-        .back-link {
-            text-align: center;
-            margin-top: 20px;
-        }
-        .back-link a {
-            color: var(--kudea-medium);
-            text-decoration: none;
-            font-size: 0.9rem;
+            border-radius: 3rem;
+            box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.05);
+            border: 1px solid #f1f5f9;
         }
     </style>
 </head>
-<body>
-    <div class="login-card">
-        <div class="brand-name">KUDE<span style="color: var(--kudea-medium);">A</span></div>
-        
-        <!-- Botón de Google (Uso de POST para mayor robustez) -->
-        <form method="post" action="/accounts/google/login/">
-            {% csrf_token %}
-            <button type="submit" class="btn-google">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google" width="20">
-                Continuar con Google
-            </button>
-        </form>
+<body class="h-full flex items-center justify-center p-6 relative overflow-hidden">
+    
+    <!-- Decoración de fondo sutil -->
+    <div class="absolute top-0 left-0 w-96 h-96 bg-blue-50 rounded-full -ml-48 -mt-48 blur-3xl"></div>
+    <div class="absolute bottom-0 right-0 w-96 h-96 bg-blue-50 rounded-full -mr-48 -mb-48 blur-3xl"></div>
 
-        <div class="divider">o accede con tu cuenta</div>
-
-        <form method="POST" action="{% url 'account_login' %}">
-            {% csrf_token %}
-            {% if form.errors %}
-                <div class="alert alert-danger py-2 small">
-                    Usuario o contraseña incorrectos.
+    <div class="w-full max-w-md relative z-10">
+        <div class="login-card-cute p-10 md:p-12">
+            
+            <div class="flex flex-col items-center mb-10">
+                <div class="w-16 h-16 bg-blue-700 rounded-3xl flex items-center justify-center text-white shadow-lg shadow-blue-700/20 mb-4">
+                    <i data-lucide="layout-grid" class="w-10 h-10"></i>
                 </div>
-            {% endif %}
-            <div class="mb-3">
-                <input type="email" name="login" class="form-control" placeholder="Correo electrónico" required id="id_login">
+                <h1 class="text-3xl font-bold tracking-tight text-slate-900">KUDEA</h1>
             </div>
-            <div class="mb-3">
-                <input type="password" name="password" class="form-control" placeholder="Contraseña" required id="id_password">
-            </div>
-            <button type="submit" class="btn-kudea">Entrar</button>
-        </form>
+            
+            <!-- Botón de Google (Original POST) -->
+            <form method="post" action="/accounts/google/login/">
+                {% csrf_token %}
+                <button type="submit" class="w-full flex items-center justify-center space-x-3 px-6 py-4 bg-white border-2 border-slate-100 rounded-2xl text-slate-700 font-bold hover:bg-slate-50 transition-all active:scale-[0.98]">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google" width="20">
+                    <span>Continuar con Google</span>
+                </button>
+            </form>
 
-        <div class="back-link">
-            <a href="/"><i class="fas fa-arrow-left me-1"></i> Volver a la web</a>
+            <div class="relative flex items-center my-8">
+                <div class="flex-grow border-t border-slate-100"></div>
+                <span class="flex-shrink mx-4 text-xs font-bold text-slate-300 uppercase tracking-widest">o accede con</span>
+                <div class="flex-grow border-t border-slate-100"></div>
+            </div>
+
+            <!-- Formulario Original -->
+            <form method="POST" action="{% url 'account_login' %}" class="space-y-6">
+                {% csrf_token %}
+                {% if form.errors %}
+                    <div class="p-4 bg-red-50 rounded-2xl border border-red-100 text-red-600 text-sm font-medium flex items-center gap-3">
+                        <i data-lucide="alert-circle" class="w-5 h-5"></i>
+                        <span>Usuario o contraseña incorrectos.</span>
+                    </div>
+                {% endif %}
+                
+                <div class="space-y-2">
+                    <input type="email" name="login" id="id_login" class="w-full px-6 py-4 bg-slate-50 border-transparent rounded-2xl focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-700 transition-all outline-none" placeholder="Correo electrónico" required>
+                </div>
+                
+                <div class="space-y-2">
+                    <input type="password" name="password" id="id_password" class="w-full px-6 py-4 bg-slate-50 border-transparent rounded-2xl focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-700 transition-all outline-none" placeholder="Contraseña" required>
+                </div>
+
+                <button type="submit" class="w-full py-4 bg-blue-700 text-white rounded-2xl font-bold text-lg shadow-lg shadow-blue-700/20 hover:bg-blue-800 transition-all hover:-translate-y-1 active:scale-[0.98]">
+                    Entrar
+                </button>
+            </form>
+
+            <div class="mt-8 text-center">
+                <a href="/" class="inline-flex items-center space-x-2 text-sm font-bold text-slate-400 hover:text-blue-700 transition-colors">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                    <span>Volver a la web</span>
+                </a>
+            </div>
         </div>
     </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
 </body>
 </html>

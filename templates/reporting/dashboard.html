@@ -1,13 +1,65 @@
 {% extends "home/base.html" %}
 {% load static %}
 
-{% block title %}KUDEA | Supermarket Command Center{% endblock %}
+{% block title %}Dashboard | KUDEA Intelligence{% endblock %}
 
 {% block head %}
 {{ block.super }}
 <script defer src="https://unpkg.com/lucide@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<link rel="stylesheet" href="{% static 'css/dashboard_principal.css' %}">
+<!-- Google Fonts: Outfit -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    'primary-blue': '#499ecf',
+                    'dark-blue': '#1D3557',
+                    'emerald-light': '#ecfdf5',
+                    'rose-light': '#fff1f2',
+                },
+                fontFamily: {
+                    'outfit': ['Outfit', 'sans-serif'],
+                }
+            }
+        }
+    }
+</script>
+
+<style>
+    body { font-family: 'Outfit', sans-serif; background: #f8fafc; }
+    .bg-mesh {
+        background-color: #f8fafc;
+        background-image: 
+            radial-gradient(at 0% 0%, rgba(73, 158, 207, 0.05) 0px, transparent 50%),
+            radial-gradient(at 100% 100%, rgba(29, 53, 87, 0.03) 0px, transparent 50%);
+    }
+    .glass-card {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(73, 158, 207, 0.2);
+        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.03);
+    }
+    .btn-filter-active {
+        background: #1D3557;
+        color: white;
+        box-shadow: 0 10px 15px -3px rgba(29, 53, 87, 0.2);
+    }
+    .ticker-anim {
+        animation: ticker 30s linear infinite;
+    }
+    @keyframes ticker {
+        0% { transform: translateX(100%); }
+        100% { transform: translateX(-100%); }
+    }
+    .soul-table th { @apply px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50/50; }
+    .soul-table td { @apply px-6 py-4 text-sm text-slate-600 border-b border-slate-50; }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -16,364 +68,448 @@
 {{ dias_labels|json_script:"dias-data" }}
 {{ ventas_30_dias|json_script:"ventas-data" }}
 
-<div class="k-wrap">
+<div class="bg-mesh min-h-screen p-4 md:p-8">
+    <div class="max-w-[1600px] mx-auto">
 
-    <!-- ========== 1. EXECUTIVE SUPERMARKET HEADER ========== -->
-    <header class="dashboard-header mb-4">
-        <div class="header-title">
-            <div class="d-flex align-items-center gap-2 mb-2">
-                <span class="badge bg-primary-subtle text-primary fw-bold px-3 py-1 rounded-pill" style="font-size: 0.7rem; letter-spacing: 0.05em;">RETAIL INTELLIGENCE v3.0</span>
-            </div>
-            <h1 class="fw-900">El Alma de Kudea</h1>
-            <p>Control estratégico y operativo del supermercado</p>
-            
-            <div class="d-flex align-items-center gap-3 mt-3">
-                <div class="header-pill">
-                    <span class="text-slate-400">IVA</span>
-                    <strong class="text-white">{{ iva_actual }}%</strong>
+        <!-- ========== 1. HEADER & TICKER ========== -->
+        <header class="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div class="space-y-2">
+                <div class="flex items-center gap-3">
+                    <span class="bg-primary-blue/10 text-primary-blue text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">Retail Intelligence v3.5</span>
+                    <span id="fecha-actual" class="text-xs font-bold text-slate-400 uppercase"></span>
                 </div>
-                <div class="header-pill">
-                    <span class="text-slate-400">HEALTH</span>
-                    <strong class="text-emerald-400">OPTIMAL</strong>
+                <h1 class="text-4xl font-black text-slate-900 tracking-tight">El Alma de <span class="text-primary-blue">Kudea</span></h1>
+                <p class="text-slate-500 font-medium">Control estratégico y operativo en tiempo real</p>
+                
+                <div class="flex gap-4 pt-2">
+                    <div class="flex items-center gap-2 bg-white px-4 py-2 rounded-2xl border border-slate-100 shadow-sm">
+                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">IVA</span>
+                        <span class="text-sm font-black text-slate-800">{{ iva_actual }}%</span>
+                    </div>
+                <div class="flex items-center gap-2 bg-{{ health_color }}-50 px-4 py-2 rounded-2xl border border-{{ health_color }}-100 shadow-sm transition-all">
+                        <span class="text-[10px] font-black text-{{ health_color }}-600 uppercase tracking-widest">Estado</span>
+                        <span class="text-sm font-black text-{{ health_color }}-700">{{ health_status }}</span>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        {% if ticker_eventos %}
-        <div class="header-ticker">
-            <div class="ticker-content">
-                {% for evento in ticker_eventos %}
-                <div class="ticker-item {{ evento.tipo }}">
-                    <i data-lucide="{% if evento.tipo == 'peligro' %}alert-triangle{% elif evento.tipo == 'exito' %}check-circle{% else %}info{% endif %}"></i>
-                    <span>{{ evento.texto }}</span>
+            {% if ticker_eventos %}
+            <div class="flex-1 max-w-xl bg-slate-900 rounded-3xl p-4 overflow-hidden relative group">
+                <div class="flex gap-10 whitespace-nowrap ticker-anim hover:pause">
+                    {% for evento in ticker_eventos %}
+                    <div class="flex items-center gap-3">
+                        <span class="w-2 h-2 rounded-full {% if evento.tipo == 'peligro' %}bg-rose-500 shadow-[0_0_10px_#f43f5e]{% elif evento.tipo == 'exito' %}bg-emerald-500 shadow-[0_0_10px_#10b981]{% else %}bg-primary-blue shadow-[0_0_10px_#499ecf]{% endif %}"></span>
+                        <span class="text-xs font-bold text-white uppercase tracking-widest">{{ evento.texto }}</span>
+                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
             </div>
-        </div>
-        {% endif %}
+            {% endif %}
+        </header>
 
-        <div class="header-date">
-            <i data-lucide="calendar" class="text-primary"></i>
-            <span id="fecha-actual">Cargando...</span>
-        </div>
-    </header>
-    
-    <!-- ========== GLOBAL FILTERS (V8) ========== -->
-    <div class="glass-container mb-4 p-2 d-flex align-items-center justify-content-between">
-        <div class="d-flex align-items-center gap-3 ms-2">
-            <span class="small fw-bold text-slate-400">FILTRAR PERIODO:</span>
-            <form method="get" action="." class="d-flex gap-1">
-                <button type="submit" name="rango" value="hoy" class="btn-filter {% if rango_activo == 'hoy' %}active{% endif %}">HOY</button>
-                <button type="submit" name="rango" value="ayer" class="btn-filter {% if rango_activo == 'ayer' %}active{% endif %}">AYER</button>
-                <button type="submit" name="rango" value="semana" class="btn-filter {% if rango_activo == 'semana' %}active{% endif %}">7D</button>
-                <button type="submit" name="rango" value="mes" class="btn-filter {% if rango_activo == 'mes' %}active{% endif %}">MES</button>
-                <button type="submit" name="rango" value="anio" class="btn-filter {% if rango_activo == 'anio' %}active{% endif %}">AÑO</button>
-                <button type="button" class="btn-filter" onclick="document.getElementById('global-custom-dates').classList.toggle('d-none')">
-                    <i data-lucide="calendar" style="width: 14px;"></i>
-                </button>
-            </form>
-        </div>
-        <div class="me-2">
-            <span class="badge bg-vibrant text-white rounded-pill px-3 py-2">
+        <!-- ========== 2. GLOBAL FILTERS ========== -->
+        <div class="glass-card rounded-[2.5rem] p-3 mb-10 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-4 px-4">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Filtrar Periodo:</span>
+                <form method="get" action="." class="flex gap-1.5">
+                    <button type="submit" name="rango" value="hoy" 
+                            class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all {% if rango_activo == 'hoy' %}btn-filter-active{% else %}bg-white text-slate-400 hover:text-primary-blue border border-slate-100 shadow-sm{% endif %}">
+                        HOY
+                    </button>
+                    <button type="submit" name="rango" value="ayer" 
+                            class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all {% if rango_activo == 'ayer' %}btn-filter-active{% else %}bg-white text-slate-400 hover:text-primary-blue border border-slate-100 shadow-sm{% endif %}">
+                        AYER
+                    </button>
+                    <button type="submit" name="rango" value="semana" 
+                            class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all {% if rango_activo == 'semana' %}btn-filter-active{% else %}bg-white text-slate-400 hover:text-primary-blue border border-slate-100 shadow-sm{% endif %}">
+                        7D
+                    </button>
+                    <button type="submit" name="rango" value="mes" 
+                            class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all {% if rango_activo == 'mes' %}btn-filter-active{% else %}bg-white text-slate-400 hover:text-primary-blue border border-slate-100 shadow-sm{% endif %}">
+                        MES
+                    </button>
+                    <button type="submit" name="rango" value="anio" 
+                            class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all {% if rango_activo == 'anio' %}btn-filter-active{% else %}bg-white text-slate-400 hover:text-primary-blue border border-slate-100 shadow-sm{% endif %}">
+                        AÑO
+                    </button>
+                    <button type="button" onclick="document.getElementById('custom-dates').classList.toggle('hidden')" 
+                            class="w-10 h-10 rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-primary-blue flex items-center justify-center transition-all shadow-sm">
+                        <i data-lucide="calendar" class="w-4"></i>
+                    </button>
+                </form>
+            </div>
+            <div class="bg-primary-blue text-white px-6 py-3 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-primary-blue/20">
                 {% if rango_activo == 'hoy' %}HOY
                 {% elif rango_activo == 'ayer' %}AYER
                 {% elif rango_activo == 'semana' %}ÚLTIMOS 7 DÍAS
                 {% elif rango_activo == 'mes' %}ESTE MES
                 {% elif rango_activo == 'anio' %}ESTE AÑO
                 {% else %}{{ f_filtro_inicio|date:"d M" }} - {{ f_filtro_fin|date:"d M" }}{% endif %}
-            </span>
+            </div>
         </div>
-    </div>
-    
-    <!-- Custom Dates Panel (Hidden by default) -->
-    <div id="global-custom-dates" class="glass-container mb-4 p-3 {% if rango_activo != 'personalizado' %}d-none{% endif %}">
-        <form method="get" action="." class="row g-2 align-items-end">
-            <input type="hidden" name="rango" value="personalizado">
-            <div class="col-md-5">
-                <label class="small fw-bold text-slate-500 mb-1">FECHA INICIO</label>
-                <input type="date" name="fecha_inicio" class="form-control" value="{{ f_filtro_inicio|date:'Y-m-d' }}">
-            </div>
-            <div class="col-md-5">
-                <label class="small fw-bold text-slate-500 mb-1">FECHA FIN</label>
-                <input type="date" name="fecha_fin" class="form-control" value="{{ f_filtro_fin|date:'Y-m-d' }}">
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-vibrant w-100">APLICAR</button>
-            </div>
-        </form>
-    </div>
 
-    <!-- ========== 2. SUPERMARKET HEALTH STRIP (PILLARS) ========== -->
-    <div class="health-strip">
-        <div class="health-pill">
-            <span class="health-label">Margen Periodo ({% if rango_activo == 'hoy' %}Hoy{% else %}Filtrado{% endif %})</span>
-            <span class="health-val text-emerald">€{{ beneficio_periodo|floatformat:2 }}</span>
-        </div>
-        <div class="health-pill">
-            <span class="health-label">Ingresos en Estantería</span>
-            <span class="health-val text-vibrant">€{{ valor_venta_potencial|floatformat:2 }}</span>
-        </div>
-        <div class="health-pill">
-            <span class="health-label">Rentabilidad Periodo</span>
-            <span class="health-val text-primary">{{ margen_periodo }}%</span>
-        </div>
-    </div>
-
-    <!-- ========== 3. KPI SECONDARY GRID ========== -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="metric-card h-100 border-vibrant">
-                <div class="metric-header text-vibrant"><span class="fw-bold">RECAUDACIÓN PERIODOS</span><i data-lucide="wallet"></i></div>
-                <div class="metric-value">€{{ total_periodo|floatformat:2 }}</div>
-                <div class="metric-trend text-slate-400">{{ tickets_periodo }} transacciones</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="metric-card h-100">
-                <div class="metric-header"><span>Ticket Medio</span><i data-lucide="receipt"></i></div>
-                <div class="metric-value">€{{ ticket_promedio_periodo|floatformat:2 }}</div>
-                <div class="metric-trend text-primary">PERIODO SELECCIONADO</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="metric-card h-100">
-                <div class="metric-header"><span>Ventas Mes</span><i data-lucide="calendar"></i></div>
-                <div class="metric-value">€{{ total_mes_actual|floatformat:2 }}</div>
-                <div class="metric-trend text-slate-400">REFERENCIA MENSUAL</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="metric-card h-100">
-                <div class="metric-header"><span>Patrimonio Stock</span><i data-lucide="box"></i></div>
-                <div class="metric-value">€{{ valor_total_inventario|floatformat:2 }}</div>
-                <div class="metric-trend text-slate-400">VALORACIÓN COSTO</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ========== 4. CAPITAL HUMANO (LEADERBOARD) ========== -->
-    <div class="chart-card mb-4">
-        <div class="chart-header">
-            <h3><i data-lucide="users" class="text-vibrant"></i> Rendimiento de Operadores</h3>
-            <span class="badge bg-vibrant text-white rounded-pill px-3 fw-bold">Cuota de Ventas</span>
-        </div>
-        <div class="p-3">
-            <div class="row align-items-center">
-                <!-- Gráfico de Queso -->
-                <div class="col-md-5">
-                    <div style="height: 280px; position: relative;">
-                        <canvas id="userDonutChart"></canvas>
-                    </div>
+        <!-- Custom Dates Panel -->
+        <div id="custom-dates" class="glass-card rounded-[2.5rem] p-8 mb-10 {% if rango_activo != 'personalizado' %}hidden{% endif %}">
+            <form method="get" action="." class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                <input type="hidden" name="rango" value="personalizado">
+                <div>
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-4">Fecha Inicio</label>
+                    <input type="date" name="fecha_inicio" class="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-slate-700 font-bold focus:ring-2 focus:ring-primary-blue/20 outline-none" value="{{ f_filtro_inicio|date:'Y-m-d' }}">
                 </div>
-                <!-- Lista Detallada con Scroll -->
-                <div class="col-md-7 border-start-dashed">
-                    <div class="pe-2" style="max-height: 280px; overflow-y: auto;">
-                        <div class="list-group list-group-flush">
-                            {% for u in ventas_usuario %}
-                            <div class="list-group-item bg-transparent border-0 px-0 py-3 d-flex align-items-center justify-content-between border-bottom-dashed">
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="user-avatar" style="width: 40px; height: 40px; font-size: 1rem;">{{ u.usuario__username|first|upper }}</div>
-                                    <div>
-                                        <div class="fw-bold text-navy-950">{% if u.usuario__first_name %}{{ u.usuario__first_name }}{% else %}{{ u.usuario__username }}{% endif %}</div>
-                                        <div class="small text-slate-400 fw-bold">{{ u.n }} tickets operados</div>
-                                    </div>
-                                </div>
-                                <div class="text-end">
-                                    <div class="fw-900 text-vibrant h5 mb-0">€{{ u.total|floatformat:2 }}</div>
-                                    <div class="small text-emerald fw-bold mt-1">Ventas Activas</div>
-                                </div>
+                <div>
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-4">Fecha Fin</label>
+                    <input type="date" name="fecha_fin" class="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-slate-700 font-bold focus:ring-2 focus:ring-primary-blue/20 outline-none" value="{{ f_filtro_fin|date:'Y-m-d' }}">
+                </div>
+                <button type="submit" class="bg-primary-blue hover:bg-dark-blue text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-primary-blue/20">
+                    APLICAR FILTRO
+                </button>
+            </form>
+        </div>
+
+        <!-- ========== 3. KPI PILLARS (HEALTH STRIP) ========== -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+            <div class="glass-card rounded-[2.5rem] p-8 flex items-center justify-between group hover:border-emerald-200 transition-all">
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Margen Neto (Periodo)</p>
+                    <h3 class="text-3xl font-black text-slate-800 tracking-tight group-hover:text-emerald-600 transition-colors">€{{ beneficio_periodo|floatformat:2 }}</h3>
+                </div>
+                <div class="w-14 h-14 bg-emerald-50 text-emerald-500 rounded-[1.5rem] flex items-center justify-center text-2xl group-hover:bg-emerald-500 group-hover:text-white transition-all">
+                    <i data-lucide="trending-up"></i>
+                </div>
+            </div>
+            <div class="glass-card rounded-[2.5rem] p-8 flex items-center justify-between group hover:border-primary-blue/30 transition-all">
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Ingresos en Estantería</p>
+                    <h3 class="text-3xl font-black text-slate-800 tracking-tight group-hover:text-primary-blue transition-colors">€{{ valor_venta_potencial|floatformat:2 }}</h3>
+                </div>
+                <div class="w-14 h-14 bg-blue-50 text-primary-blue rounded-[1.5rem] flex items-center justify-center text-2xl group-hover:bg-primary-blue group-hover:text-white transition-all">
+                    <i data-lucide="box"></i>
+                </div>
+            </div>
+            <div class="glass-card rounded-[2.5rem] p-8 flex items-center justify-between group hover:border-dark-blue/30 transition-all">
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Rentabilidad Operativa</p>
+                    <h3 class="text-3xl font-black text-slate-800 tracking-tight group-hover:text-dark-blue transition-colors">{{ margen_periodo }}%</h3>
+                </div>
+                <div class="w-14 h-14 bg-slate-100 text-dark-blue rounded-[1.5rem] flex items-center justify-center text-2xl group-hover:bg-dark-blue group-hover:text-white transition-all">
+                    <i data-lucide="pie-chart"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 4. KPI SECONDARY GRID ========== -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+            <div class="glass-card rounded-3xl p-6 border-l-4 border-primary-blue">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Recaudación Periodo</span>
+                    <i data-lucide="wallet" class="w-4 text-primary-blue"></i>
+                </div>
+                <h4 class="text-2xl font-black text-slate-800 mb-1">€{{ total_periodo|floatformat:2 }}</h4>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{{ tickets_periodo }} transacciones</p>
+            </div>
+            <div class="glass-card rounded-3xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ticket Medio</span>
+                    <i data-lucide="receipt" class="w-4 text-slate-300"></i>
+                </div>
+                <h4 class="text-2xl font-black text-slate-800 mb-1">€{{ ticket_promedio_periodo|floatformat:2 }}</h4>
+                <p class="text-[10px] font-bold text-primary-blue uppercase tracking-tighter">Promedio filtrado</p>
+            </div>
+            <div class="glass-card rounded-3xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ventas Mes</span>
+                    <i data-lucide="calendar" class="w-4 text-slate-300"></i>
+                </div>
+                <h4 class="text-2xl font-black text-slate-800 mb-1">€{{ total_mes_actual|floatformat:2 }}</h4>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Referencia mensual</p>
+            </div>
+            <div class="glass-card rounded-3xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Patrimonio Stock</span>
+                    <i data-lucide="database" class="w-4 text-slate-300"></i>
+                </div>
+                <h4 class="text-2xl font-black text-slate-800 mb-1">€{{ valor_total_inventario|floatformat:2 }}</h4>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Valoración costo</p>
+            </div>
+        </div>
+
+        <!-- ========== 5. ANALYTICS GRID ========== -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-10">
+            <!-- 30 DAYS PROJECTION -->
+            <div class="glass-card rounded-[3rem] p-8 flex flex-col">
+                <div class="flex items-center justify-between mb-8">
+                    <h3 class="text-lg font-black text-slate-800 uppercase tracking-widest flex items-center gap-3">
+                        <i data-lucide="activity" class="text-primary-blue"></i> Proyección 30 Días
+                    </h3>
+                </div>
+                <div class="flex-1 min-h-[300px]">
+                    <canvas id="salesChart"></canvas>
+                </div>
+            </div>
+
+            <!-- LEADERBOARD OPERATORS -->
+            <div class="glass-card rounded-[3rem] p-8">
+                <div class="flex items-center justify-between mb-8">
+                    <h3 class="text-lg font-black text-slate-800 uppercase tracking-widest flex items-center gap-3">
+                        <i data-lucide="users" class="text-primary-blue"></i> Rendimiento Operadores
+                    </h3>
+                    <span class="text-[10px] font-black bg-slate-900 text-white px-3 py-1 rounded-lg uppercase tracking-widest">Cuota de Ventas</span>
+                </div>
+                <div class="space-y-4 max-h-[350px] overflow-y-auto pr-4 custom-scrollbar">
+                    {% for u in ventas_usuario %}
+                    <div class="flex items-center justify-between p-4 bg-white/50 border border-slate-50 rounded-2xl hover:bg-white transition-all shadow-sm">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-primary-blue text-white flex items-center justify-center font-black text-lg shadow-lg shadow-primary-blue/20">
+                                {{ u.usuario__username|first|upper }}
                             </div>
-                            {% empty %}
-                            <div class="text-center py-5 text-slate-400">Sin actividad de operadores</div>
-                            {% endfor %}
+                            <div>
+                                <h5 class="text-sm font-black text-slate-800">{% if u.usuario__first_name %}{{ u.usuario__first_name }}{% else %}{{ u.usuario__username }}{% endif %}</h5>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{{ u.n }} tickets operados</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-lg font-black text-primary-blue">€{{ u.total|floatformat:2 }}</p>
+                            <p class="text-[10px] font-black text-emerald-500 uppercase">Ventas Activas</p>
                         </div>
                     </div>
+                    {% empty %}
+                    <div class="text-center py-20 text-slate-300 italic uppercase text-xs font-bold tracking-widest">Sin actividad registrada</div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- ========== 5. RENDIMIENTO MIX (CHART + HEATMAP) ========== -->
-    <div class="grid-2 mb-4">
-        <div class="chart-card">
-            <div class="chart-header">
-                <h3><i data-lucide="activity" class="text-primary"></i> Proyección 30 Días</h3>
-            </div>
-            <div class="chart-container" style="height: 280px;">
-                <canvas id="salesChart"></canvas>
-            </div>
-        </div>
-
-        <div class="chart-card border-rose-light">
-            <div class="chart-header">
-                <h3><i data-lucide="alert-triangle" class="text-rose-600"></i> Reposición Urgente</h3>
-                <span class="badge bg-rose-600 text-white rounded-pill">BAJO MÍNIMO</span>
-            </div>
-            <div class="p-3" style="max-height: 280px; overflow-y: auto;">
-                <div class="list-group list-group-flush">
-                    {% for p in productos_criticos %}
-                    <div class="list-group-item bg-transparent border-0 px-0 py-2 d-flex align-items-center justify-content-between border-bottom-dashed">
+        <!-- ========== 6. STOCK & PRODUCTS GRID ========== -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-10">
+            <!-- URGENT RESTOCK -->
+            <div class="glass-card rounded-[3rem] p-8 border-l-8 border-rose-500/30">
+                <div class="flex items-center justify-between mb-8">
+                    <h3 class="text-lg font-black text-slate-800 uppercase tracking-widest flex items-center gap-3">
+                        <i data-lucide="alert-triangle" class="text-rose-500"></i> Reposición Urgente
+                    </h3>
+                    <span class="bg-rose-500 text-white text-[10px] font-black px-3 py-1 rounded-lg uppercase tracking-widest">Bajo Mínimo</span>
+                </div>
+                <div class="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+                    {% for p in productos_stock_bajo %}
+                    <div class="flex items-center justify-between p-4 bg-rose-50/30 border border-rose-100 rounded-2xl">
                         <div>
-                            <div class="fw-bold text-navy-950">{{ p.producto__nombre }}</div>
-                            <div class="small text-slate-400">Stock: <span class="text-rose-600 fw-900">{{ p.producto__stock }}</span> / {{ p.producto__stock_minimo }} min.</div>
+                            <h5 class="text-sm font-black text-slate-800">{{ p.nombre }}</h5>
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">
+                                Stock: <span class="text-rose-600 font-black">{{ p.stock }}</span> / {{ p.stock_minimo }} min.
+                            </p>
                         </div>
-                        <div class="text-end">
-                            <span class="badge {% if p.producto__stock == 0 %}bg-rose-600{% else %}bg-rose-100 text-rose-600{% endif %} rounded-pill">
-                                {% if p.producto__stock == 0 %}AGOTADO{% else %}-{{ p.ruptura_porcentaje|floatformat:0 }}%{% endif %}
-                            </span>
-                        </div>
+                        <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest {% if p.stock == 0 %}bg-rose-500 text-white shadow-lg shadow-rose-500/20{% else %}bg-rose-100 text-rose-600{% endif %}">
+                            {% if p.stock == 0 %}AGOTADO{% else %}BAJO MÍNIMO{% endif %}
+                        </span>
                     </div>
                     {% empty %}
-                    <div class="text-center py-4 text-emerald">
-                        <i data-lucide="check-circle" class="h1 mb-2"></i>
-                        <p class="small fw-bold">Todo el stock bajo control</p>
+                    <div class="text-center py-20">
+                        <i data-lucide="check-circle" class="w-12 h-12 text-emerald-500 mx-auto mb-4"></i>
+                        <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Todo el stock bajo control</p>
                     </div>
                     {% endfor %}
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- ========== 6. TREASURY (METHODS) & TOP PRODUCT ========== -->
-    <div class="grid-2 mb-4">
-        <div class="chart-card">
-            <div class="chart-header">
-                <h3><i data-lucide="credit-card" class="text-emerald"></i> Canales de Recaudación</h3>
-            </div>
-            <div class="p-3" style="max-height: 350px; overflow-y: auto;">
-                <div class="row g-2">
-                    {% for p in recaudacion_filtrada %}
-                    <div class="col-6">
-                        <div class="p-3 bg-light rounded-4 border text-center">
-                            <div class="small text-slate-400 font-monospace">{{ p.metodo_pago__nombre|upper }}</div>
-                            <div class="h5 mb-0 fw-900 text-navy-950">€{{ p.total|floatformat:2 }}</div>
-                            <div class="small text-emerald fw-bold mt-1">{{ p.n }} tiks</div>
-                        </div>
-                    </div>
-                    {% empty %}
-                    <div class="col-12 text-center py-5 text-slate-400">Sin movimientos en este periodo</div>
-                    {% endfor %}
+            <!-- TOP SKU -->
+            <div class="glass-card rounded-[3rem] p-8 border-l-8 border-amber-500/30">
+                <div class="flex items-center justify-between mb-8">
+                    <h3 class="text-lg font-black text-slate-800 uppercase tracking-widest flex items-center gap-3">
+                        <i data-lucide="crown" class="text-amber-500"></i> SKU Alta Rotación
+                    </h3>
                 </div>
-            </div>
-        </div>
-
-        <div class="chart-card">
-            <div class="chart-header">
-                <h3><i data-lucide="crown" class="text-amber-500"></i> SKU de Alta Rotación</h3>
-            </div>
-            <div class="p-0" style="max-height: 400px; overflow-y: auto;">
-                <div class="list-group list-group-flush">
+                <div class="space-y-4 max-h-[400px] overflow-y-auto pr-2">
                     {% for p in productos_top %}
-                    <div class="list-group-item bg-transparent border-0 px-3 py-3 d-flex align-items-center justify-content-between border-bottom-dashed">
-                        <div class="d-flex align-items-center gap-3">
-                            <span class="badge bg-amber-400 text-amber-950 rounded-circle d-flex align-items-center justify-content-center" style="width: 24px; height: 24px; font-weight: 900; font-size: 0.7rem;">{{ forloop.counter }}</span>
-                            <div class="fw-bold text-navy-950">{{ p.producto__nombre }}</div>
+                    <div class="flex items-center justify-between p-4 bg-amber-50/30 border border-amber-100 rounded-2xl">
+                        <div class="flex items-center gap-4">
+                            <span class="w-8 h-8 rounded-full bg-amber-400 text-amber-950 flex items-center justify-center font-black text-xs">{{ forloop.counter }}</span>
+                            <h5 class="text-sm font-black text-slate-800">{{ p.producto__nombre }}</h5>
                         </div>
-                        <div class="text-end">
-                            <div class="fw-900 text-navy-950">{{ p.total_vendido }} u.</div>
-                            <div class="small text-slate-400">vendidas</div>
+                        <div class="text-right">
+                            <p class="text-sm font-black text-slate-800">{{ p.total_vendido }} u.</p>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">Vendidas</p>
                         </div>
                     </div>
                     {% endfor %}
                 </div>
             </div>
-            {% if not productos_top %}
-            <p class="text-slate-400 text-center py-4">Sin datos este periodo</p>
-            {% endif %}
         </div>
-    </div>
 
-
-    <!-- ========== 8. STOCK MUERTO (CEMENTERIO) ========== -->
-    <div class="chart-card mb-4">
-        <div class="chart-header">
-            <h3><i data-lucide="skull" class="text-slate-500"></i> Cementerio de Stock (Sin Rotación)</h3>
-            <span class="badge bg-slate-100 text-slate-500 rounded-pill px-3 fw-bold">0 VENTAS ESTE MES</span>
-        </div>
-        <div class="table-responsive">
-            <table class="soul-matrix">
-                <thead><tr><th>Producto</th><th>Stock Actual</th><th class="text-end">Capital Estancado</th></tr></thead>
-                <tbody>
-                    {% for p in stock_muerto %}
-                    <tr class="soul-row">
-                        <td class="fw-bold">{{ p.nombre }}</td>
-                        <td>{{ p.stock }} uni.</td>
-                        <td class="text-end text-rose-400">€{{ p.valor_estancado|floatformat:2 }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="3" class="text-center py-4 text-emerald">¡Todo tu stock está rotando!</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- ========== 8. PROFIT/LOSS & CATEGORY ========== -->
-    <div class="grid-2 mb-4">
-        <div class="chart-card">
-            <div class="chart-header">
-                <h3><i data-lucide="trending-up" class="text-emerald"></i> Motores de Beneficio (Gains)</h3>
+        <!-- ========== 7. SOUL MATRIX (DEAD STOCK) ========== -->
+        <div class="glass-card rounded-[3rem] p-8 mb-10 overflow-hidden">
+            <div class="flex items-center justify-between mb-8">
+                <h3 class="text-lg font-black text-slate-800 uppercase tracking-widest flex items-center gap-3">
+                    <i data-lucide="skull" class="text-slate-500"></i> Cementerio de Stock (Sin Rotación)
+                </h3>
+                <span class="text-[10px] font-black bg-slate-100 text-slate-500 px-3 py-1 rounded-lg uppercase tracking-widest">0 Ventas este mes</span>
             </div>
-            <div class="table-responsive">
-                <table class="soul-matrix">
-                    <thead><tr><th>Producto</th><th>Ventas</th><th class="text-end">Margen</th></tr></thead>
-                    <tbody>
-                        {% for p in productos_ganancia %}
-                        <tr class="soul-row">
-                            <td class="fw-bold">{{ p.producto__nombre|truncatechars:18 }}</td>
-                            <td>{{ p.unidades_vendidas }}</td>
-                            <td class="text-end text-emerald fw-900">€{{ p.total_beneficio|floatformat:2 }}</td>
+            <div class="overflow-x-auto">
+                <table class="w-full soul-table">
+                    <thead>
+                        <tr>
+                            <th class="text-left">Producto</th>
+                            <th class="text-center">Stock Actual</th>
+                            <th class="text-right">Capital Estancado</th>
                         </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="chart-card">
-            <div class="chart-header">
-                <h3><i data-lucide="trending-down" class="text-rose"></i> Fugas de Capital (Losses)</h3>
-            </div>
-            <div class="table-responsive">
-                <table class="soul-matrix">
-                    <thead><tr><th>Producto</th><th>Coste</th><th class="text-end">Pérdida</th></tr></thead>
-                    <tbody>
-                        {% for p in productos_perdida %}
-                        <tr class="soul-row">
-                            <td class="fw-bold">{{ p.producto__nombre|truncatechars:18 }}</td>
-                            <td class="text-slate-400">€{{ p.producto__costo|floatformat:2 }}</td>
-                            <td class="text-end text-rose fw-900">€{{ p.total_beneficio|floatformat:2 }}</td>
+                    </thead>
+                    <tbody class="divide-y divide-slate-50">
+                        {% for p in stock_muerto %}
+                        <tr class="hover:bg-slate-50/50 transition-colors">
+                            <td class="px-6 py-5 font-black text-slate-700">{{ p.nombre }}</td>
+                            <td class="px-6 py-5 text-center font-bold text-slate-500">{{ p.stock }} uni.</td>
+                            <td class="px-6 py-5 text-right font-black text-rose-500">€{{ p.valor_estancado|floatformat:2 }}</td>
                         </tr>
                         {% empty %}
-                        <tr><td colspan="3" class="text-center py-5 text-emerald fw-bold">SIN FUGAS DETECTADAS</td></tr>
+                        <tr><td colspan="3" class="px-6 py-10 text-center text-emerald-500 font-black uppercase tracking-widest text-xs">¡Todo tu stock está rotando!</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
         </div>
-    </div>
 
-    <div class="chart-card mb-5">
-        <div class="chart-header">
-            <h3><i data-lucide="pie-chart" class="text-vibrant"></i> Economía por Departamento</h3>
+        <!-- ========== 8. PROFIT / LOSS GRID ========== -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-10">
+            <!-- GAINS -->
+            <div class="glass-card rounded-[3rem] p-8">
+                <div class="flex items-center justify-between mb-8">
+                    <h3 class="text-lg font-black text-slate-800 uppercase tracking-widest flex items-center gap-3">
+                        <i data-lucide="trending-up" class="text-emerald-500"></i> Motores de Beneficio
+                    </h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full soul-table">
+                        <thead>
+                            <tr><th class="text-left">Producto</th><th class="text-center">Ventas</th><th class="text-right">Margen</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for p in productos_ganancia %}
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="px-6 py-4 font-black text-slate-700">{{ p.producto__nombre|truncatechars:18 }}</td>
+                                <td class="px-6 py-4 text-center font-bold text-slate-500">{{ p.unidades_vendidas }}</td>
+                                <td class="px-6 py-4 text-right font-black text-emerald-600">€{{ p.total_beneficio|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- LOSSES -->
+            <div class="glass-card rounded-[3rem] p-8">
+                <div class="flex items-center justify-between mb-8">
+                    <h3 class="text-lg font-black text-slate-800 uppercase tracking-widest flex items-center gap-3">
+                        <i data-lucide="trending-down" class="text-rose-500"></i> Fugas de Capital
+                    </h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full soul-table">
+                        <thead>
+                            <tr><th class="text-left">Producto</th><th class="text-center">Coste</th><th class="text-right">Pérdida</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for p in productos_perdida %}
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="px-6 py-4 font-black text-slate-700">{{ p.producto__nombre|truncatechars:18 }}</td>
+                                <td class="px-6 py-4 text-center font-bold text-slate-400">€{{ p.producto__costo|floatformat:2 }}</td>
+                                <td class="px-6 py-4 text-right font-black text-rose-500">€{{ p.total_beneficio|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3" class="px-6 py-10 text-center text-emerald-500 font-black uppercase tracking-widest text-xs">Sin fugas detectadas</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-        <div class="table-responsive">
-            <table class="soul-matrix">
-                <thead><tr><th>Categoría</th><th>Nº SKUs</th><th class="text-end">Ventas Mes</th></tr></thead>
-                <tbody>
-                    {% for cat in categoria_stats %}
-                    <tr class="soul-row">
-                        <td class="fw-800">{{ cat.producto__categoria__nombre|default:"General" }}</td>
-                        <td>{{ cat.n_articulos }} articulos</td>
-                        <td class="text-end fw-900 text-navy-950">€{{ cat.total_ventas|floatformat:2 }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+
+        <!-- ========== 9. ECONOMY BY DEPARTMENT ========== -->
+        <div class="glass-card rounded-[3rem] p-8 mb-10 overflow-hidden">
+            <div class="flex items-center justify-between mb-8">
+                <h3 class="text-lg font-black text-slate-800 uppercase tracking-widest flex items-center gap-3">
+                    <i data-lucide="pie-chart" class="text-primary-blue"></i> Economía por Departamento
+                </h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full soul-table">
+                    <thead>
+                        <tr><th class="text-left">Categoría</th><th class="text-center">Nº SKUs</th><th class="text-right">Ventas Mes</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for cat in categoria_stats %}
+                        <tr class="hover:bg-slate-50/50 transition-colors">
+                            <td class="px-6 py-5 font-black text-slate-700 uppercase tracking-widest text-xs">{{ cat.producto__categoria__nombre|default:"General" }}</td>
+                            <td class="px-6 py-5 text-center font-bold text-slate-400">{{ cat.n_articulos }} artículos</td>
+                            <td class="px-6 py-5 text-right font-black text-dark-blue">€{{ cat.total_ventas|floatformat:2 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
+
+        <!-- ========== 10. SALES & TAX AUDIT (EXCEPTIONS) ========== -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-10">
+            <!-- DISCOUNTS AUDIT -->
+            <div class="glass-card rounded-[3rem] p-8 border-l-8 border-indigo-500/30">
+                <div class="flex items-center justify-between mb-8">
+                    <h3 class="text-lg font-black text-slate-800 uppercase tracking-widest flex items-center gap-3">
+                        <i data-lucide="percent" class="text-indigo-500"></i> Auditoría de Descuentos
+                    </h3>
+                    <div class="text-right">
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Descontado</p>
+                        <p class="text-xl font-black text-indigo-600">-€{{ total_descuentos_periodo|floatformat:2 }}</p>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full soul-table">
+                        <thead>
+                            <tr><th class="text-left">Ticket</th><th class="text-center">Total</th><th class="text-right">Descuento</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for v in ventas_con_descuento %}
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="px-6 py-4 font-black text-slate-700">#{{ v.codigo }}</td>
+                                <td class="px-6 py-4 text-center font-bold text-slate-500">€{{ v.total }}</td>
+                                <td class="px-6 py-4 text-right font-black text-indigo-500">-€{{ v.descuento }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3" class="px-6 py-10 text-center text-slate-300 font-bold uppercase text-xs">Sin descuentos aplicados</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAX AUDIT (IVA EXCEPTIONS) -->
+            <div class="glass-card rounded-[3rem] p-8 border-l-8 border-cyan-500/30">
+                <div class="flex items-center justify-between mb-8">
+                    <h3 class="text-lg font-black text-slate-800 uppercase tracking-widest flex items-center gap-3">
+                        <i data-lucide="shield-alert" class="text-cyan-500"></i> Excepciones de IVA
+                    </h3>
+                    <span class="text-[10px] font-black bg-cyan-100 text-cyan-600 px-3 py-1 rounded-lg uppercase tracking-widest">Distinto al {{ iva_actual }}%</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full soul-table">
+                        <thead>
+                            <tr><th class="text-left">Ticket</th><th class="text-center">Total</th><th class="text-right">IVA Aplicado</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for exc in excepciones_iva %}
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="px-6 py-4 font-black text-slate-700">#{{ exc.codigo }}</td>
+                                <td class="px-6 py-4 text-center font-bold text-slate-500">€{{ exc.total }}</td>
+                                <td class="px-6 py-4 text-right font-black text-cyan-600">{{ exc.iva_aplicado }}%</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3" class="px-6 py-10 text-center text-emerald-500 font-bold uppercase text-xs">Todos los tickets al {{ iva_actual }}%</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
     </div>
-
-
 </div>
 
 <script src="{% static 'js/dashboard_principal.js' %}"></script>

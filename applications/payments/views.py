@@ -37,3 +37,18 @@ class DeletePaymentMethodView(View):
         metodo.delete()
         messages.success(request, f'Método de pago "{nombre}" eliminado correctamente.')
         return redirect('payments_app:payment_methods')
+
+
+@method_decorator(staff_member_required(login_url='/admin/login/'), name='dispatch')
+class UpdatePaymentMethodView(View):
+    """Solo los administradores (staff) pueden modificar métodos de pago."""
+
+    def post(self, request, pk, *args, **kwargs):
+        metodo = get_object_or_404(MetodoPago, pk=pk)
+        form = MetodoPagoForm(request.POST, request.FILES, instance=metodo)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Método de pago "{metodo.nombre}" actualizado correctamente.')
+        else:
+            messages.error(request, 'Error al actualizar el método de pago.')
+        return redirect('payments_app:payment_methods')

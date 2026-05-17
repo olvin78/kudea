@@ -1,231 +1,182 @@
+{% extends "home/base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arqueo Personalizado | Kudea</title>
-    
-    <!-- Google Fonts: Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <style>
-        :root {
-            --primary: #1d4ed8;
-            --primary-dark: #1e3a8a;
-            --kudea-dark: #123954;
-            --kudea-bg: #f0f5fa;
-            --border: #dde6ef;
-            --text: #1e293b;
-            --text-muted: #64748b;
-            --glass: rgba(255, 255, 255, 0.85);
-        }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+{% block title %}Arqueo Personalizado | KUDEA{% endblock %}
 
-        body {
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            background: radial-gradient(circle at top right, #eaf2f7, #f0f5fa);
-            color: var(--text);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1.5rem;
-        }
+{% block head %}
+<style>
+    :root {
+        --pm-primary: #1d3557;
+        --pm-accent: #457b9d;
+        --pm-bg: #f8f9fa;
+        --pm-card-bg: #ffffff;
+        --pm-border: rgba(0,0,0,0.06);
+    }
 
-        .main-card {
-            background: var(--glass);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            width: 100%;
-            max-width: 650px;
-            border-radius: 24px;
-            box-shadow: 0 20px 60px rgba(18, 57, 84, 0.12);
-            padding: 3rem;
-            animation: fadeIn 0.6s ease-out;
-        }
+    body {
+        background-color: var(--pm-bg);
+        font-family: 'Outfit', sans-serif !important;
+    }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+    .k-selector-card {
+        background: white;
+        border-radius: 30px;
+        padding: 3.5rem;
+        border: 1px solid var(--pm-border);
+        box-shadow: 0 20px 60px rgba(29, 53, 87, 0.08);
+        max-width: 600px;
+        margin: 4rem auto;
+        text-align: center;
+        animation: slideUp 0.5s ease-out;
+    }
 
-        .header {
-            text-align: center;
-            margin-bottom: 2.5rem;
-        }
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
 
-        .icon-circle {
-            width: 70px;
-            height: 70px;
-            background: linear-gradient(135deg, var(--kudea-dark), var(--primary));
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1.5rem;
-            color: white;
-            font-size: 1.8rem;
-            box-shadow: 0 10px 20px rgba(29, 78, 216, 0.25);
-        }
+    .k-icon-large {
+        width: 80px;
+        height: 80px;
+        background: rgba(29, 53, 87, 0.05);
+        color: var(--pm-primary);
+        border-radius: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin: 0 auto 2rem;
+    }
 
-        h1 {
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: var(--kudea-dark);
-            letter-spacing: -0.5px;
-            margin-bottom: 0.5rem;
-        }
+    .k-title {
+        font-weight: 900;
+        color: var(--pm-primary);
+        font-size: 2rem;
+        letter-spacing: -0.5px;
+        margin-bottom: 0.75rem;
+    }
 
-        p.subtitle {
-            font-size: 0.95rem;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
+    .k-subtitle {
+        color: #6c757d;
+        font-weight: 500;
+        margin-bottom: 2.5rem;
+    }
 
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
+    .k-input-group {
+        text-align: left;
+        margin-bottom: 1.5rem;
+    }
 
-        @media (max-width: 500px) {
-            .form-grid { grid-template-columns: 1fr; }
-        }
+    .k-label {
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: var(--pm-accent);
+        letter-spacing: 0.05em;
+        margin-bottom: 0.6rem;
+        display: block;
+    }
 
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.6rem;
-        }
+    .k-input {
+        width: 100%;
+        padding: 1rem 1.25rem;
+        border-radius: 16px;
+        border: 1.5px solid #e9ecef;
+        font-weight: 600;
+        font-family: inherit;
+        transition: all 0.3s ease;
+        outline: none;
+        background: #fbfcfd;
+    }
 
-        label {
-            font-size: 0.8rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: var(--kudea-dark);
-            opacity: 0.9;
-        }
+    .k-input:focus {
+        border-color: var(--pm-primary);
+        background: white;
+        box-shadow: 0 0 0 4px rgba(29, 53, 87, 0.05);
+    }
 
-        input[type="date"] {
-            width: 100%;
-            padding: 0.9rem 1.2rem;
-            border-radius: 14px;
-            border: 1px solid var(--border);
-            background: #fff;
-            color: var(--text);
-            font-family: inherit;
-            font-size: 1rem;
-            font-weight: 600;
-            outline: none;
-            transition: all 0.2s ease;
-            cursor: pointer;
-        }
+    .k-btn-generate {
+        width: 100%;
+        background: var(--pm-primary);
+        color: white;
+        border: none;
+        padding: 1.25rem;
+        border-radius: 18px;
+        font-weight: 800;
+        font-size: 1rem;
+        margin-top: 1.5rem;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        box-shadow: 0 10px 25px rgba(29, 53, 87, 0.15);
+    }
 
-        input[type="date"]:hover {
-            border-color: #cbd5e1;
-        }
+    .k-btn-generate:hover {
+        transform: translateY(-3px);
+        background: #142a46;
+        box-shadow: 0 15px 35px rgba(29, 53, 87, 0.2);
+        color: white;
+    }
 
-        input[type="date"]:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(29, 78, 216, 0.1);
-        }
+    .k-btn-cancel {
+        display: inline-block;
+        margin-top: 2rem;
+        color: #adb5bd;
+        font-weight: 700;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: color 0.2s;
+    }
 
-        .btn-submit {
-            width: 100%;
-            background: linear-gradient(135deg, var(--kudea-dark), var(--primary));
-            color: white;
-            border: none;
-            padding: 1.1rem;
-            border-radius: 16px;
-            font-size: 1.05rem;
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.6rem;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 8px 25px rgba(18, 57, 84, 0.2);
-        }
+    .k-btn-cancel:hover {
+        color: var(--pm-danger);
+    }
+</style>
+{% endblock %}
 
-        .btn-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 35px rgba(18, 57, 84, 0.3);
-            filter: brightness(1.1);
-        }
-
-        .btn-submit:active {
-            transform: translateY(0);
-        }
-
-        .footer-action {
-            margin-top: 1.5rem;
-            text-align: center;
-        }
-
-        .btn-back {
-            text-decoration: none;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.2s;
-            padding: 0.5rem 1rem;
-            border-radius: 10px;
-        }
-
-        .btn-back:hover {
-            color: var(--kudea-dark);
-            background: rgba(18, 57, 84, 0.05);
-        }
-    </style>
-</head>
-<body>
-
-    <div class="main-card">
-        <div class="header">
-            <div class="icon-circle">
-                📊
-            </div>
-            <h1>Arqueo Especial</h1>
-            <p class="subtitle">Selecciona el rango de fechas para el informe</p>
+{% block content %}
+<div class="container">
+    <div class="k-selector-card">
+        <div class="k-icon-large">
+            <i class="fas fa-calendar-alt"></i>
         </div>
+        <h1 class="k-title">Rango de Auditoría</h1>
+        <p class="k-subtitle">Selecciona el periodo exacto para generar el arqueo.</p>
 
         <form method="POST" action="{% url 'home_app:arqueo_personalizado' %}">
             {% csrf_token %}
             
-            <div class="form-grid">
-                <div class="input-group">
-                    <label for="inicio">📆 Fecha Inicio</label>
-                    <input type="date" id="inicio" name="inicio" required>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="k-input-group">
+                        <label class="k-label">Fecha de Inicio</label>
+                        <input type="date" name="inicio" class="k-input" value="{{ inicio_prefill }}" required>
+                    </div>
                 </div>
-
-                <div class="input-group">
-                    <label for="fin">📍 Fecha Fin</label>
-                    <input type="date" id="fin" name="fin" required>
+                <div class="col-md-6">
+                    <div class="k-input-group">
+                        <label class="k-label">Fecha de Finalización</label>
+                        <input type="date" name="fin" class="k-input" value="{{ fin_prefill }}" required>
+                    </div>
                 </div>
             </div>
 
-            <button type="submit" class="btn-submit">
-                <span>Generar Informe Detallado</span>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <div class="k-input-group" style="margin-top: 10px;">
+                <label class="k-label">Fondo Inicial (Opcional)</label>
+                <input type="number" step="0.01" name="fondo" class="k-input" placeholder="Ej: 200.00">
+                <small style="color: #6c757d; font-size: 0.75rem; display: block; margin-top: 5px;">Deja vacío para usar el registro automático.</small>
+            </div>
+
+            <button type="submit" class="btn k-btn-generate">
+                Generar Informe Detallado <i class="fas fa-arrow-right ms-1"></i>
             </button>
         </form>
 
-        <div class="footer-action">
-            <a href="{% url 'home_app:arqueo_menu' %}" class="btn-back">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                Regresar al Panel
-            </a>
-        </div>
+        <a href="{% url 'home_app:arqueo_menu' %}" class="k-btn-cancel">
+            <i class="fas fa-times me-2"></i> Cancelar y volver
+        </a>
     </div>
-
-</body>
-</html>
+</div>
+{% endblock %}

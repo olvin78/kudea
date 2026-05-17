@@ -5,191 +5,206 @@
   <meta charset="UTF-8" />
   <title>{% block title %}KUDEA - Panel de Control{% endblock %}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Estética: Google Fonts Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
+  <!-- Bootstrap CSS (Original) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  
+  <!-- Lucide Icons (Original) -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+  <!-- Tailwind CSS Output (Nuevo estilo visual) -->
+  <link rel="stylesheet" href="{% static 'css/output.css' %}">
+
+  <!-- Estilos base originales + micro-ajustes visuales -->
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  
+  <style>
+    body { font-family: 'Outfit', sans-serif; background-color: #fdfdfd; }
+    
+    /* Adaptación fluida y sin costuras */
+    .sidebar { 
+        background-color: transparent !important; 
+        color: #1D3557 !important; 
+        border-right: none !important; /* Eliminamos la línea vertical */
+        box-shadow: none !important;   /* Eliminamos la sombra que corta */
+    }
+    .sidebar a { 
+        color: #475569 !important; 
+        margin: 4px 12px; 
+        border-radius: 14px;
+        font-weight: 500;
+        padding: 10px 1.5rem !important;
+        transition: all 0.2s ease;
+    }
+    .sidebar a:hover { background-color: rgba(29, 53, 87, 0.05) !important; color: #1D3557 !important; }
+    .sidebar h4 { color: #1D3557; border-bottom: none !important; padding: 2rem 1.5rem !important; }
+    
+    .topbar { 
+        position: relative;
+        z-index: 1000;
+        background-color: rgba(253, 253, 253, 0.9) !important; 
+        backdrop-filter: blur(12px); 
+        border-bottom: none !important; /* Eliminamos la línea horizontal */
+    }
+    .topbar .avatar { background-color: #1D3557; border-radius: 12px; }
+    
+    .main-content {
+        padding: 0 !important;
+        background-color: transparent !important;
+    }
+
+    /* Estilo para módulos inactivos (Original) */
+    .disabled-module { opacity: 0.5 !important; cursor: not-allowed !important; }
+  </style>
 
   {% block head %}
   {% endblock %}
 </head>
 <body>
 
-<!-- Fondo oscuro para cerrar menú móvil -->
+<!-- Fondo oscuro para cerrar menú móvil (Original) -->
 <div class="overlay" id="overlay"></div>
 
+<!-- Sidebar (Estructura ORIGINAL exacta) -->
 <div class="sidebar collapsed" id="sidebar">
-  <a href="{% url 'home_app:home' %}"><h4>KUDEA</h4></a>
-
-  <!-- NOTA SOBRE MÓDULOS ACTIVOS/DESACTIVADOS -->
-  <!-- Cuando quieras que un módulo esté desactivado, simplemente haz esto: -->
-  <!-- <a href="#" class="modulo-off"> -->
-  <!--     <i data-lucide="receipt"></i> Facturas -->
-  <!-- </a> -->
-  <!-- Y cuando esté activo: -->
-  <!-- <a href="{% url 'invoice_app:invoice_list' %}"> -->
-  <!--     <i data-lucide="receipt"></i> Facturas -->
-  <!-- </a> -->
-  <!-- Nada más. -->
+  <a href="{% url 'home_app:home' %}" style="padding: 0 !important; margin: 0 !important; hover: background: none;">
+      <h4 class="text-2xl font-bold tracking-tight py-6">KUDEA</h4>
+  </a>
 
   <!-- SECCIÓN PRIMARIA (ACCIONES DIARIAS) -->
-
-  <!-- TPV -->
   <a href="{% url 'home_app:tpv_general' %}"
      class="{% if not MODULOS.tpv %}disabled-module{% endif %}">
     <i data-lucide="store"></i> TPV
   </a>
 
-  <!-- APERTURA DE CAJA -->
   <a href="{% url 'cash_app:apertura_caja' %}"
      class="{% if not MODULOS.caja %}disabled-module{% endif %}"
-     style="background: rgba(25, 92, 150, 0.1); border-left: 3px solid var(--kudea-mid);">
+     style="background: rgba(25, 92, 150, 0.05); border-left: 3px solid #457B9D;">
     <i data-lucide="unlock"></i> Apertura de Caja
   </a>
 
-  <!-- TPV RESTAURANTE -->
   <a href="{% url 'tpv_app:tpv_index' %}"
      class="{% if not MODULOS.tpv_restaurante %}disabled-module{% endif %}">
     <i data-lucide="store"></i> TPV-restaurante
   </a>
 
-  <!-- TICKETS -->
   <a href="{% url 'support_app:ticket_list' %}"
    class="{% if not MODULOS.tickets %}disabled-module{% endif %}">
     <i data-lucide="ticket"></i> Tickets
   </a>
 
-  <!-- FACTURAS -->
   <a href="{% url 'invoice_app:invoice_list' %}"
      class="{% if not MODULOS.facturas %}disabled-module{% endif %}">
     <i data-lucide="receipt"></i> Facturas
   </a>
 
-  <!-- PRESUPUESTOS -->
   <a href="{% url 'budget_app:budget_create' %}"
      class="{% if not MODULOS.presupuestos %}disabled-module{% endif %}">
     <i data-lucide="file-text"></i> Presupuestos
   </a>
 
-  <!-- CAJA -->
   <a href="{% url 'cash_app:cash_index' %}"
      class="{% if not MODULOS.caja %}disabled-module{% endif %}">
     <i data-lucide="credit-card"></i> Caja
   </a>
 
-  <!-- CLIENTES -->
   <a href="#"
      class="{% if not MODULOS.clientes %}disabled-module{% endif %}">
     <i data-lucide="users"></i> Clientes
   </a>
 
   <!-- SECCIÓN SECUNDARIA (HERRAMIENTAS FRECUENTES) -->
-
-  <!-- TPV SHOP -->
   <a href="{% url 'tpv_shop:index' %}"
      class="{% if not MODULOS.tpv_shop %}disabled-module{% endif %}">
     <i data-lucide="layout-grid"></i> Tpv shop
   </a>
 
-  <!-- PRODUCTOS -->
   <a href="{% url 'home_app:lista_productos' %}"
      class="{% if not MODULOS.productos %}disabled-module{% endif %}">
     <i data-lucide="box"></i> Productos
   </a>
 
-  <!-- MOVIMIENTOS DE STOCK -->
   <a href="{% url 'stock_app:movement_list' %}"
      class="{% if not MODULOS.stock %}disabled-module{% endif %}">
     <i data-lucide="repeat"></i> Movimientos de stock
   </a>
 
-  <!-- REGISTRO DE HORAS -->
   <a href="{% url 'home_attendance:fichaje_menu' %}"
      class="{% if not MODULOS.registro_horas %}disabled-module{% endif %}">
     <i data-lucide="clock"></i> Registro de Horas
   </a>
 
   <!-- SECCIÓN TERCIARIA (CONSULTAS/INFORMES) -->
-
-  <!-- INFORMES -->
   <a href="{% url 'reporting_app:dashboard_informes' %}"
      class="{% if not MODULOS.informes %}disabled-module{% endif %}">
     <i data-lucide="bar-chart-3"></i> Informes
   </a>
 
-  <!-- MOVIMIENTOS DE CAJA -->
   <a href="/cashflow/"
      class="{% if not MODULOS.movimientos_caja %}disabled-module{% endif %}">
     <i data-lucide="repeat"></i> Movimientos de caja
   </a>
 
-  <!-- SOPORTE -->
   <a href="{% url 'support_app:ticket_list' %}"
      class="{% if not MODULOS.soporte %}disabled-module{% endif %}">
     <i data-lucide="file-text"></i> Soporte
   </a>
 
   <!-- SECCIÓN ADMIN (ACCESO OCASIONAL) -->
-
-  <!-- CONFIGURAR TIENDA -->
   <a href="#"
      class="{% if not MODULOS.configurar_tienda %}disabled-module{% endif %}">
     <i data-lucide="settings"></i> Configurar tienda
   </a>
 
-  <!-- EMPLEADOS -->
   <a href="{% url 'tpv_app:empleados_lista' %}"
      class="{% if not MODULOS.empleados %}disabled-module{% endif %}">
     <i data-lucide="users"></i> Empleados
   </a>
 
-  <!-- FORMAS DE PAGO -->
   <a href="{% url 'payments_app:payment_methods' %}"
      class="{% if not MODULOS.formas_pago %}disabled-module{% endif %}">
     <i data-lucide="credit-card"></i> Formas de pago
   </a>
 
-  <!-- CUENTAS -->
   <a href="{% url 'accounts_app:accounts_list' %}"
      class="{% if not MODULOS.cuentas %}disabled-module{% endif %}">
     <i data-lucide="list"></i> Cuentas
   </a>
 
-  <!-- ORDEN DE REGISTROS -->
   <a href="{% url 'recordlog_app:record_order' %}"
      class="{% if not MODULOS.orden_registros %}disabled-module{% endif %}">
     <i data-lucide="list"></i> Orden de registros
   </a>
 
-  <!-- CONFIGURACIÓN -->
-  <a href="#"
+  <a href="{% url 'configuraciones' %}"
      class="{% if not MODULOS.configuracion %}disabled-module{% endif %}">
     <i data-lucide="settings"></i> Configuración
   </a>
 
   <!-- ÚLTIMOS ELEMENTOS (ACCIONES FINALES) -->
-
-  <!-- CENTRO DE AYUDA -->
   <a href="{% url 'home_app:ayuda' %}">
     <i data-lucide="help-circle"></i> Centro de Ayuda
   </a>
 
-  <!-- ACERCA DE -->
-  <a href="#"><i data-lucide="info"></i> Acerca de...</a>
+  <a href="{% url 'home_app:acerca_version' %}"><i data-lucide="info"></i> Acerca de...</a>
 
-  <!-- CERRAR SESIÓN -->
   <a href="#"><i data-lucide="log-out"></i> Cerrar sesión</a>
 
-  <!-- MENSAJES (solo móvil) -->
-  <a href="#" class="d-md-none d-flex align-items-center gap-2 text-white">
+  <a href="#" class="d-md-none d-flex align-items-center gap-2">
     <i data-lucide="mail"></i> Mensajes
   </a>
 </div>
 
-<!-- Topbar -->
-<div class="topbar collapsed d-flex justify-content-between align-items-center px-4 py-2 border-bottom bg-light" id="topbar">
+<!-- Topbar (Estructura ORIGINAL exacta) -->
+<div class="topbar collapsed d-flex justify-content-between align-items-center px-4 py-2" id="topbar">
   <div class="d-flex align-items-center gap-2">
     <i data-lucide="menu" class="text-dark" style="cursor: pointer;" id="menu-toggle"></i>
     <strong class="text-dark d-none d-md-block">Kudea Panel</strong>
@@ -197,95 +212,272 @@
   </div>
 
   <div class="profile dropdown d-flex align-items-center gap-3">
-    <i data-lucide="mail" class="text-dark d-none d-md-flex" style="cursor: pointer;"></i>
-
-    <div class="avatar" data-bs-toggle="dropdown" aria-expanded="false">
-      H
+    <div class="relative cursor-pointer d-none d-md-flex" data-bs-toggle="modal" data-bs-target="#commsModal">
+        <i data-lucide="mail" class="text-dark"></i>
+        {% if unread_comms > 0 %}
+        <span class="absolute -top-1 -right-1 w-3 h-3 bg-rose-500 rounded-full border-2 border-white animate-pulse"></span>
+        {% endif %}
     </div>
-    <ul class="dropdown-menu dropdown-menu-end">
-      <li><a class="dropdown-item" href="#">Crear Ticket</a></li>
-      <li><a class="dropdown-item" href="#">Configuración</a></li>
-      <li><a class="dropdown-item" href="#">Cerrar sesión</a></li>
+
+    <div class="d-flex align-items-center gap-2 cursor-pointer" data-bs-toggle="dropdown" aria-expanded="false">
+        <span class="text-sm font-bold text-slate-700 hidden md:inline">{{ request.user.username }}</span>
+        <div class="avatar bg-dark-blue text-white flex items-center justify-center w-8 h-8 rounded-lg font-bold">
+            {{ request.user.username|slice:":1"|upper|default:"U" }}
+        </div>
+    </div>
+    <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3">
+      <li><a class="dropdown-item py-2" href="#">Crear Ticket</a></li>
+      <li><a class="dropdown-item py-2" href="{% url 'configuraciones' %}">Configuración</a></li>
+      <li><hr class="dropdown-divider"></li>
+      <li><a class="dropdown-item py-2 text-danger" href="#">Cerrar sesión</a></li>
     </ul>
   </div>
 </div>
 
-<div id="main-content">
+<div id="main-content" class="main-content collapsed">
   {% block content %}
   {% endblock %}
 </div>
 
+<!-- Scripts Consolidados -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
 
 <script>
-  lucide.createIcons();
+document.addEventListener("DOMContentLoaded", function () {
+  // 1. Inicializar iconos Lucide
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
 
+  // 2. Elementos del DOM
   const toggleBtn = document.getElementById("menu-toggle");
   const sidebar = document.getElementById("sidebar");
   const topbar = document.getElementById("topbar");
   const mainContent = document.getElementById("main-content");
   const overlay = document.getElementById("overlay");
 
-  toggleBtn.addEventListener("click", () => {
-    const isMobile = window.innerWidth <= 768;
-    if (isMobile) {
-      sidebar.classList.toggle("active");
-      overlay.classList.toggle("active");
-    } else {
-      sidebar.classList.toggle("collapsed");
-      topbar.classList.toggle("collapsed");
-      mainContent.classList.toggle("collapsed");
-    }
-  });
+  // 3. Lógica del Sidebar (Toggle)
+  if (toggleBtn && sidebar) {
+    toggleBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const isMobile = window.innerWidth <= 768;
+      
+      if (isMobile) {
+        sidebar.classList.toggle("active");
+        overlay.classList.toggle("active");
+      } else {
+        sidebar.classList.toggle("collapsed");
+        if (topbar) topbar.classList.toggle("collapsed");
+        if (mainContent) mainContent.classList.toggle("collapsed");
+      }
+    });
+  }
 
-  overlay.addEventListener("click", () => {
-    sidebar.classList.remove("active");
-    overlay.classList.remove("active");
-  });
-</script>
+  // 4. Cerrar en móvil al pulsar fuera
+  if (overlay) {
+    overlay.addEventListener("click", () => {
+      sidebar.classList.remove("active");
+      overlay.classList.remove("active");
+    });
+  }
 
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-
-  const sidebar = document.querySelector(".sidebar");
+  // 5. Lógica de Reordenamiento Original (Preservada)
+  const sidebarEl = document.querySelector(".sidebar");
   const enlaces = Array.from(document.querySelectorAll(".sidebar a"));
 
   const activos = [];
   const desactivados = [];
 
   enlaces.forEach(function (link) {
-
     if (link.classList.contains("disabled-module")) {
-
-      // 🔹 Estilo visual (lo que ya tenías)
-      link.style.opacity = "1";
-      link.style.color = "#6c8aa1";
+      link.style.color = "#94a3b8";
       link.style.cursor = "not-allowed";
-
-      // 🔹 Bloquear click
       link.addEventListener("click", function (e) {
         e.preventDefault();
         e.stopPropagation();
       });
-
       desactivados.push(link);
-
     } else {
       activos.push(link);
     }
-
   });
 
-  // 🔹 Reordenar: primero activos, luego desactivados
-  [...activos, ...desactivados].forEach(link => {
-    sidebar.appendChild(link);
-  });
-
+  if (sidebarEl) {
+    [...activos, ...desactivados].forEach(link => {
+      sidebarEl.appendChild(link);
+    });
+  }
 });
+</script>
+
+<!-- MODAL: COMUNICACIONES -->
+<div class="modal fade" id="commsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 rounded-[2.5rem] shadow-2xl overflow-hidden">
+            <!-- Header Fijo -->
+            <div class="p-8 text-white relative" style="background: #1D3557;">
+                <div class="relative z-10">
+                    <h5 class="text-2xl font-bold mb-1">Centro de Comunicaciones</h5>
+                    <p class="text-white/60 font-medium">Panel de avisos y red interna del equipo.</p>
+                </div>
+                <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl"></div>
+                <button type="button" class="btn-close btn-close-white absolute top-6 right-6" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <div class="modal-body p-0 bg-slate-50">
+                <!-- Tabs para Admin -->
+                {% if user.is_staff %}
+                <div class="flex border-b border-slate-200 bg-white sticky-top">
+                    <button id="tab-inbox" class="flex-1 py-4 font-bold text-sm text-primary-blue border-b-2 border-primary-blue">Bandeja de Entrada</button>
+                    <button id="tab-create" class="flex-1 py-4 font-bold text-sm text-slate-400 hover:text-dark-blue transition-colors">Nueva Comunicación</button>
+                </div>
+                {% endif %}
+
+                <!-- Contenido Principal -->
+                <div class="overflow-y-auto" style="max-height: 60vh;">
+                    <!-- Lista de Comunicaciones -->
+                    <div id="comms-list" class="p-6 space-y-4">
+                        {% for comm in comunicaciones %}
+                        <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm relative group transition-all hover:shadow-md">
+                            <div class="flex justify-between items-start mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-500">
+                                        <i data-lucide="user" class="w-5 h-5"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="font-bold text-dark-blue mb-0">{{ comm.titulo }}</h6>
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ comm.emisor.first_name|default:comm.emisor.username }} · {{ comm.creado_en|date:"d M, H:i" }}</p>
+                                    </div>
+                                </div>
+                                {% if user not in comm.visto_por.all %}
+                                <span class="w-2 h-2 bg-rose-500 rounded-full shadow-[0_0_8px_rgba(244,63,94,0.5)]"></span>
+                                {% endif %}
+                            </div>
+                            <div class="text-slate-600 text-sm leading-relaxed">
+                                {{ comm.contenido|linebreaks }}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-20">
+                            <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center text-slate-300 mx-auto mb-4">
+                                <i data-lucide="message-square-off" class="w-10 h-10"></i>
+                            </div>
+                            <p class="text-slate-400 font-medium">No hay comunicaciones en este momento.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Formulario de Creación (Admin) -->
+                    {% if user.is_staff %}
+                    <div id="comms-form" class="hidden p-8 bg-white">
+                        <div class="mb-8">
+                            <h6 class="text-lg font-bold text-dark-blue mb-1">Redactar Comunicado</h6>
+                            <p class="text-sm text-slate-400">Este mensaje será enviado a todos los usuarios del sistema.</p>
+                        </div>
+                        
+                        <form id="newCommForm" class="space-y-6">
+                            {% csrf_token %}
+                            <div class="group">
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Asunto del Aviso</label>
+                                <input type="text" name="titulo" required 
+                                    class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-bold text-dark-blue focus:bg-white focus:border-blue-400 transition-all outline-none" 
+                                    placeholder="Ej: Nueva política de inventario">
+                            </div>
+                            
+                            <div class="group">
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Mensaje Detallado</label>
+                                <textarea name="contenido" rows="5" required 
+                                    class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl p-4 font-medium text-slate-600 focus:bg-white focus:border-blue-400 transition-all outline-none" 
+                                    placeholder="Escribe aquí el comunicado para el equipo..."></textarea>
+                            </div>
+
+                            <div class="pt-4 pb-8">
+                                <button type="submit" class="w-full text-white py-4 rounded-2xl font-bold shadow-xl transition-all flex items-center justify-center gap-3" style="background: #1D3557;">
+                                    <span class="text-lg">Emitir Comunicado</span>
+                                    <div class="bg-white/20 p-2 rounded-xl">
+                                        <i data-lucide="send" class="w-5 h-5"></i>
+                                    </div>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Tab Switching
+    const tabInbox = document.getElementById('tab-inbox');
+    const tabCreate = document.getElementById('tab-create');
+    const listDiv = document.getElementById('comms-list');
+    const formDiv = document.getElementById('comms-form');
+
+    if (tabCreate) {
+        tabCreate.addEventListener('click', () => {
+            tabCreate.classList.add('text-primary-blue', 'border-b-2', 'border-primary-blue');
+            tabCreate.classList.remove('text-slate-400');
+            tabInbox.classList.remove('text-primary-blue', 'border-b-2', 'border-primary-blue');
+            tabInbox.classList.add('text-slate-400');
+            listDiv.classList.add('hidden');
+            formDiv.classList.remove('hidden');
+        });
+
+        tabInbox.addEventListener('click', () => {
+            tabInbox.classList.add('text-primary-blue', 'border-b-2', 'border-primary-blue');
+            tabInbox.classList.remove('text-slate-400');
+            tabCreate.classList.remove('text-primary-blue', 'border-b-2', 'border-primary-blue');
+            tabCreate.classList.add('text-slate-400');
+            formDiv.classList.add('hidden');
+            listDiv.classList.remove('hidden');
+        });
+    }
+
+    // Mark as Read Logic
+    const commsModal = document.getElementById('commsModal');
+    if (commsModal) {
+        commsModal.addEventListener('shown.bs.modal', function () {
+            fetch("{% url 'home_app:mark_comms_read' %}", {
+                method: 'POST',
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+            }).then(() => {
+                // Ocultar el badge si existe
+                const badge = document.querySelector('.animate-pulse');
+                if (badge) badge.remove();
+            });
+        });
+    }
+
+    // Handle New Comm Form
+    const newCommForm = document.getElementById('newCommForm');
+    if (newCommForm) {
+        newCommForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = this.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.innerHTML = 'Enviando...';
+
+            fetch("{% url 'home_app:create_comm' %}", {
+                method: 'POST',
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                body: new FormData(this)
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.ok) {
+                    location.reload();
+                } else {
+                    alert('Error al enviar comunicación');
+                    btn.disabled = false;
+                    btn.innerHTML = 'Enviar Comunicación';
+                }
+            });
+        });
+    }
 </script>
 
 </body>

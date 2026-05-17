@@ -7,7 +7,7 @@ from datetime import timedelta
 
 from applications.home.models import Venta, DetalleVenta
 from applications.product.models import Producto
-from applications.config.models import ConfiguracionFiscal  # 🔥 IMPORTANTE
+from applications.config.models import ConfiguracionFiscal
 
 
 class DashboardPrincipalView(TemplateView):
@@ -140,7 +140,6 @@ class DashboardPrincipalView(TemplateView):
         # =========================
         # 🔥 ANÁLISIS PROFUNDO DE PRODUCTOS (Soul 2.0)
         # =========================
-        # Agregamos Ganancias/Pérdidas Reales y Ruptura de Stock
         productos_soul = DetalleVenta.objects.filter(
             venta__in=ventas_mes
         ).values(
@@ -155,14 +154,12 @@ class DashboardPrincipalView(TemplateView):
         ).annotate(
             total_costo=F("unidades_vendidas") * F("producto__costo"),
             total_beneficio=F("total_ingreso") - (F("unidades_vendidas") * F("producto__costo")),
-            # Índice de Ruptura: stock / stock_minimo
             indice_ruptura=ExpressionWrapper(
                 F("producto__stock") * 1.0 / F("producto__stock_minimo"),
                 output_field=models.FloatField()
             )
         )
         
-        # Pre-calculamos el porcentaje para el template (evitar mathfilters)
         for p in productos_soul:
             try:
                 p['ruptura_porcentaje'] = min(float(p['indice_ruptura']) * 100, 100)
@@ -171,7 +168,9 @@ class DashboardPrincipalView(TemplateView):
 
         productos_ganancia = productos_soul.order_by("-total_beneficio")[:5]
         productos_perdida = productos_soul.filter(total_beneficio__lt=0).order_by("total_beneficio")[:5]
-        productos_criticos = productos_soul.order_by("indice_ruptura")[:5]
+        productos_criticos = productos_soul.filter(
+            producto__stock__lte=F("producto__stock_minimo")
+        ).order_by("indice_ruptura")[:5]
 
         # =========================
         # 🔥 ECONOMÍA POR CATEGORÍA
@@ -184,9 +183,7 @@ class DashboardPrincipalView(TemplateView):
         ).order_by("-total_ventas")
 
         # =========================
-        # Productos top (MES) - LISTA ESTÁTICA V6
-        # =========================
-        # Productos top (MES) - LISTA PARA CARRUSEL V5
+        # Productos top (MES)
         # =========================
         productos_top = DetalleVenta.objects.filter(
             venta__in=ventas_mes
@@ -194,29 +191,20 @@ class DashboardPrincipalView(TemplateView):
             total_vendido=Sum("cantidad")
         ).order_by("-total_vendido")[:5]
         
-        # Para el ticker usamos el #1
         producto_top_uno = productos_top[0] if productos_top.exists() else None
 
-        # =====================================================
-        # 🔥 INTELIGENCIA DE NEGOCIO V3 (NUEVO)
-        # =====================================================
-        
-        # 1. Velocidad de Ventas y Predicción de Agotamiento
-        # Calculamos ventas promedio diarias de los últimos 30 días
+        # =========================
+        # 🔥 INTELIGENCIA DE NEGOCIO V3
+        # =========================
         dias_mes = (hoy - inicio_mes).days + 1
-        
         for p in productos_soul:
             unidades = float(p['unidades_vendidas'] or 0)
             p['velocidad_diaria'] = round(unidades / dias_mes, 2)
-            
-            # Predicción de días restantes
             if p['velocidad_diaria'] > 0:
                 p['dias_inventario'] = int(float(p['producto__stock']) / p['velocidad_diaria'])
             else:
-                p['dias_inventario'] = 999 # Infinito (no se vende)
+                p['dias_inventario'] = 999
 
-        # 2. Cementerio de Stock (Productos sin rotación con stock > 0)
-        # Productos que tienen stock pero 0 ventas en el mes actual
         productos_con_venta_ids = DetalleVenta.objects.filter(venta__in=ventas_mes).values_list('producto_id', flat=True).distinct()
         stock_muerto = Producto.objects.filter(
             activo=True, 
@@ -225,32 +213,20 @@ class DashboardPrincipalView(TemplateView):
             valor_estancado=F("stock") * F("costo")
         ).order_by("-valor_estancado")[:5]
 
-        # 3. Valor de Venta Potencial (Ingresos en estantería)
         valor_venta_potencial = Producto.objects.filter(activo=True).aggregate(
             total=Sum(F("stock") * F("precio"), output_field=models.FloatField())
         )["total"] or 0
 
-        # 4. Ticker Operativo (Hitos en vivo)
         ticker_eventos = []
-        
-        # Hito: Stock agotado reciente
         agotados = Producto.objects.filter(activo=True, stock=0).order_by("-creado_en")[:2]
         for a in agotados:
             ticker_eventos.append({"tipo": "peligro", "texto": f"STOCK AGOTADO: {a.nombre}"})
-            
-        # Hito: Gran venta hoy
         gran_venta = ventas_hoy.filter(total__gt=100).order_by("-total").first()
         if gran_venta:
             ticker_eventos.append({"tipo": "exito", "texto": f"GRAN VENTA: {gran_venta.total}€ (Ticket #{gran_venta.id})"})
-            
-        # Hito: Producto estrella
         if producto_top_uno:
             ticker_eventos.append({"tipo": "info", "texto": f"TOP VENTAS: {producto_top_uno['producto__nombre']}"})
 
-
-        # =========================
-        # 🔥 HISTORIAL DE RECAUDACIÓN (Filtrado V4)
-        # =========================
         recaudacion_filtrada = (
             Venta.objects.filter(
                 creado_en__date__range=(f_filtro_inicio, f_filtro_fin),
@@ -260,103 +236,111 @@ class DashboardPrincipalView(TemplateView):
             .order_by("-total")
         )
 
-        # =========================
-        # Actividad reciente
-        # =========================
         ultimas_ventas = Venta.objects.filter(estado="completada").order_by("-creado_en")[:8]
 
-        # =========================
-        # Stock bajo
-        # =========================
         productos_stock_bajo = Producto.objects.filter(
             activo=True,
             stock__lte=F("stock_minimo")
-        ).order_by("stock")[:8]
+        ).order_by("stock")
 
-        # =========================
-        # Valor inventario
-        # =========================
         inventario = Producto.objects.filter(activo=True).annotate(
             valor_stock=F("stock") * F("costo")
         )
         valor_total_inventario = inventario.aggregate(total=Sum("valor_stock"))["total"] or 0
-
         total_productos_activos = Producto.objects.filter(activo=True).count()
 
-        # =========================
         # Ventas últimos 30 días
-        # =========================
-        fecha_inicio = hoy - timedelta(days=29)
-
+        fecha_inicio_grafico = hoy - timedelta(days=29)
         ventas_por_dia = []
         dias_labels = []
-
         for i in range(30):
-            dia = fecha_inicio + timedelta(days=i)
-            total_dia = Venta.objects.filter(
-                creado_en__date=dia,
-                estado="completada"
-            ).aggregate(total=Sum("total"))["total"] or 0
-
+            dia = fecha_inicio_grafico + timedelta(days=i)
+            total_dia = Venta.objects.filter(creado_en__date=dia, estado="completada").aggregate(total=Sum("total"))["total"] or 0
             ventas_por_dia.append(float(total_dia))
             dias_labels.append(dia.strftime("%d/%m"))
 
         # =========================
-        # CONTEXTO FINAL
+        # 🔥 AUDITORÍA DE EXCEPCIONES
         # =========================
+        ventas_con_descuento = ventas_periodo.filter(descuento__gt=0)
+        total_descuentos_periodo = float(ventas_con_descuento.aggregate(total=Sum("descuento"))["total"] or 0)
+        
+        excepciones_iva = []
+        for v in ventas_periodo:
+            try:
+                sub = float(v.subtotal)
+                iva_v = float(v.iva)
+                if sub > 0:
+                    ratio = round((iva_v / sub) * 100, 1)
+                    if abs(ratio - iva_actual) > 0.5:
+                        excepciones_iva.append({
+                            'codigo': v.codigo,
+                            'total': v.total,
+                            'iva_aplicado': ratio,
+                            'fecha': v.creado_en
+                        })
+            except: pass
+
+        # =========================
+        # 🔥 ESTADO DE SALUD DINÁMICO
+        # =========================
+        n_agotados = Producto.objects.filter(activo=True, stock=0).count()
+        n_bajo_minimo = productos_stock_bajo.count() - n_agotados
+        
+        health_status = "OPTIMAL"
+        health_color = "emerald"
+        if n_agotados > 0:
+            health_status = "CRITICAL"
+            health_color = "rose"
+        elif n_bajo_minimo > 0:
+            health_status = "WARNING"
+            health_color = "amber"
+
         context.update({
             "hoy": hoy,
-
             "iva_actual": iva_actual,
-
+            "health_status": health_status,
+            "health_color": health_color,
+            "n_agotados": n_agotados,
+            "n_bajo_minimo": n_bajo_minimo,
             "total_hoy": total_hoy,
             "total_mes_actual": total_mes_actual,
             "total_mes_anterior": total_mes_anterior,
             "total_anio_actual": total_anio_actual,
-
             "tickets_hoy": tickets_hoy,
             "tickets_mes": tickets_mes,
-
             "ticket_promedio_hoy": round(float(ticket_promedio_hoy), 2),
             "ticket_promedio_mes": round(float(ticket_promedio_mes), 2),
-
             "crecimiento": round(float(crecimiento), 2),
-
             "coste_total_mes": coste_total_mes,
             "beneficio_bruto": beneficio_bruto,
             "margen": round(float(margen), 2),
-
             "total_periodo": total_periodo,
             "tickets_periodo": tickets_periodo,
             "ticket_promedio_periodo": round(float(ticket_promedio_periodo), 2),
             "beneficio_periodo": beneficio_periodo,
             "margen_periodo": round(float(margen_periodo), 2),
-
             "productos_top": productos_top,
             "productos_ganancia": productos_ganancia,
             "productos_perdida": productos_perdida,
             "productos_criticos": productos_criticos,
             "categoria_stats": categoria_stats,
             "ventas_usuario": ventas_usuario,
-            
-            # Contexto V4
             "recaudacion_filtrada": recaudacion_filtrada,
             "rango_activo": rango,
             "f_filtro_inicio": f_filtro_inicio,
             "f_filtro_fin": f_filtro_fin,
-
             "stock_muerto": stock_muerto,
             "valor_venta_potencial": valor_venta_potencial,
             "ticker_eventos": ticker_eventos,
-
             "ultimas_ventas": ultimas_ventas,
-
             "productos_stock_bajo": productos_stock_bajo,
             "valor_total_inventario": valor_total_inventario,
-
             "total_productos_activos": total_productos_activos,
             "ventas_30_dias": ventas_por_dia,
             "dias_labels": dias_labels,
+            "ventas_con_descuento": ventas_con_descuento[:10],
+            "total_descuentos_periodo": total_descuentos_periodo,
+            "excepciones_iva": excepciones_iva[:10],
         })
-
         return context

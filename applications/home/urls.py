@@ -75,9 +75,15 @@ urlpatterns = [
     path('home/api/guardar-venta/', views.guardar_venta, name='guardar_venta'),
     # ===========================
     path("api/mentor/", api_mentor.mentor_query, name="mentor_api"),
+    
+    # COMUNICACIONES
+    path('home/comunicaciones/leer/', views.mark_comms_read, name='mark_comms_read'),
+    path('home/comunicaciones/crear/', views.create_comm, name='create_comm'),
+
     # AYUDA / SOPORTE
     # ===========================
     path("ayuda/", views.HelpCenterView.as_view(), name="ayuda"),
+    path("acerca/", views.AboutVersionView.as_view(), name="acerca_version"),
 ]
 
 # Servir archivos media en desarrollo

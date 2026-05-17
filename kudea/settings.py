@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
+    'django_cotton',
 ]
 
 SITE_ID = get_env_int("DJANGO_SITE_ID", 3)
@@ -104,12 +105,14 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'applications.home.context_processors.modulos_activos',
+                'applications.home.context_processors.comunicaciones_context',
             ],
         },
     },
 ]
 
 WSGI_APPLICATION = 'kudea.wsgi.application'
+TEST_RUNNER = 'kudea.test_runner.ProjectDiscoverRunner'
 
 
 # Database
@@ -150,6 +153,7 @@ AUTHENTICATION_BACKENDS = [
 # Allauth Settings
 ACCOUNT_LOGOUT_ON_GET = True
 ACCOUNT_LOGIN_METHODS = {'email'}
+ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 LOGIN_URL = '/accounts/login/'
 LOGIN_REDIRECT_URL = '/'
