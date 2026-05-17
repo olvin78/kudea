@@ -165,7 +165,7 @@ KUDEA_KNOWLEDGE = {
     "operaciones_venta": {
         "vender_tpv": {
             "titulo": "💰 Cómo Vender Algo Rápido en el TPV",
-            "keywords": ["vender", "cobrar", "pago", "ticket", "vender producto", "operacion", "tpv", "cobro"],
+            "keywords": ["vender", "cobrar", "pago", "ticket", "vender producto", "operacion", "tpv", "cobro", "venta", "ventas", "cobros"],
             "paso_a_paso": [
                 "**1. Seleccionar productos:** Haz clic en ellos. Aparecen en el ticket de la derecha automáticamente.",
                 "**2. Cantidades:** Usa los botones **'+'** y **'-'** del ticket para ajustar sin tener que clicar varias veces.",
@@ -994,15 +994,31 @@ def generate_auto_response(query, normalized_words, analysis_results):
     return response
 
 
-def search_knowledge(query):
-    # 1. Normalización
-    query_raw = query
-    query = query.lower().strip()
-    for char in "¿?¡!,.;:()":
-        query = query.replace(char, "")
+def clean_accents(text):
+    text = text.lower().strip()
+    replacements = {
+        'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u',
+        'ü': 'u'
+    }
+    for accent, clean in replacements.items():
+        text = text.replace(accent, clean)
+    return text
 
-    words = query.split()
-    stopwords = {"que", "es", "el", "la", "de", "en", "para", "un", "con", "por", "los", "las", "como"}
+
+def search_knowledge(query):
+    # 1. Normalización robusta con eliminación de acentos
+    query_raw = query
+    query_clean = clean_accents(query)
+    for char in "¿?¡!,.;:()":
+        query_clean = query_clean.replace(char, "")
+
+    words = query_clean.split()
+    # Detener palabras de parada en español con acentos normalizados
+    stopwords = {
+        "que", "es", "el", "la", "de", "en", "para", "un", "con", "por", 
+        "los", "las", "como", "hacer", "hago", "puedo", "quiero", 
+        "ayuda", "sobre", "del", "al"
+    }
     filtered_words = [w for w in words if w not in stopwords and len(w) > 1]
 
     best_matches = []
@@ -1017,8 +1033,8 @@ def search_knowledge(query):
         "horas": "fichaje", "tiempo": "fichaje", "horario": "fichaje", "fichar": "fichaje",
         "barras": "etiqueta", "barcode": "etiqueta", "ean": "etiqueta", "imprimir": "etiqueta",
         "abrir": "apertura", "inicio": "apertura",
-        "cerrar": "cierre", "cierre": "cierre", "fin": "cierre", "cuadrar": "cierre", "cuadre": "cierre",
-        "quitar": "eliminar", "borrar": "eliminar", "sacar": "eliminar", "ticket": "venta",
+        "cerrar": "cierre", "fin": "cierre", "cuadrar": "cierre", "cuadre": "cierre",
+        "quitar": "eliminar", "borrar": "eliminar", "sacar": "eliminar",
         "aprender": "aprendizaje", "cerebro": "aprendizaje", "inteligencia": "aprendizaje",
         "creado": "arquitectura", "construido": "arquitectura", "estructura": "arquitectura",
         "poco": "bajo", "agotado": "bajo", "reponer": "bajo", "reposicion": "bajo",
@@ -1037,19 +1053,39 @@ def search_knowledge(query):
     for cat_name, secciones in KUDEA_KNOWLEDGE.items():
         for sub_key, data in secciones.items():
             score = 0
+            
+            # Limpiar palabras clave y título para matching robusto
+            clean_keywords = [clean_accents(kw) for kw in data["keywords"]]
+            clean_title = clean_accents(data["titulo"])
+            
             if normalized_words:
                 for word in normalized_words:
-                    if word in data["keywords"]:
-                        score += 50
+                    word_clean = clean_accents(word)
+                    
+                    # 1. Coincidencia exacta de palabra clave
+                    if word_clean in clean_keywords:
+                        score += 60
                     else:
-                        for kw in data["keywords"]:
-                            if (len(word) > 3 and word in kw) or (len(kw) > 3 and kw in word):
-                                score += 25
+                        # 2. Coincidencia difusa de palabra clave (evita falsos positivos como venta en inventario)
+                        for kw in clean_keywords:
+                            # Permitir plurales simples o variaciones (ej. venta -> ventas)
+                            if len(word_clean) > 3 and len(kw) > 3:
+                                if word_clean == kw + 's' or kw == word_clean + 's':
+                                    score += 45
+                                    break
+                                elif difflib.SequenceMatcher(None, word_clean, kw).ratio() > 0.8:
+                                    score += 30
+                                    break
 
-                if any(w in data["titulo"].lower() for w in normalized_words):
-                    score += 40
+                # 3. Coincidencia en el título (sin stopwords de por medio)
+                title_words = clean_title.split()
+                for w in normalized_words:
+                    if clean_accents(w) in title_words:
+                        score += 40
 
-                if difflib.SequenceMatcher(None, query, data["titulo"].lower()).ratio() > 0.55:
+                # 4. Similitud global del título con la consulta limpia
+                ratio = difflib.SequenceMatcher(None, query_clean, clean_title).ratio()
+                if ratio > 0.6:
                     score += 50
 
             if score > 20:
@@ -1071,9 +1107,9 @@ def search_knowledge(query):
 
     # 3. Si no hay manuales, buscar en código fuente dinámicamente
     if not best_matches:
-        code_results = analyze_code_for_query(query, normalized_words)
+        code_results = analyze_code_for_query(query_clean, normalized_words)
         if code_results:
-            auto_response = generate_auto_response(query, normalized_words, code_results)
+            auto_response = generate_auto_response(query_clean, normalized_words, code_results)
             if auto_response:
                 best_matches.append({
                     "score": 100,
@@ -1101,14 +1137,14 @@ def search_knowledge(query):
                             if normalized_words and any(w == model["nombre"].lower() for w in normalized_words):
                                 app_score += 40
                                 tech_details.append(f"🔹 **Modelo `{model['nombre']}`**: Núcleo de `{app}`.")
-                            if query in model["nombre"].lower():
+                            if query_clean in model["nombre"].lower():
                                 app_score += 20
                                 campos = model.get("campos", [])
                                 if campos:
                                     tech_details.append(f"🔹 **`{model['nombre']}`**: Campos: {', '.join(campos[:5])}...")
 
                         for view in info.get("vistas", []):
-                            if query in view.lower() or any(w in view.lower() for w in normalized_words):
+                            if query_clean in view.lower() or any(w in view.lower() for w in normalized_words):
                                 app_score += 15
                                 tech_details.append(f"🖥️ **Vista `{view}`**: Detectada.")
 
