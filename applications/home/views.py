@@ -139,6 +139,7 @@ class TpvGeneralView(LoginRequiredMixin, TemplateView):
         fondo = apertura.fondo_inicial if apertura else 0
         ventas_hoy = Venta.objects.filter(usuario=self.request.user, creado_en__date=hoy, estado="completada").aggregate(total=models.Sum("total"))["total"] or 0
         context["balance_caja"] = fondo + ventas_hoy
+        context["caja_abierta"] = apertura is not None
         context['current_user'] = self.request.user
         return context
 
