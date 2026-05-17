@@ -63,14 +63,14 @@
 
     /* ── Invoice Paper ── */
     .invoice-wrap {
-      max-width: 800px;
+      max-width: 850px;
       margin: 40px auto;
       padding: 0 15px;
     }
 
     .invoice {
       background: white;
-      border-radius: 2px;
+      border-radius: 4px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.02);
       border: 1px solid var(--border-color);
     }
@@ -84,7 +84,7 @@
     }
 
     .brand-section h1 {
-      font-size: 1.25rem;
+      font-size: 1.5rem;
       font-weight: 900;
       color: var(--kudea-dark);
       margin: 0;
@@ -109,13 +109,13 @@
       margin-bottom: 2px;
     }
     .invoice-id {
-      font-size: 1.1rem;
-      font-weight: 500;
+      font-size: 1.25rem;
+      font-weight: 700;
       color: var(--kudea-dark);
       margin: 0;
     }
 
-    /* ── Meta Section (With subtle colored headings) ── */
+    /* ── Meta Section ── */
     .invoice-meta {
       padding: 0;
       display: grid;
@@ -133,7 +133,7 @@
 
     .meta-label {
       display: inline-block;
-      font-size: 0.6rem;
+      font-size: 0.65rem;
       font-weight: 800;
       text-transform: uppercase;
       color: var(--kudea-medium);
@@ -155,14 +155,13 @@
     }
     .meta-content span:first-child {
       color: var(--text-light);
-      font-weight: 400;
     }
     .meta-content span:last-child {
       color: var(--kudea-dark);
       font-weight: 600;
     }
 
-    /* ── Table (Items with colored header bar) ── */
+    /* ── Table ── */
     .invoice-body {
       padding: 35px 50px;
     }
@@ -175,22 +174,23 @@
       background: var(--tint-blue);
     }
     .items-table th {
-      padding: 10px 15px;
-      font-size: 0.65rem;
+      padding: 12px 15px;
+      font-size: 0.7rem;
       font-weight: 800;
       text-transform: uppercase;
       color: var(--kudea-dark);
       border-bottom: 2px solid var(--kudea-medium);
     }
     .items-table td {
-      padding: 14px 15px;
-      font-size: 0.82rem;
+      padding: 16px 15px;
+      font-size: 0.85rem;
       border-bottom: 1px solid #f8fafc;
     }
 
-    .col-qty { width: 60px; text-align: center; color: var(--text-light); }
-    .col-price { width: 110px; text-align: right; color: var(--text-light); }
-    .col-total { width: 110px; text-align: right; font-weight: 600; color: var(--kudea-dark); }
+    .col-qty { width: 60px; text-align: center; }
+    .col-tax { width: 80px; text-align: center; }
+    .col-price { width: 110px; text-align: right; }
+    .col-total { width: 110px; text-align: right; font-weight: 700; color: var(--kudea-dark); }
 
     /* ── Summary ── */
     .summary-section {
@@ -200,33 +200,32 @@
     }
 
     .summary-table {
-      width: 260px;
+      width: 300px;
     }
     .summary-row {
       display: flex;
       justify-content: space-between;
-      padding: 6px 0;
-      font-size: 0.8rem;
+      padding: 8px 0;
+      font-size: 0.85rem;
     }
     .summary-row.total {
-      margin-top: 10px;
-      padding-top: 15px;
+      margin-top: 15px;
+      padding-top: 20px;
       border-top: 2px solid var(--kudea-dark);
-      font-size: 1rem;
-      font-weight: 800;
+      font-size: 1.1rem;
+      font-weight: 900;
       color: var(--kudea-dark);
     }
-    .summary-row.discount span:last-child { color: var(--kudea-danger); }
+    .summary-row.discount { color: #e11d48; }
 
     /* ── Footer ── */
     .invoice-footer {
-      padding: 25px 50px;
+      padding: 30px 50px;
       background: #fcfdfe;
       border-top: 1px solid #f1f5f9;
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       color: #94a3b8;
       text-align: center;
-      line-height: 1.5;
     }
 
     /* ── Print ── */
@@ -248,57 +247,87 @@
     </a>
     <div class="d-flex gap-2">
       <button class="btn-minimal" onclick="window.print()">
-        <i class="fas fa-print"></i> Imprimir
+        <i class="fas fa-file-invoice"></i> Imprimir A4
       </button>
+      <a href="?format=ticket" class="btn-minimal" target="_blank">
+        <i class="fas fa-receipt"></i> Imprimir Ticket TPV (80mm)
+      </a>
+      <a href="?format=reverso" class="btn-minimal text-slate-400" target="_blank">
+        <i class="fas fa-undo"></i> Ver Reverso (Demo)
+      </a>
       <button class="btn-minimal" onclick="window.print()">
-        <i class="fas fa-file-pdf"></i> PDF
+        <i class="fas fa-file-pdf"></i> Exportar PDF
       </button>
     </div>
   </div>
 
-  <!-- Factura -->
+  <!-- Factura Clásica Limpia -->
   <div class="invoice-wrap">
     <article class="invoice">
       
       <header class="invoice-header">
         <div class="brand-section">
-          <h1>KUDEA</h1>
-          <p>Sistemas de Gestión Professional</p>
+            <h1>KUDEA <span style="font-weight:300; color:var(--kudea-medium)">Panel</span></h1>
+            <p>Gestión de Ventas y TPV</p>
         </div>
         <div class="invoice-status-block">
-          <div class="invoice-label">Ticket No.</div>
+          <div class="invoice-label">TICKET DE VENTA</div>
           <p class="invoice-id">{{ venta.codigo }}</p>
         </div>
       </header>
 
-      <!-- Meta Info con realce de encabezados -->
+      <!-- Meta Info estructura clásica -->
       <section class="invoice-meta">
         <div class="meta-group">
-          <div class="meta-label">Detalles de Venta</div>
+          <div class="meta-label">Detalles del Ticket</div>
           <div class="meta-content">
-            <div><span>Fecha emisión</span><span>{{ venta.creado_en|date:"d/m/Y" }}</span></div>
-            <div><span>Hora registro</span><span>{{ venta.creado_en|date:"H:i" }}h</span></div>
-            <div><span>Punto de venta</span><span>TPV 01</span></div>
+            <div><span>Fecha:</span><span>{{ venta.creado_en|date:"d/m/Y" }}</span></div>
+            <div><span>Hora:</span><span>{{ venta.creado_en|date:"H:i" }}h</span></div>
+            <div><span>Punto de Venta:</span><span>Caja Principal</span></div>
           </div>
         </div>
         <div class="meta-group">
-          <div class="meta-label">Liquidación</div>
+          <div class="meta-label">Información de Pago</div>
           <div class="meta-content">
-            <div><span>Método pago</span><span>{{ venta.metodo_pago.nombre }}</span></div>
-            <div><span>Operador</span><span>{{ venta.usuario.username }}</span></div>
-            <div><span>Estado ticket</span><span style="color:#059669">Liquidado</span></div>
+            <div><span>Operador:</span><span>{{ venta.usuario.username }}</span></div>
+            <div><span>Método:</span><span>{{ venta.metodo_pago.nombre }}</span></div>
+            {% if desglose_mixto %}
+              <div style="font-size:0.75rem; border-top:1px dashed #e2e8f0; padding-top:4px; margin-top:4px; display:flex; flex-direction:column; gap:2px; font-weight:normal;">
+                <span class="text-muted" style="font-size:0.7rem; font-weight:700; text-transform:uppercase;">Detalle Pago Mixto:</span>
+                {% if desglose_mixto.efectivo > 0 %}
+                <div style="display:flex; justify-content:space-between; width:100%;">
+                  <span style="color:#64748b;">- Efectivo:</span>
+                  <span style="color:#1d3557; font-weight:600;">{{ desglose_mixto.efectivo|floatformat:2 }} €</span>
+                </div>
+                {% endif %}
+                {% if desglose_mixto.tarjeta > 0 %}
+                <div style="display:flex; justify-content:space-between; width:100%;">
+                  <span style="color:#64748b;">- Tarjeta:</span>
+                  <span style="color:#1d3557; font-weight:600;">{{ desglose_mixto.tarjeta|floatformat:2 }} €</span>
+                </div>
+                {% endif %}
+                {% if desglose_mixto.bizum > 0 %}
+                <div style="display:flex; justify-content:space-between; width:100%;">
+                  <span style="color:#64748b;">- Bizum:</span>
+                  <span style="color:#1d3557; font-weight:600;">{{ desglose_mixto.bizum|floatformat:2 }} €</span>
+                </div>
+                {% endif %}
+              </div>
+            {% endif %}
+            <div><span>Estado:</span><span style="color:#059669">COMPLETADA</span></div>
           </div>
         </div>
       </section>
 
-      <!-- Tabla Productos con franja de color en encabezado -->
+      <!-- Tabla Productos con columna de IVA -->
       <main class="invoice-body">
         <table class="items-table">
           <thead>
             <tr>
-              <th style="text-align:left">Descripción Artículo</th>
+              <th style="text-align:left">Descripción</th>
               <th class="col-qty">Cant</th>
-              <th class="col-price">Unitario</th>
+              <th class="col-tax">IVA %</th>
+              <th class="col-price">Precio Ud.</th>
               <th class="col-total">Subtotal</th>
             </tr>
           </thead>
@@ -306,12 +335,11 @@
             {% for d in detalles %}
             <tr>
               <td>
-                <div style="font-weight:600; color:var(--text-main)">{{ d.producto.nombre }}</div>
-                {% if d.producto.categoria %}
-                <div style="font-size:0.65rem; color:#94a3b8">Categoría: {{ d.producto.categoria.nombre }}</div>
-                {% endif %}
+                <div style="font-weight:600;">{{ d.producto.nombre }}{% if venta.descuento > 0 %} *{% endif %}</div>
+                <div style="font-size:0.7rem; color:var(--text-light)">Categoría: {{ d.producto.categoria.nombre|default:"General" }}</div>
               </td>
               <td class="col-qty">{{ d.cantidad }}</td>
+              <td class="col-tax">{{ d.producto.porcentaje_iva|default:21|floatformat:0 }}%</td>
               <td class="col-price">{{ d.precio_unitario|floatformat:2 }} €</td>
               <td class="col-total">{{ d.total|floatformat:2 }} €</td>
             </tr>
@@ -320,35 +348,37 @@
         </table>
       </main>
 
-      <!-- Resumen de Totales -->
+      <!-- Resumen Estilo Limpio -->
       <footer class="summary-section">
         <div class="summary-table">
           <div class="summary-row">
-            <span class="summary-label">Importe Base</span>
-            <span class="summary-value">{{ venta.subtotal|floatformat:2 }} €</span>
+            <span>Base Imponible</span>
+            <span>{{ venta.subtotal|floatformat:2 }} €</span>
           </div>
+          {% if venta.descuento %}
           <div class="summary-row discount">
-            <span class="summary-label">Descuento aplicado</span>
-            <span class="summary-value">{% if venta.descuento %}-{{ venta.descuento|floatformat:2 }}{% else %}0,00{% endif %} €</span>
+            <span>Descuento Aplicado</span>
+            <span>-{{ venta.descuento|floatformat:2 }} €</span>
           </div>
+          {% endif %}
           <div class="summary-row">
-            <span class="summary-label">Total Impuestos (IVA)</span>
-            <span class="summary-value">{{ venta.iva|floatformat:2 }} €</span>
+            <span>Cuota IVA Total</span>
+            <span>{{ venta.iva|floatformat:2 }} €</span>
           </div>
           <div class="summary-row total">
-            <span class="summary-label">TOTAL FACTURA</span>
-            <span class="summary-value">{{ venta.total|floatformat:2 }} €</span>
+            <span>TOTAL TICKET</span>
+            <span>{{ venta.total|floatformat:2 }} €</span>
           </div>
 
           {% if venta.recibido %}
-          <div style="margin-top:15px; border-top:1px dashed #f1f5f9; padding-top:10px;">
-            <div class="summary-row" style="font-size:0.7rem; opacity:0.7">
-              <span class="summary-label">Pagado</span>
-              <span class="summary-value">{{ venta.recibido|floatformat:2 }} €</span>
+          <div style="margin-top:20px; padding-top:15px; border-top:1px dashed #e2e8f0;">
+            <div class="summary-row" style="font-size:0.8rem; color:var(--text-light)">
+              <span>Efectivo entregado</span>
+              <span>{{ venta.recibido|floatformat:2 }} €</span>
             </div>
-            <div class="summary-row" style="font-size:0.7rem; opacity:0.7">
-              <span class="summary-label">Cambio</span>
-              <span class="summary-value">{{ venta.cambio|floatformat:2 }} €</span>
+            <div class="summary-row" style="font-size:0.85rem; font-weight:700; color:#059669">
+              <span>Cambio devuelto</span>
+              <span>{{ venta.cambio|floatformat:2 }} €</span>
             </div>
           </div>
           {% endif %}
@@ -356,8 +386,8 @@
       </footer>
 
       <div class="invoice-footer">
-        Documento simplificado generado por KUDEA Smart POS.<br>
-        Emitido id: {{ venta.codigo }} · Gracias por su compra
+        Gracias por su compra.<br>
+        Ticket No: {{ venta.codigo }} · Documento Simplificado
       </div>
     </article>
   </div>

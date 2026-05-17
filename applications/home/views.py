@@ -1,7 +1,10 @@
 # ============================
 # Django imports
 # ============================
+import os
+
 from django.shortcuts import render, redirect
+from django.conf import settings
 from django.http import JsonResponse, HttpResponse
 from django.views.generic import TemplateView, CreateView, ListView, View
 from django.urls import reverse_lazy
@@ -37,6 +40,50 @@ from applications.cashflow.services import register_movement
 from applications.cash.models import AperturaCaja
 
 
+def _parse_sale_items(items):
+    parsed_items = []
+
+    for raw_item in items:
+        product_id = raw_item.get("id") or raw_item.get("producto_id")
+        cantidad = int(raw_item.get("cantidad", 0))
+
+        if cantidad <= 0:
+            raise ValueError("La cantidad debe ser mayor que cero")
+
+        producto = Producto.objects.select_for_update().get(pk=product_id)
+        # Omitido para permitir ventas con stock negativo (solo modo aviso en frontend)
+        # if producto.stock < cantidad:
+        #     raise ValueError(f"Stock insuficiente para {producto.nombre}")
+
+        unit_price = Decimal(str(raw_item.get("precio", producto.precio)))
+        parsed_items.append({
+            "producto": producto,
+            "cantidad": cantidad,
+            "precio": unit_price,
+            "total": unit_price * cantidad,
+        })
+
+    return parsed_items
+
+
+def _cashflow_payment_data(metodo_pago):
+    nombre = (metodo_pago.nombre or "").strip().lower()
+
+    if any(token in nombre for token in ["efectivo", "cash", "metalic", "metálic"]):
+        return "Caja", Movimiento.MetodoPago.EFECTIVO
+
+    if "bizum" in nombre:
+        return "Banco", Movimiento.MetodoPago.BIZUM
+
+    if any(token in nombre for token in ["tarjeta", "card", "visa", "mastercard", "datáfono", "datafono"]):
+        return "Banco", Movimiento.MetodoPago.TARJETA
+
+    if any(token in nombre for token in ["transfer", "banco", "bank"]):
+        return "Banco", Movimiento.MetodoPago.TRANSFERENCIA
+
+    return "Banco", Movimiento.MetodoPago.EFECTIVO if metodo_pago.acepta_cambio else Movimiento.MetodoPago.TRANSFERENCIA
+
+
 # ============================================================
 # HOME
 # ============================================================
@@ -45,6 +92,33 @@ class HomePageView(LoginRequiredMixin, ListView):
     template_name = 'home/index.html'
     model = Producto
     context_object_name = 'productos'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from django.db.models import Sum, Count
+        from django.utils.timezone import localdate
+        from applications.home.models import Venta
+        
+        hoy = localdate()
+        
+        # Estadísticas del día
+        ventas_hoy = Venta.objects.filter(creado_en__date=hoy, estado="completada")
+        context['ventas_total_hoy'] = ventas_hoy.aggregate(total=Sum('total'))['total'] or 0
+        context['ventas_count_hoy'] = ventas_hoy.count()
+        
+        # Productos totales
+        context['total_productos'] = Producto.objects.filter(activo=True).count()
+        
+        # Actividad reciente (últimas 10 ventas)
+        context['actividad_reciente'] = Venta.objects.all().select_related('usuario', 'metodo_pago').order_by('-creado_en')[:10]
+        
+        # Comunicaciones
+        from applications.home.models import Comunicacion
+        comunicaciones = Comunicacion.objects.all()[:20]
+        context['comunicaciones'] = comunicaciones
+        context['unread_comms'] = Comunicacion.objects.exclude(visto_por=self.request.user).count()
+
+        return context
 
 # ============================================================
 # TPV GENERAL
@@ -115,6 +189,7 @@ class ProcesarVentaView(LoginRequiredMixin, CreateView):
     def post(self, request, *args, **kwargs):
         try:
             data = json.loads(request.body)
+            items = _parse_sale_items(data['items'])
 
             venta = Venta(
                 usuario=request.user,
@@ -127,8 +202,8 @@ class ProcesarVentaView(LoginRequiredMixin, CreateView):
             )
             venta.save()
 
-            for item in data['items']:
-                producto = Producto.objects.get(pk=item['producto_id'])
+            for item in items:
+                producto = item['producto']
                 DetalleVenta.objects.create(
                     venta=venta,
                     producto=producto,
@@ -138,7 +213,7 @@ class ProcesarVentaView(LoginRequiredMixin, CreateView):
                 )
 
                 producto.stock -= item['cantidad']
-                producto.save()
+                producto.save(update_fields=['stock'])
 
             return JsonResponse({
                 'success': True,
@@ -181,12 +256,32 @@ class ProductoListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        # Use the queryset already filtered by get_queryset() to ensure stats match the displayed list
+        queryset = self.get_queryset()
+        
         context['categorias'] = Categoria.objects.all()
-        # Count items with stock < stock_minimo (only active ones)
-        context['low_stock_count'] = Producto.objects.filter(
-            activo=True, 
+        context['total_products'] = queryset.count()
+        
+        # Count items with stock < stock_minimo in the current list
+        context['low_stock_count'] = queryset.filter(
             stock__lt=models.F('stock_minimo')
         ).count()
+
+        # Calculate Total Inventory Value and totals per product
+        total_val = 0
+        for p in queryset:
+            p.total_por_producto = p.stock * p.precio
+            if p.stock > 0:
+                total_val += p.total_por_producto
+        
+        context['total_inventory_value'] = total_val
+        context['productos'] = queryset # Ensure we use the same list with added attribute
+        
+        # For the print report: Get ALL products (not paginated) and group them
+        # We use the filtered queryset but without pagination
+        full_queryset = self.get_queryset()
+        context['all_products'] = full_queryset
+        
         return context
 
 # ============================================================
@@ -337,9 +432,59 @@ class VentaDetalleView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         venta = Venta.objects.get(pk=self.kwargs['pk'])
-        context['venta'] = venta
-        context['detalles'] = venta.detalles.all()
+        detalles = venta.detalles.all()
+        
+        # Calcular desglose de IVA y Totales Reales
+        iva_breakdown = {}
+        total_items = 0
+        
+        for d in detalles:
+            rate = float(d.producto.porcentaje_iva or 21)
+            item_total = float(d.total)
+            total_items += item_total
+            
+            # Desglosamos: Base = Total / (1 + (IVA/100))
+            base = item_total / (1 + (rate / 100))
+            cuota = item_total - base
+            
+            if rate not in iva_breakdown:
+                iva_breakdown[rate] = {'base': 0, 'cuota': 0}
+            
+            iva_breakdown[rate]['base'] += base
+            iva_breakdown[rate]['cuota'] += cuota
+
+        # Usar los totales y cambios exactos registrados en la base de datos
+        total_final = float(venta.total)
+        cambio_real = float(venta.cambio or 0)
+
+        # Parsear desglose de Pago Mixto si aplica
+        desglose_mixto = None
+        if venta.metodo_pago.nombre == "Pago Mixto" and venta.notas:
+            try:
+                import json
+                desglose_mixto = json.loads(venta.notas)
+            except Exception:
+                pass
+
+        context.update({
+            'venta': venta,
+            'detalles': detalles,
+            'iva_breakdown': iva_breakdown,
+            'total_real': total_final,
+            'subtotal_real': total_items - float(venta.iva or 0), # Aproximado para la base
+            'cambio_real': cambio_real,
+            'desglose_mixto': desglose_mixto,
+            'config': ConfiguracionFiscal.objects.first()
+        })
         return context
+
+    def get_template_names(self):
+        fmt = self.request.GET.get('format')
+        if fmt == 'ticket':
+            return ['home/venta_ticket_pos.html']
+        elif fmt == 'reverso':
+            return ['home/venta_ticket_reverso.html']
+        return [self.template_name]
 
 
 # ============================================================
@@ -525,6 +670,7 @@ def guardar_venta(request):
         metodo_pago_id = data.get("metodo_pago")
         recibido = Decimal(str(data.get("recibido", 0)))
         descuento = Decimal(str(data.get("descuento", 0)))
+        desglose_mixto = data.get("desglose_mixto")  # 👈 Obtener desglose de Pago Mixto
 
         if not ticket:
             return JsonResponse({"error": "El ticket está vacío"}, status=400)
@@ -533,23 +679,21 @@ def guardar_venta(request):
             return JsonResponse({"error": "Método de pago requerido"}, status=400)
 
         metodo_pago = MetodoPago.objects.get(id=metodo_pago_id)
+        parsed_items = _parse_sale_items(ticket)
 
         # ==========================
         # CÁLCULO FINANCIERO 100% DECIMAL
         # ==========================
-        subtotal_bruto = sum(
-            Decimal(str(item["precio"])) * Decimal(item["cantidad"])
-            for item in ticket
-        )
+        subtotal_bruto = sum(item["total"] for item in parsed_items)
 
         tasa_descuento = Decimal("0")
         if subtotal_bruto > Decimal("0") and descuento > Decimal("0"):
             tasa_descuento = descuento / subtotal_bruto
 
         iva = Decimal("0")
-        for item in ticket:
-            producto = Producto.objects.get(id=item["id"])
-            item_bruto = Decimal(str(item["precio"])) * Decimal(item["cantidad"])
+        for item in parsed_items:
+            producto = item["producto"]
+            item_bruto = item["total"]
             item_neto = item_bruto * (Decimal("1") - tasa_descuento)
             
             p_iva = getattr(producto, 'porcentaje_iva', Decimal("21"))
@@ -569,6 +713,13 @@ def guardar_venta(request):
         print("💰 Total:", total)
 
         # ==========================
+        # PREPARAR NOTAS (SERIALIZACIÓN DEL DESGLOSE MIXTO)
+        # ==========================
+        notas_guardar = None
+        if desglose_mixto and metodo_pago.nombre == "Pago Mixto":
+            notas_guardar = json.dumps(desglose_mixto)
+
+        # ==========================
         # CREAR VENTA
         # ==========================
         venta = Venta.objects.create(
@@ -581,6 +732,7 @@ def guardar_venta(request):
             recibido=recibido,
             cambio=cambio,
             estado="completada",
+            notas=notas_guardar,
         )
 
         print("✅ Venta creada:", venta.id)
@@ -588,21 +740,20 @@ def guardar_venta(request):
         # ==========================
         # CREAR DETALLES Y ACTUALIZAR STOCK
         # ==========================
-        for item in ticket:
-            producto = Producto.objects.get(id=item["id"])
-
-            cantidad = Decimal(item["cantidad"])
-            precio = Decimal(str(producto.precio))
+        for item in parsed_items:
+            producto = item["producto"]
+            cantidad = item["cantidad"]
+            precio = item["precio"]
 
             DetalleVenta.objects.create(
                 venta=venta,
                 producto=producto,
                 cantidad=cantidad,
                 precio_unitario=precio,
-                total=cantidad * precio,
+                total=item["total"],
             )
 
-            producto.stock -= int(cantidad)
+            producto.stock -= cantidad
             producto.save(update_fields=["stock"])
 
         print("📦 Detalles creados")
@@ -614,26 +765,46 @@ def guardar_venta(request):
             from applications.cashflow.models import Cuenta, Movimiento
             from applications.cashflow.services import register_movement
 
-            nombre_metodo = metodo_pago.nombre.lower()
-
-            if "efectivo" in nombre_metodo:
-                cuenta_nombre = "Caja"
+            # Si es Pago Mixto y tiene desglose, registramos movimientos separados por cada fracción
+            if desglose_mixto and metodo_pago.nombre == "Pago Mixto":
+                print("📝 Registrando movimientos fragmentados para Pago Mixto...")
+                for medio, importe_parcial in desglose_mixto.items():
+                    importe_parcial_dec = Decimal(str(importe_parcial))
+                    if importe_parcial_dec > 0:
+                        try:
+                            mp_parcial = MetodoPago.objects.get(nombre__iexact=medio)
+                            cuenta_nombre, movimiento_metodo = _cashflow_payment_data(mp_parcial)
+                        except MetodoPago.DoesNotExist:
+                            cuenta_nombre = "Caja" if medio.lower() == "efectivo" else "Banco"
+                            movimiento_metodo = Movimiento.MetodoPago.EFECTIVO if medio.lower() == "efectivo" else Movimiento.MetodoPago.TARJETA
+                        
+                        cuenta, _ = Cuenta.objects.get_or_create(nombre=cuenta_nombre)
+                        register_movement(
+                            concepto=f"Venta TPV #{venta.codigo} [Fracción {medio.capitalize()}]",
+                            tipo=Movimiento.Tipo.INGRESO,
+                            origen=Movimiento.Origen.TPV,
+                            cuenta=cuenta,
+                            cantidad=importe_parcial_dec,
+                            metodo_pago=movimiento_metodo,
+                            external_ref=f"tpv:venta:{venta.id}:{medio.lower()}",
+                            created_by=request.user,
+                        )
             else:
-                cuenta_nombre = "Banco"
+                cuenta_nombre, movimiento_metodo = _cashflow_payment_data(metodo_pago)
+                cuenta, _ = Cuenta.objects.get_or_create(nombre=cuenta_nombre)
 
-            cuenta, _ = Cuenta.objects.get_or_create(nombre=cuenta_nombre)
+                register_movement(
+                    concepto=f"Venta TPV #{venta.codigo}",
+                    tipo=Movimiento.Tipo.INGRESO,
+                    origen=Movimiento.Origen.TPV,
+                    cuenta=cuenta,
+                    cantidad=total,
+                    metodo_pago=movimiento_metodo,
+                    external_ref=f"tpv:venta:{venta.id}",
+                    created_by=request.user,
+                )
 
-            movimiento = register_movement(
-                concepto=f"Venta TPV #{venta.codigo}",
-                tipo=Movimiento.Tipo.INGRESO,
-                origen=Movimiento.Origen.TPV,
-                cuenta=cuenta,
-                cantidad=total,
-                external_ref=f"tpv:venta:{venta.id}",
-                created_by=request.user,
-            )
-
-            print("💚 Movimiento creado:", movimiento.id)
+            print("💚 Movimiento creado con éxito")
 
         except Exception as e:
             print("❌ ERROR EN CASHFLOW:", str(e))
@@ -659,7 +830,7 @@ def guardar_venta(request):
 # ======================================================
 # 📌 Función utilitaria — Obtener datos de ventas por rango
 # ======================================================
-def obtener_datos_arqueo_completo(inicio, fin, tipo, usuario):
+def obtener_datos_arqueo_completo(inicio, fin, tipo, usuario, fondo_manual=None):
     """Obtiene el conjunto completo de datos para el reporte profesional."""
     from django.db.models import Sum, Count, F, ExpressionWrapper, FloatField
     from django.db.models.functions import ExtractHour
@@ -675,16 +846,19 @@ def obtener_datos_arqueo_completo(inicio, fin, tipo, usuario):
     ).select_related("usuario", "metodo_pago").order_by("creado_en")
 
     # ── Fondo Inicial (Apertura)
-    apertura = AperturaCaja.objects.filter(
-        fecha__gte=inicio,
-        fecha__lte=fin
-    ).order_by("hora_apertura").first()
-    
-    if apertura:
-        fondo_inicial = float(apertura.fondo_inicial)
+    if fondo_manual is not None:
+        fondo_inicial = float(fondo_manual)
     else:
-        conf = ConfiguracionFiscal.objects.first()
-        fondo_inicial = float(conf.fondo_caja_defecto) if conf else 200.00
+        apertura = AperturaCaja.objects.filter(
+            fecha__gte=inicio,
+            fecha__lte=fin
+        ).order_by("hora_apertura").first()
+        
+        if apertura:
+            fondo_inicial = float(apertura.fondo_inicial)
+        else:
+            conf = ConfiguracionFiscal.objects.first()
+            fondo_inicial = float(conf.fondo_caja_defecto) if conf else 200.00
 
     # ── Totales generales
     agg = ventas.aggregate(
@@ -720,14 +894,44 @@ def obtener_datos_arqueo_completo(inicio, fin, tipo, usuario):
     beneficio_bruto = total_subtotal - total_coste
     margen = round((beneficio_bruto / total_subtotal * 100), 2) if total_subtotal else 0
 
-    # ── Desglose por método de pago
-    por_metodo = (
-        ventas.values("metodo_pago__nombre")
-        .annotate(importe=Sum("total"), n_tickets=Count("id"))
-        .order_by("-importe")
-    )
-    for m in por_metodo:
-        m["importe"] = float(m["importe"] or 0)
+    # ── Desglose por método de pago (con soporte inteligente para Pago Mixto)
+    desglose_pagos = {}
+    tickets_por_metodo = {}
+
+    for v in ventas:
+        if v.metodo_pago.nombre == "Pago Mixto" and v.notas:
+            try:
+                import json
+                desglose_json = json.loads(v.notas)
+                for medio, importe_parcial in desglose_json.items():
+                    medio_display = medio.capitalize()
+                    val = float(importe_parcial)
+                    if val > 0:
+                        desglose_pagos[medio_display] = desglose_pagos.get(medio_display, 0.0) + val
+                        if medio_display not in tickets_por_metodo:
+                            tickets_por_metodo[medio_display] = set()
+                        tickets_por_metodo[medio_display].add(v.id)
+            except Exception:
+                m_nombre = v.metodo_pago.nombre
+                desglose_pagos[m_nombre] = desglose_pagos.get(m_nombre, 0.0) + float(v.total)
+                if m_nombre not in tickets_por_metodo:
+                    tickets_por_metodo[m_nombre] = set()
+                tickets_por_metodo[m_nombre].add(v.id)
+        else:
+            m_nombre = v.metodo_pago.nombre
+            desglose_pagos[m_nombre] = desglose_pagos.get(m_nombre, 0.0) + float(v.total)
+            if m_nombre not in tickets_por_metodo:
+                tickets_por_metodo[m_nombre] = set()
+            tickets_por_metodo[m_nombre].add(v.id)
+
+    por_metodo = []
+    for m_nombre, importe in desglose_pagos.items():
+        por_metodo.append({
+            "metodo_pago__nombre": m_nombre,
+            "importe": float(importe),
+            "n_tickets": len(tickets_por_metodo.get(m_nombre, []))
+        })
+    por_metodo = sorted(por_metodo, key=lambda x: x["importe"], reverse=True)
 
     # ── Desglose por cajero
     por_cajero = (
@@ -752,6 +956,21 @@ def obtener_datos_arqueo_completo(inicio, fin, tipo, usuario):
     # ── Incidencias
     ventas_anuladas = Venta.objects.filter(creado_en__date__gte=inicio, creado_en__date__lte=fin, estado="cancelada").count()
     ventas_pendientes = Venta.objects.filter(creado_en__date__gte=inicio, creado_en__date__lte=fin, estado="pendiente").count()
+
+    # ── Desglose de IVA por Tipo (4%, 10%, 21%, etc)
+    from django.db.models import F, DecimalField, ExpressionWrapper, Value
+    iva_desglose = (
+        detalles.values("producto__porcentaje_iva")
+        .annotate(
+            base_total=Sum(ExpressionWrapper(F("total") / (Value(1.0) + (F("producto__porcentaje_iva") / Value(100.0))), output_field=DecimalField(max_digits=10, decimal_places=2))),
+            iva_total=Sum(ExpressionWrapper(F("total") - (F("total") / (Value(1.0) + (F("producto__porcentaje_iva") / Value(100.0)))), output_field=DecimalField(max_digits=10, decimal_places=2)))
+        )
+        .order_by("-producto__porcentaje_iva")
+    )
+    for iva in iva_desglose:
+        iva["porcentaje"] = float(iva["producto__porcentaje_iva"])
+        iva["base"] = float(iva["base_total"] or 0)
+        iva["cuota"] = float(iva["iva_total"] or 0)
 
     return {
         "tipo": tipo.title(),
@@ -778,6 +997,7 @@ def obtener_datos_arqueo_completo(inicio, fin, tipo, usuario):
         "ventas_pendientes": ventas_pendientes,
         "total_efectivo_neto": total_efectivo_neto,
         "total_esperado": total_esperado,
+        "iva_desglose": iva_desglose,
     }
 
 def obtener_resumen_ventas(inicio, fin):
@@ -888,6 +1108,12 @@ def registrar_cierre_desde_rango(request, tipo, fecha_inicio, fecha_fin):
 class ArqueoMenuView(LoginRequiredMixin, TemplateView):
     template_name = "home/arqueo_menu.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from applications.cash.models import CierreCaja
+        context['ultimos_cierres'] = CierreCaja.objects.all().order_by('-fecha', '-hora_cierre')[:10]
+        return context
+
 
 # ======================================================
 # 📌 Arqueo diario
@@ -965,15 +1191,25 @@ class ArqueoAnualView(LoginRequiredMixin, TemplateView):
 class ArqueoPersonalizadoView(LoginRequiredMixin, TemplateView):
     template_name = "home/arqueo_personalizado.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Permitir pre-llenar fechas desde parámetros GET
+        context['inicio_prefill'] = self.request.GET.get('inicio', '')
+        context['fin_prefill'] = self.request.GET.get('fin', '')
+        return context
+
     def post(self, request, *args, **kwargs):
         if "inicio" in request.POST and "fin" in request.POST:
             # Viene del formulario de selección de fechas
             inicio_str = request.POST.get("inicio")
             fin_str = request.POST.get("fin")
+            fondo_str = request.POST.get("fondo")
             inicio = datetime.strptime(inicio_str, "%Y-%m-%d").date()
             fin = datetime.strptime(fin_str, "%Y-%m-%d").date()
+            
+            fondo_manual = float(fondo_str) if fondo_str else None
 
-            data = obtener_datos_arqueo_completo(inicio, fin, "personalizado", request.user)
+            data = obtener_datos_arqueo_completo(inicio, fin, "personalizado", request.user, fondo_manual=fondo_manual)
             data["fecha_inicio_raw"] = inicio_str
             data["fecha_fin_raw"] = fin_str
 
@@ -999,18 +1235,30 @@ class ArqueoPDFView(LoginRequiredMixin, View):
             return HttpResponse("Tipo de arqueo no válido", status=400)
 
         hoy = date.today()
-        if tipo == "diario":
-            fecha_inicio = hoy
-            fecha_fin = hoy
-        elif tipo == "semanal":
-            fecha_inicio = hoy - timedelta(days=hoy.weekday())
-            fecha_fin = hoy
-        elif tipo == "mensual":
-            fecha_inicio = hoy.replace(day=1)
-            fecha_fin = hoy
+        # Priorizar fechas desde parámetros GET
+        get_inicio = request.GET.get('inicio')
+        get_fin = request.GET.get('fin')
+        get_fondo = request.GET.get('fondo')
+
+        if get_inicio and get_fin:
+            inicio = datetime.strptime(get_inicio, "%Y-%m-%d").date()
+            fin = datetime.strptime(get_fin, "%Y-%m-%d").date()
+            fondo_manual = float(get_fondo) if get_fondo else None
+            data = obtener_datos_arqueo_completo(inicio, fin, tipo, request.user, fondo_manual=fondo_manual)
+            return render(request, "home/arqueo_pdf.html", data)
         else:
-            fecha_inicio = hoy.replace(month=1, day=1)
-            fecha_fin = hoy
+            if tipo == "diario":
+                fecha_inicio = hoy
+                fecha_fin = hoy
+            elif tipo == "semanal":
+                fecha_inicio = hoy - timedelta(days=hoy.weekday())
+                fecha_fin = hoy
+            elif tipo == "mensual":
+                fecha_inicio = hoy.replace(day=1)
+                fecha_fin = hoy
+            else:
+                fecha_inicio = hoy.replace(month=1, day=1)
+                fecha_fin = hoy
 
         data = obtener_datos_arqueo_completo(fecha_inicio, fecha_fin, tipo, request.user)
         return render(request, "home/arqueo_pdf.html", data)
@@ -1100,3 +1348,50 @@ class HelpCenterView(LoginRequiredMixin, TemplateView):
             },
         ]
         return context
+
+
+# ============================================================
+# ACERCA DE / VERSION
+# ============================================================
+
+class AboutVersionView(LoginRequiredMixin, TemplateView):
+    template_name = 'home/acerca_version.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['app_version'] = os.environ.get('KUDEA_VERSION', '1.0.0')
+        context['build_id'] = os.environ.get('KUDEA_BUILD', 'local')
+        context['runtime_env'] = 'development' if settings.DEBUG else 'production'
+        return context
+
+
+# ============================================================
+# COMUNICACIONES INTERNAS
+# ============================================================
+
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def mark_comms_read(request):
+    if request.method == 'POST':
+        from applications.home.models import Comunicacion
+        comms = Comunicacion.objects.exclude(visto_por=request.user)
+        for c in comms:
+            c.visto_por.add(request.user)
+        return JsonResponse({'ok': True})
+    return JsonResponse({'ok': False}, status=400)
+
+@login_required
+def create_comm(request):
+    if request.method == 'POST' and request.user.is_staff:
+        from applications.home.models import Comunicacion
+        titulo = request.POST.get('titulo')
+        contenido = request.POST.get('contenido')
+        if titulo and contenido:
+            Comunicacion.objects.create(
+                emisor=request.user,
+                titulo=titulo,
+                contenido=contenido
+            )
+            return JsonResponse({'ok': True})
+    return JsonResponse({'ok': False}, status=400)

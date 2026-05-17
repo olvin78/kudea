@@ -23,6 +23,14 @@
         </div>
         <div class="col-md-6 text-md-end">
           <div><strong>Método de pago:</strong> {{ venta.metodo_pago.nombre }}</div>
+          {% if desglose_mixto %}
+            <div class="mt-1 small text-muted text-start text-md-end">
+              <strong class="d-block">Desglose Pago Mixto:</strong>
+              {% if desglose_mixto.efectivo > 0 %}<div>Efectivo: {{ desglose_mixto.efectivo|floatformat:2 }} €</div>{% endif %}
+              {% if desglose_mixto.tarjeta > 0 %}<div>Tarjeta: {{ desglose_mixto.tarjeta|floatformat:2 }} €</div>{% endif %}
+              {% if desglose_mixto.bizum > 0 %}<div>Bizum: {{ desglose_mixto.bizum|floatformat:2 }} €</div>{% endif %}
+            </div>
+          {% endif %}
           <div><strong>Estado:</strong> {{ venta.get_estado_display }}</div>
         </div>
       </div>
@@ -40,7 +48,7 @@
           <tbody>
             {% for d in detalles %}
             <tr>
-              <td>{{ d.producto.nombre }}</td>
+              <td>{{ d.producto.nombre }}{% if venta.descuento > 0 %} *{% endif %}</td>
               <td class="text-center">{{ d.cantidad }}</td>
               <td class="text-end">{{ d.precio_unitario|floatformat:2 }} €</td>
               <td class="text-end">{{ d.total|floatformat:2 }} €</td>
