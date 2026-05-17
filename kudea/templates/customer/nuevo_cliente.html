@@ -1,0 +1,264 @@
+{% extends 'tpv_shop/base_tpv_shop.html' %}
+{% load static %}
+
+{% block head %}
+  <style>
+    :root {
+      --primary-color: #4361ee;
+      --primary-hover: #3a56d4;
+      --secondary-color: #f8f9fa;
+      --secondary-hover: #e9ecef;
+      --text-color: #212529;
+      --border-radius: 8px;
+      --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --transition: all 0.3s ease;
+    }
+
+    .form-container {
+      max-width: 700px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+    }
+
+    h2 {
+      color: var(--primary-color);
+      margin-bottom: 1.5rem;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: var(--text-color);
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+      border: 1px solid #ced4da;
+      border-radius: var(--border-radius);
+      transition: var(--transition);
+      box-sizing: border-box;
+    }
+
+    .form-control:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.25);
+      outline: none;
+    }
+
+    .btn-submit {
+      background-color: var(--primary-color);
+      color: white;
+      font-size: 1rem;
+      font-weight: 500;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: var(--transition);
+      width: 100%;
+      margin-top: 1rem;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-submit:hover {
+      background-color: var(--primary-hover);
+      transform: translateY(-2px);
+    }
+
+    .btn-back {
+      background-color: var(--secondary-color);
+      color: var(--text-color);
+      font-weight: 500;
+      padding: 0.75rem 1.5rem;
+      border-radius: var(--border-radius);
+      display: inline-block;
+      text-align: center;
+      text-decoration: none;
+      transition: var(--transition);
+      width: 100%;
+      margin-top: 1rem;
+      border: 1px solid #dee2e6;
+    }
+
+    .btn-back:hover {
+      background-color: var(--secondary-hover);
+      text-decoration: none;
+      transform: translateY(-2px);
+    }
+
+    .search-container {
+      margin-bottom: 2rem;
+      position: relative;
+    }
+
+    .search-container label {
+      margin-bottom: 0.75rem;
+    }
+
+    /* Animación para el contenedor del formulario */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-container {
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    /* Estilos para dispositivos móviles */
+    @media (max-width: 768px) {
+      .form-container {
+        padding: 1.5rem;
+        margin: 1rem;
+      }
+      
+      h2 {
+        font-size: 1.5rem;
+      }
+    }
+
+    /* Efecto de carga para la búsqueda */
+    .search-loading {
+      position: relative;
+    }
+
+    .search-loading::after {
+      content: "";
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 20px;
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid var(--primary-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin {
+      0% { transform: translateY(-50%) rotate(0deg); }
+      100% { transform: translateY(-50%) rotate(360deg); }
+    }
+  </style>
+{% endblock %}
+
+{% block tpv_content %}
+  <div class="container py-4">
+    <h2 class="text-center mb-4">{{ form_title }}</h2>
+
+    <div class="form-container">
+      <form method="post">
+        {% csrf_token %}
+        <div class="search-container">
+          <label for="dni">Buscar por DNI:</label>
+          <input type="text" id="dni" class="form-control search-loading" placeholder="Introduce el DNI" onkeyup="searchCliente()">
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.nombre.id_for_label }}">Nombre:</label>
+          {{ form.nombre }}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.codigo_postal.id_for_label }}">Código Postal:</label>
+          {{ form.codigo_postal }}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.correo.id_for_label }}">Correo Electrónico:</label>
+          {{ form.correo }}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.telefono.id_for_label }}">Teléfono:</label>
+          {{ form.telefono }}
+        </div>
+
+        <button type="submit" class="btn-submit">Guardar Cliente</button>
+      </form>
+
+      <a href="{% url 'tpv_shop:cart' %}" class="btn-back mt-3">Volver al Inicio</a>
+    </div>
+  </div>
+
+  <script>
+    let lastSearchedDni = '';
+
+    function searchCliente() {
+      var dniInput = document.getElementById('dni');
+      var dni = dniInput.value.trim();
+      
+      if (dni.length < 5) {
+        clearFields();
+        lastSearchedDni = '';
+        return;
+      }
+
+      if (dni === lastSearchedDni) {
+        return;
+      }
+
+      dniInput.classList.add('search-loading');
+      
+      fetch('/clientes/nuevo/?dni=' + dni)
+        .then(response => {
+          if (!response.ok) throw new Error('Error en la respuesta');
+          return response.json();
+        })
+        .then(data => {
+          // MODIFICACIÓN IMPORTANTE: Solo verificamos que exista data.nombre
+          if (data.nombre) {
+            document.getElementById('id_nombre').value = data.nombre;
+            document.getElementById('id_codigo_postal').value = data.codigo_postal || '';
+            document.getElementById('id_correo').value = data.correo || '';
+            document.getElementById('id_telefono').value = data.telefono || '';
+            lastSearchedDni = dni;
+            highlightFields();
+          } else {
+            clearFields();
+            lastSearchedDni = '';
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          clearFields();
+          lastSearchedDni = '';
+        })
+        .finally(() => {
+          dniInput.classList.remove('search-loading');
+        });
+    }
+    
+    function clearFields() {
+      document.getElementById('id_nombre').value = '';
+      document.getElementById('id_codigo_postal').value = '';
+      document.getElementById('id_correo').value = '';
+      document.getElementById('id_telefono').value = '';
+    }
+    
+    function highlightFields() {
+      const fields = ['id_nombre', 'id_codigo_postal', 'id_correo', 'id_telefono'];
+      fields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        field.style.backgroundColor = '#e8f4ff';
+        setTimeout(() => {
+          field.style.backgroundColor = '';
+        }, 1000);
+      });
+    }
+</script>
+{% endblock %}

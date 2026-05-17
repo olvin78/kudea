@@ -1,0 +1,77 @@
+{% extends 'home/base.html' %}
+{% load static %}
+
+{% block head %}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="{% static 'css/tpc_base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/tpv_index.css' %}">
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+    .tpv-button {
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #212529;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.8rem;
+      text-decoration: none;
+    }
+    .tpv-button:hover {
+      background-color: #007bff;
+      color: white;
+      border-color: #007bff;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(0, 123, 255, 0.2);
+    }
+    .tpv-icon {
+      font-size: 1.8rem;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="text-center mb-5">
+    <h2 class="display-5 fw-bold text-primary">
+      <i class="fas fa-store me-2"></i>TPV - Restaurante
+    </h2>
+    <p class="lead text-muted">Gestiona mesas, comandas y cobros de forma eficiente y moderna.</p>
+  </div>
+
+  <div class="row g-4 justify-content-center">
+    <div class="col-12 col-md-6 col-lg-4">
+      <a href="{% url 'tpv_app:tpv_mesas' %}" class="tpv-button">
+        <i class="fas fa-th-large tpv-icon"></i> Gestión de Mesas
+      </a>
+    </div>
+    <div class="col-12 col-md-6 col-lg-4">
+      <a href="{% url 'tpv_app:tpv_comandas' %}" class="tpv-button">
+        <i class="fas fa-receipt tpv-icon"></i> Comandas
+      </a>
+    </div>
+    <div class="col-12 col-md-6 col-lg-4">
+      <a href="{% url 'tpv_app:tpv_cobros' %}" class="tpv-button">
+        <i class="fas fa-credit-card tpv-icon"></i> Cobros
+      </a>
+    </div>
+    <div class="col-12 col-md-6 col-lg-4">
+      <a href="{% url 'tpv_app:tpv_historial' %}" class="tpv-button">
+        <i class="fas fa-history tpv-icon"></i> Historial de Ventas
+      </a>
+    </div>
+    <div class="col-12 col-md-6 col-lg-4">
+      <a href="{% url 'tpv_app:tpv_config' %}" class="tpv-button">
+        <i class="fas fa-cogs tpv-icon"></i> Configuración
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

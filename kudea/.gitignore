@@ -1,0 +1,51 @@
+# Python
+*.pyc
+*~
+__pycache__/
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db*.sqlite3
+db.sqlite3-journal
+media/
+
+# Configuration and Secrets
+.env
+.env.local
+.env.production
+secret.key
+
+# Docker
+.dockerignore
+postgres_data/
+redis_data/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE / Text Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Project specific stray files
+=
+f{base}{suffix}
+.gemini/

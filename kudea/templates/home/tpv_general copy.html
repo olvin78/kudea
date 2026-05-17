@@ -1,0 +1,565 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block title %}TPV - Punto de Venta{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" />
+<link rel="stylesheet" href="{% static 'css/index.css' %}">
+<style>
+  :root {
+    --kudea-dark: #1D3557;
+    --kudea-medium: #457B9D;
+    --kudea-light: #A8DADC;
+    --kudea-accent: #F1FAEE;
+    --kudea-danger: #004074;
+  }
+
+  .btn-outline-kudea{
+    border:2px solid var(--kudea-medium);
+    color:var(--kudea-medium);
+    font-weight:500;
+  }
+  .btn-outline-kudea:hover{
+    background:var(--kudea-medium);
+    color:#fff;
+  }
+  .btn-kudea{
+    background:var(--kudea-medium);
+    color:#fff;
+    border:none;
+  }
+  .bg-kudea{
+    background:var(--kudea-medium)!important;
+    color:#fff!important;
+  }
+  .producto-card-custom{
+    border-radius:12px;
+    overflow:hidden;
+    transition:.2s;
+    cursor:pointer;
+  }
+  .producto-card-custom:hover{
+    transform:translateY(-3px);
+    box-shadow:0 6px 14px rgba(0,0,0,0.1);
+  }
+  .payment-card.selected{
+    border:2px solid var(--kudea-medium);
+    background:#f1faff;
+  }
+
+  /* Modal de eliminación mejorado */
+  .delete-modal .modal-content {
+    border-radius: 16px;
+    border: none;
+    box-shadow: 0 10px 30px rgba(29, 53, 87, 0.2);
+  }
+  .delete-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #ffebee, #037461);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+  }
+  .delete-icon i {
+    font-size: 1.5rem;
+    color: var(--kudea-danger);
+  }
+  .product-info-card {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 12px;
+    padding: 12px;
+    margin: 15px 0;
+    border-left: 4px solid var(--kudea-medium);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-3 py-4">
+
+  <!-- BARRA SUPERIOR -->
+  <div class="mb-4 d-flex flex-wrap justify-content-center gap-3">
+    <a href="{% url 'home_app:lista_productos' %}" class="btn btn-outline-kudea px-4 py-2 shadow-sm">
+      <i class="fas fa-th me-2"></i>Productos
+    </a>
+    <button class="btn btn-outline-kudea px-4 py-2 shadow-sm" onclick="TPV.showConfirm()">
+      <i class="fas fa-credit-card me-2"></i>Cobrar
+    </button>
+    <a href="{% url 'home_app:lista_ventas' %}" class="btn btn-outline-kudea px-4 py-2 shadow-sm">
+      <i class="fas fa-clock me-2"></i>Historial
+    </a>
+    <a href="{% url 'home_app:arqueo_menu' %}" class="btn btn-outline-kudea px-4 py-2 shadow-sm">
+      <i class="fas fa-cash-register me-2"></i>Arqueo
+    </a>
+    <button class="btn btn-outline-kudea px-4 py-2 shadow-sm" onclick="TPV.mostrarResumenDia()">
+      <i class="fas fa-chart-bar me-2"></i>Resumen día
+    </button>
+    <button class="btn btn-outline-kudea px-4 py-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#discountModal">
+      <i class="fas fa-percent me-2"></i>Descuento
+    </button>
+    <button class="btn btn-outline-kudea px-4 py-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#settingsModal">
+      <i class="fas fa-cog me-2"></i>Configuración
+    </button>
+    <button class="btn btn-outline-kudea px-4 py-2 shadow-sm" onclick="TPV.toggleLayout()">
+      <i class="fas fa-arrows-left-right me-2"></i>Layout
+    </button>
+  </div>
+
+  <!-- LAYOUT PRINCIPAL -->
+  <div class="row" id="main-layout">
+
+    <!-- PRODUCTOS -->
+    <div class="col-lg-9 mb-4" id="productos-section">
+      <div class="card shadow-sm p-4 rounded-4">
+        <h5 class="fw-bold mb-3"><i class="fas fa-boxes me-2"></i>Productos</h5>
+        <div class="row g-3">
+          {% for p in productos %}
+          <div class="col-6 col-md-3 col-lg-2">
+            <div class="card border-0 shadow-sm producto-card-custom"
+                 onclick="TPV.addToTicket({{ p.id }}, '{{ p.nombre|escapejs }}', {{ p.precio }})">
+              <div class="bg-kudea text-center py-1">
+                <strong>{{ p.precio }} €</strong>
+              </div>
+              <div class="card-body text-center p-2">
+                {% if p.imagen %}
+                <img src="{{ p.imagen.url }}" class="img-fluid rounded mb-2" style="height:70px; object-fit:contain;">
+                {% else %}
+                <div class="bg-light rounded d-flex align-items-center justify-content-center mb-2" style="height:70px;">
+                  <i class="fas fa-box text-muted fa-2x"></i>
+                </div>
+                {% endif %}
+                <strong class="small d-block">{{ p.nombre }}</strong>
+                <small class="text-muted d-block">{{ p.categoria.nombre|default:"Sin categoría" }}</small>
+                <span class="badge {% if p.stock > 10 %}bg-secondary{% else %}bg-danger{% endif %}">
+                  Stock: {{ p.stock }}
+                </span>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- TICKET -->
+    <div class="col-lg-3 mb-4" id="ticket-section">
+      <div class="card shadow-sm p-3 rounded-4">
+        <h5 class="fw-bold"><i class="fas fa-file-invoice me-2"></i>Ticket</h5>
+        <div class="table-responsive" style="max-height:200px;">
+          <table class="table table-sm">
+            <thead class="table-light">
+              <tr>
+                <th>Producto</th>
+                <th>Cant</th>
+                <th>€</th>
+                <th>Total</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="ticket-list"></tbody>
+          </table>
+        </div>
+        <div class="border-top pt-2">
+          <div class="d-flex justify-content-between small">
+            <span>Subtotal:</span><span id="subtotal-ticket">0,00 €</span>
+          </div>
+          <div class="d-flex justify-content-between small">
+            <span>IVA (<span id="iva-label">IVA desde Django: {{ config.iva_por_defecto }}</span>%):</span><span id="iva-ticket">0,00 €</span>
+          </div>
+          <div class="d-flex justify-content-between fw-bold border-top pt-1 mt-1">
+            <span>Total:</span><span id="total-ticket">0,00 €</span>
+          </div>
+        </div>
+        <hr>
+        <h6 class="fw-bold">Importe recibido</h6>
+        <input id="importe" type="text" class="form-control text-end fs-4 mb-2" placeholder="0,00">
+        <div class="row g-2">
+          {% for n in "123456789" %}
+          <div class="col-4">
+            <button class="btn btn-outline-kudea w-100" onclick="TPV.addNumber('{{ n }}')">{{ n }}</button>
+          </div>
+          {% endfor %}
+          <div class="col-4"><button class="btn btn-outline-kudea w-100" onclick="TPV.addNumber('0')">0</button></div>
+          <div class="col-4"><button class="btn btn-outline-kudea w-100" onclick="TPV.addNumber('.')">.</button></div>
+          <div class="col-4"><button class="btn btn-danger w-100" onclick="TPV.clearAmount()">C</button></div>
+        </div>
+        <hr>
+        <h6 class="fw-bold">Método de Pago</h6>
+        <div class="row g-1">
+          {% for m in metodos_pago2 %}
+          <div class="col-4">
+            <div class="card p-2 payment-card text-center"
+                 data-id="{{ m.id }}"
+                 data-nombre="{{ m.nombre }}"
+                 data-acepta_cambio="{{ m.acepta_cambio|yesno:'1,0' }}"
+                 onclick="TPV.selectPayment(this)">
+              {% if m.imagen %}
+              <img src="{{ m.imagen.url }}" class="mb-1">
+              {% else %}
+              <i class="fas fa-credit-card text-muted mb-1"></i>
+              {% endif %}
+              <small class="fw-bold">{{ m.nombre }}</small>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        <button class="btn btn-kudea w-100 mt-3 fs-5" onclick="TPV.showConfirm()">
+          <i class="fas fa-cash-register me-2"></i>Finalizar Cobro
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMAR PAGO -->
+<div class="modal fade" id="confirmPayModal">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4">
+      <div class="modal-header bg-kudea text-white">
+        <h5 class="modal-title">Confirmar pago</h5>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="d-flex justify-content-between"><span>Método:</span><strong id="conf-metodo">—</strong></p>
+        <p class="d-flex justify-content-between"><span>Subtotal:</span><strong id="conf-subtotal">0,00 €</strong></p>
+        <p class="d-flex justify-content-between"><span>IVA (<span id="iva-label-modal">{{ config.iva_general }}</span>%):</span><strong id="conf-iva">0,00 €</strong></p>
+        <p class="d-flex justify-content-between border-top pt-2">
+          <span class="fw-bold">Total:</span><strong id="conf-total" class="fs-5">0,00 €</strong>
+        </p>
+        <p class="d-flex justify-content-between"><span>Recibido:</span><strong id="conf-recibido">0,00 €</strong></p>
+        <p class="d-flex justify-content-between"><span>Cambio:</span><strong id="conf-cambio">0,00 €</strong></p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-kudea" id="confirmarPagoBtn">Confirmar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ELIMINACIÓN MEJORADO -->
+<div class="modal fade delete-modal" id="confirmRemoveModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0 pb-0">
+        <button class="btn-close ms-auto" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body text-center pt-0">
+        <div class="delete-icon">
+          <i class="fas fa-trash-alt"></i>
+        </div>
+
+        <h5 class="fw-bold text-dark mb-2">¿Eliminar producto?</h5>
+        <p class="text-muted mb-3">Esta acción no se puede deshacer</p>
+
+        <div class="product-info-card">
+          <div class="fw-bold text-primary mb-1" id="remove-product-name">Producto</div>
+          <div class="small text-muted" id="remove-product-details">Detalles del producto</div>
+        </div>
+      </div>
+
+      <div class="modal-footer border-0 justify-content-center gap-3">
+        <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-danger px-4" onclick="TPV.confirmRemove()">
+          <i class="fas fa-trash me-2"></i>Eliminar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================
+// 📌 IVA DESDE DJANGO - TOMA EL VALOR DE CONFIGURACIÓN
+// ============================
+const IVA_CONFIG = {{ config.iva_general|default:21 }};
+
+// ============================
+// 🔐 CSRF helper
+// ============================
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== "") {
+    const cookies = document.cookie.split(";");
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + "=")) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+const csrftoken = getCookie("csrftoken");
+
+// ============================
+// 🧾 TPV
+// ============================
+const TPV = {
+  ticket: [],
+  metodoPagoSeleccionado: null,
+  ultimoRecibido: 0,
+  ivaPorcentaje: IVA_CONFIG,
+  layoutInvertido: false,
+  productoAEliminar: null,
+
+  fmt(n){ return (n ?? 0).toFixed(2).replace('.', ',') + " €"; },
+  getSubtotal(){ return this.ticket.reduce((s,i)=>s + i.precio*i.cantidad,0); },
+  getIVA(){ return this.getSubtotal() * (this.ivaPorcentaje/100); },
+  getTotal(){ return this.getSubtotal() + this.getIVA(); },
+
+  mostrarError(mensaje){
+    const elMsg = document.getElementById("tpv-error-message");
+    const elModal = document.getElementById("tpvErrorModal");
+
+    if (elMsg && elModal && window.bootstrap?.Modal) {
+      elMsg.textContent = mensaje;
+      new bootstrap.Modal(elModal).show();
+      return;
+    }
+    alert(mensaje);
+  },
+
+  addToTicket(id,nombre,precio){
+    const i = this.ticket.findIndex(x => x.id === id);
+    if(i>=0) this.ticket[i].cantidad++;
+    else this.ticket.push({id,nombre,precio,cantidad:1});
+    this.updateTicket();
+  },
+
+  updateTicket(){
+    const tbody = document.getElementById("ticket-list");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    this.ticket.forEach(item=>{
+      tbody.innerHTML += `
+        <tr>
+          <td>${item.nombre}</td>
+          <td class="text-center">${item.cantidad}</td>
+          <td class="text-end">${item.precio.toFixed(2)} €</td>
+          <td class="text-end">${(item.precio*item.cantidad).toFixed(2)} €</td>
+          <td>
+            <button class="btn btn-sm btn-outline-danger" onclick="TPV.remove(${item.id})">
+              <i class="fas fa-times"></i>
+            </button>
+          </td>
+        </tr>`;
+    });
+
+    document.getElementById("subtotal-ticket").textContent = this.fmt(this.getSubtotal());
+    document.getElementById("iva-ticket").textContent = this.fmt(this.getIVA());
+    document.getElementById("total-ticket").textContent = this.fmt(this.getTotal());
+
+    // 🔥 Pintar porcentaje dinámico
+    const ivaLabel = document.getElementById("iva-label");
+    if (ivaLabel) ivaLabel.textContent = this.ivaPorcentaje;
+  },
+
+  remove(id){
+    this.productoAEliminar = id;
+    const item = this.ticket.find(x => x.id === id);
+
+    if(item){
+      document.getElementById("remove-product-name").textContent = item.nombre;
+      document.getElementById("remove-product-details").textContent =
+        `${item.cantidad} x ${item.precio.toFixed(2)}€ = ${(item.precio*item.cantidad).toFixed(2)}€`;
+    }
+
+    new bootstrap.Modal(document.getElementById("confirmRemoveModal")).show();
+  },
+
+  confirmRemove(){
+    this.ticket = this.ticket.filter(x => x.id !== this.productoAEliminar);
+    this.updateTicket();
+    bootstrap.Modal.getInstance(document.getElementById("confirmRemoveModal"))?.hide();
+  },
+
+  addNumber(n){
+    const input = document.getElementById("importe");
+    if(!input) return;
+    if(n==="." && input.value.includes(".")) return;
+    input.value += n;
+  },
+
+  clearAmount(){
+    const input = document.getElementById("importe");
+    if (input) input.value = "";
+  },
+
+  selectPayment(card){
+    document.querySelectorAll(".payment-card").forEach(c=>c.classList.remove("selected"));
+    card.classList.add("selected");
+
+    this.metodoPagoSeleccionado = {
+      id: parseInt(card.dataset.id),
+      nombre: card.dataset.nombre,
+      aceptaCambio: card.dataset.acepta_cambio === "1"
+    };
+
+    if(!this.metodoPagoSeleccionado.aceptaCambio){
+      document.getElementById("importe").value = this.getTotal().toFixed(2);
+    }
+  },
+
+  toggleLayout(){
+    const productos = document.getElementById("productos-section");
+    const ticket = document.getElementById("ticket-section");
+    const parent = document.getElementById("main-layout");
+
+    if(!productos || !ticket || !parent) return;
+
+    this.layoutInvertido = !this.layoutInvertido;
+
+    if(this.layoutInvertido){
+      parent.insertBefore(ticket, productos);
+    } else {
+      parent.insertBefore(productos, ticket);
+    }
+  },
+
+  showConfirm(){
+    if(!this.ticket.length) return alert("Añade productos al ticket.");
+    if(!this.metodoPagoSeleccionado) return alert("Selecciona método de pago.");
+
+    let recibido = parseFloat((document.getElementById("importe").value || "").replace(",","."));
+    const total = this.getTotal();
+
+    if(isNaN(recibido)) recibido = 0;
+
+    if(!this.metodoPagoSeleccionado.aceptaCambio){
+      recibido = total;
+      document.getElementById("importe").value = recibido.toFixed(2);
+    } else if(recibido < total){
+      return alert("El importe recibido es insuficiente.");
+    }
+
+    this.ultimoRecibido = recibido;
+    const cambio = this.metodoPagoSeleccionado.aceptaCambio ? recibido-total : 0;
+
+    document.getElementById("conf-metodo").textContent = this.metodoPagoSeleccionado.nombre;
+    document.getElementById("conf-subtotal").textContent = this.fmt(this.getSubtotal());
+    document.getElementById("conf-iva").textContent = this.fmt(this.getIVA());
+    document.getElementById("conf-total").textContent = this.fmt(total);
+    document.getElementById("conf-recibido").textContent = this.fmt(recibido);
+    document.getElementById("conf-cambio").textContent = this.fmt(cambio);
+
+    // 🔥 Pintar porcentaje dinámico en modal
+    const ivaLabelModal = document.getElementById("iva-label-modal");
+    if (ivaLabelModal) ivaLabelModal.textContent = this.ivaPorcentaje;
+
+    new bootstrap.Modal(document.getElementById("confirmPayModal")).show();
+  },
+
+  finalizarPago(){
+    const payload = {
+      ticket: this.ticket,
+      metodo_pago: this.metodoPagoSeleccionado?.id,
+      recibido: this.ultimoRecibido
+    };
+
+    fetch("{% url 'home_app:guardar_venta' %}", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrftoken
+      },
+      body: JSON.stringify(payload)
+    })
+    .then(async (response) => {
+      const data = await response.json().catch(() => ({}));
+
+      if (response.status === 401) {
+        this.mostrarError("Debes iniciar sesión antes de realizar una venta.");
+        return null;
+      }
+
+      if (!response.ok) {
+        this.mostrarError(data.error || ("Error al guardar venta (HTTP " + response.status + ")"));
+        return null;
+      }
+
+      return data;
+    })
+    .then((data) => {
+      if (!data) return;
+
+      this.ticket = [];
+      this.metodoPagoSeleccionado = null;
+      document.getElementById("importe").value = "";
+      document.querySelectorAll(".payment-card").forEach(c => c.classList.remove("selected"));
+      this.updateTicket();
+
+      bootstrap.Modal.getInstance(document.getElementById("confirmPayModal"))?.hide();
+      window.location.href = "{% url 'home_app:lista_ventas' %}";
+    })
+    .catch(() => {
+      this.mostrarError("Error inesperado al guardar la venta.");
+    });
+  }
+};
+
+// ============================
+// INIT
+// ============================
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("confirmarPagoBtn")
+    ?.addEventListener("click", () => TPV.finalizarPago());
+
+  // Pintar IVA al cargar
+  const ivaLabel = document.getElementById("iva-label");
+  if (ivaLabel) ivaLabel.textContent = IVA_CONFIG;
+
+  const ivaLabelModal = document.getElementById("iva-label-modal");
+  if (ivaLabelModal) ivaLabelModal.textContent = IVA_CONFIG;
+});
+
+</script>
+<!-- ============================= -->
+<!-- 🔵 POPUP ERROR TPV (Kudea) -->
+<!-- ============================= -->
+
+
+<div class="modal fade" id="tpvErrorModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4">
+
+      <div class="modal-header border-0 pb-0">
+        <div class="d-flex align-items-center gap-2">
+          <div class="tpv-icon">
+            <i class="fas fa-lock"></i>
+          </div>
+          <h5 class="modal-title fw-semibold mb-0">Acceso requerido</h5>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body text-center pt-2">
+        <p id="tpv-error-message" class="text-muted mb-4"></p>
+
+        <a href="/admin/login/" class="btn btn-kudea px-4">
+          <i class="fas fa-sign-in-alt me-2"></i>
+          Iniciar sesión
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================= -->
+<!-- 🔵 FIN POPUP ERROR TPV -->
+<!-- ============================= -->
+
+
+{% endblock %}

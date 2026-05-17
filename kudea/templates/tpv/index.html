@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KUDEA TPV | Restaurante</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --kudea-primary: #1D3557;
+            --kudea-secondary: #457B9D;
+            --kudea-accent: #A8DADC;
+            --kudea-light: #F1FAEE;
+            --kudea-text: #4d7291;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--kudea-light);
+            color: var(--kudea-primary);
+        }
+
+        .header-tpv {
+            background: linear-gradient(135deg, var(--kudea-primary) 0%, var(--kudea-secondary) 100%);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .mesa-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-radius: 10px;
+            overflow: hidden;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            background: white;
+        }
+
+        .mesa-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .badge-estado {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 5px 10px;
+            border-radius: 20px;
+            background-color: var(--kudea-accent);
+            color: var(--kudea-primary);
+        }
+
+        .btn-kudea, .btn-primary, .btn-outline-primary, .btn-outline-secondary, .btn-outline-success, .btn-outline-danger, .btn-outline-warning {
+            background-color: var(--kudea-secondary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-kudea:hover, .btn-primary:hover, .btn-outline-primary:hover, .btn-outline-secondary:hover, .btn-outline-success:hover, .btn-outline-danger:hover, .btn-outline-warning:hover {
+            background-color: var(--kudea-primary);
+            color: white;
+        }
+
+        .btn-light {
+            background-color: var(--kudea-light) !important;
+            border: none;
+            color: var(--kudea-primary) !important;
+        }
+
+        .list-group-item-action {
+            transition: all 0.3s ease;
+            border-radius: 8px !important;
+            margin-bottom: 5px;
+        }
+
+        .list-group-item-action:hover {
+            background-color: var(--kudea-accent);
+            color: var(--kudea-primary);
+        }
+
+        .clock-display {
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+            color: white;
+            font-weight: 600;
+        }
+
+        .text-kudea {
+            color: var(--kudea-text);
+        }
+
+        .progress {
+            height: 8px;
+            border-radius: 4px;
+            background-color: #e9ecef;
+        }
+
+        .progress-bar {
+            background-color: var(--kudea-accent);
+        }
+        
+        /* Estilo para el botón de eliminar - Versión táctil */
+        .btn-eliminar-mesa {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            background-color: #f8f9fa;
+            color: #6c757d;
+            border: 1px solid #dee2e6;
+            opacity: 1;
+            transition: all 0.2s;
+            z-index: 1;
+        }
+        
+        .btn-eliminar-mesa:hover {
+            background-color: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+        
+        .mesa-card-container {
+            position: relative;
+            padding-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid p-0" style="min-height: 100vh;">
+        <header class="header-tpv text-white p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-utensils fa-2x me-3"></i>
+                    <div>
+                        <h1 class="h4 mb-0">KUDEA TPV RESTAURANTE</h1>
+                        <small class="d-block opacity-75">Usuario: <strong>Admin</strong> | Turno: <strong id="turno-actual">Cargando...</strong></small>
+                    </div>
+                </div>
+                <div class="text-end">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <span class="clock-display">
+                                <i class="fas fa-clock me-1"></i>
+                                <span id="hora-actual">--:--</span>
+                            </span>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-light dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle me-1"></i> Menú
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Configuración</a></li>
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-users me-2"></i>Cambiar usuario</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#"><i class="fas fa-sign-out-alt me-2"></i>Cerrar sesión</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Contenido principal -->
+        <div class="container-fluid p-3">
+          <div class="row">
+            <!-- Panel izquierdo - Mesas -->
+            <div class="col-lg-8 mb-4">
+              <div class="card shadow-sm h-100">
+                <div class="card-header bg-white">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-chair me-2 text-kudea"></i>Gestor de Mesas</h5>
+                    <div>
+                      <a href="{% url 'tpv_app:mesa_create' %}" class="btn btn-sm btn-kudea me-2">
+                        <i class="fas fa-plus me-1"></i> Nueva Mesa
+                      </a>
+                      <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-secondary active" onclick="filtrarMesas('todas')">Todas</button>
+                        <button class="btn btn-outline-secondary" onclick="filtrarMesas('libre')">Libres</button>
+                        <button class="btn btn-outline-secondary" onclick="filtrarMesas('ocupada')">Ocupadas</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="card-body">
+                  <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3" id="listado-mesas">
+                    {% for mesa in mesas %}
+                    <div class="col mesa-card-item" data-estado="{{ mesa.estado }}">
+                      <div class="card h-100 mesa-card 
+                        {% if mesa.estado == 'libre' %}mesa-libre
+                        {% elif mesa.estado == 'ocupada' %}mesa-ocupada
+                        {% elif mesa.estado == 'reservada' %}mesa-reservada
+                        {% endif %}">
+                        <div class="card-body text-center mesa-card-container">
+                          <!-- Botón de eliminar con ícono de Font Awesome -->
+                          <button class="btn-eliminar-mesa" data-bs-toggle="modal" data-bs-target="#confirmarEliminarModal" data-mesa-id="{{ mesa.id }}" data-mesa-nombre="{{ mesa.nombre }}" title="Eliminar mesa">
+                            <i class="fas fa-trash-alt"></i>
+                          </button>
+                          
+                          <span class="badge badge-estado mb-2">{{ mesa.get_estado_display }}</span>
+                          <h4 class="mb-3">{{ mesa.nombre }}</h4>
+
+                          {% if mesa.estado == 'ocupada' and mesa.tiene_comanda_abierta %}
+                            <p class="small text-kudea mb-1">Comanda #{{ mesa.comanda_abierta.id }}</p>
+                            <p class="small mb-2"><strong>{{ mesa.comanda_abierta.total }}€</strong></p>
+                            <p class="small text-kudea mb-3">{{ mesa.comanda_abierta.fecha_creacion|date:"H:i" }} - {{ mesa.capacidad }}p</p>
+                          {% elif mesa.estado == 'reservada' %}
+                            <p class="small text-kudea mb-1">Zona: Comedor</p>
+                            <p class="small text-kudea mb-3">Cliente: Reservado</p>
+                          {% else %}
+                            <p class="small text-kudea mb-1">{{ mesa.capacidad }} personas</p>
+                            <p class="small text-kudea mb-3">Zona: Comedor</p>
+                          {% endif %}
+
+                          {% if mesa.estado == 'ocupada' %}
+                            <a href="{% url 'tpv_app:mesa_categorias' mesa.pk %}" class="btn btn-sm btn-kudea w-100">
+                              <i class="fas fa-edit me-1"></i> Gestionar
+                            </a>
+                          {% else %}
+                            <a href="{% url 'tpv_app:mesa_categorias' mesa.pk %}" class="btn btn-sm btn-kudea w-100">
+                              <i class="fas fa-plus-circle me-1"></i> Abrir Comanda
+                            </a>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12">
+                      <p class="text-center text-muted">No hay mesas disponibles.</p>
+                    </div>
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Panel derecho - Comandas y acciones -->
+            <div class="col-lg-4">
+              <!-- Comandas activas -->
+              <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                  <h5 class="mb-0"><i class="fas fa-list me-2 text-kudea"></i>Comandas Activas</h5>
+                </div>
+                <div class="card-body p-0">
+                  <div class="list-group list-group-flush">
+                    {% for comanda in comandas %}
+                    <a href="{% url 'tpv_app:comanda_detail' comanda.pk %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                      <div>
+                        <strong>#{{ comanda.id }} - {{ comanda.mesa.nombre }}</strong>
+                        <div class="small text-kudea">{{ comanda.fecha_creacion|date:"H:i" }} - {{ comanda.mesa.capacidad }} personas</div>
+                      </div>
+                      <div>
+                        <span class="badge bg-danger">{{ comanda.total }}€</span>
+                        <i class="fas fa-chevron-right ms-2 text-kudea"></i>
+                      </div>
+                    </a>
+                    {% empty %}
+                    <div class="text-center p-3">
+                      <p class="text-muted">No hay comandas activas.</p>
+                    </div>
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Acciones rápidas -->
+              <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                  <h5 class="mb-0"><i class="fas fa-bolt me-2 text-kudea"></i>Acciones Rápidas</h5>
+                </div>
+                <div class="card-body">
+                  <div class="row g-2">
+                    <div class="col-6">
+                      <a href="{% url 'tpv_app:create_comanda' %}" class="btn btn-outline-primary btn-action w-100">
+                        <i class="fas fa-plus-circle fa-2x mb-2"></i><br>
+                        Nueva Comanda
+                      </a>
+                    </div>
+                    <div class="col-6">
+                      <button class="btn btn-outline-success btn-action w-100">
+                        <i class="fas fa-print fa-2x mb-2"></i><br>
+                        Imprimir
+                      </button>
+                    </div>
+                    <div class="col-6">
+                      <button class="btn btn-outline-danger btn-action w-100">
+                        <i class="fas fa-euro-sign fa-2x mb-2"></i><br>
+                        Cobrar
+                      </button>
+                    </div>
+                    <div class="col-6">
+                      <button class="btn btn-outline-secondary btn-action w-100">
+                        <i class="fas fa-undo fa-2x mb-2"></i><br>
+                        Devolución
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Resumen del día -->
+              <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                  <h5 class="mb-0"><i class="fas fa-chart-line me-2 text-kudea"></i>Resumen del Día</h5>
+                </div>
+                <div class="card-body">
+                  <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-2">
+                      <span class="text-kudea">Mesas ocupadas:</span>
+                      <strong>{{ mesas_ocupadas }}/{{ mesas_totales }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                      <span class="text-kudea">Ventas totales:</span>
+                      <strong>{{ ventas_totales }}€</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                      <span class="text-kudea">Comandas abiertas:</span>
+                      <strong>{{ comandas_abiertas }}</strong>
+                    </div>
+                    <div class="progress mb-3">
+                      <div class="progress-bar" style="width: {{ porcentaje_ocupacion }}%;"></div>
+                    </div>
+                    <button class="btn btn-kudea w-100 py-2">
+                      <i class="fas fa-file-invoice-dollar me-2"></i> Cierre Diario
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal de confirmación para eliminar mesa -->
+        <div class="modal fade" id="confirmarEliminarModal" tabindex="-1" aria-labelledby="confirmarEliminarModalLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="confirmarEliminarModalLabel">Confirmar eliminación</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar la mesa <strong id="nombre-mesa-eliminar"></strong>?</p>
+                <p class="text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Esta acción no se puede deshacer.</p>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="form-eliminar-mesa" method="POST" action="">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-danger">Eliminar Mesa</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            // Función para determinar el turno según la hora
+            function determinarTurno() {
+                const horaActual = new Date().getHours();
+                let turno = "";
+                
+                if (horaActual >= 5 && horaActual < 12) {
+                    turno = "Mañana";
+                } else if (horaActual >= 12 && horaActual < 18) {
+                    turno = "Tarde";
+                } else {
+                    turno = "Noche";
+                }
+                
+                document.getElementById('turno-actual').textContent = turno;
+            }
+
+            function actualizarHora() {
+                const ahora = new Date();
+                document.getElementById('hora-actual').textContent = 
+                    ahora.getHours().toString().padStart(2, '0') + ':' + 
+                    ahora.getMinutes().toString().padStart(2, '0');
+                
+                // Actualizar el turno cada vez que se actualiza la hora
+                determinarTurno();
+            }
+
+            function filtrarMesas(estado) {
+                const todasMesas = document.querySelectorAll('.mesa-card-item');
+                const botones = document.querySelectorAll('.btn-group-sm .btn');
+
+                // Filtrar las mesas
+                todasMesas.forEach(mesa => {
+                    const estadoMesa = mesa.getAttribute('data-estado');
+                    
+                    // Mostrar todas las mesas si se selecciona "todas"
+                    if (estado === 'todas') {
+                        mesa.style.display = 'block';
+                    } else {
+                        if (estadoMesa === estado) {
+                            mesa.style.display = 'block';
+                        } else {
+                            mesa.style.display = 'none';
+                        }
+                    }
+                });
+
+                // Actualizar los botones activos visualmente
+                botones.forEach(boton => boton.classList.remove('active'));
+                if (estado === 'todas') {
+                    botones[0].classList.add('active');
+                } else if (estado === 'libre') {
+                    botones[1].classList.add('active');
+                } else if (estado === 'ocupada') {
+                    botones[2].classList.add('active');
+                }
+            }
+
+            // Configurar el modal de confirmación de eliminación
+            document.addEventListener('DOMContentLoaded', function() {
+                const modal = document.getElementById('confirmarEliminarModal');
+                
+                modal.addEventListener('show.bs.modal', function(event) {
+                    const button = event.relatedTarget;
+                    const mesaId = button.getAttribute('data-mesa-id');
+                    const mesaNombre = button.getAttribute('data-mesa-nombre');
+                    
+                    document.getElementById('nombre-mesa-eliminar').textContent = mesaNombre;
+                    
+                    const form = document.getElementById('form-eliminar-mesa');
+                    form.action = `/tpv/mesas/${mesaId}/eliminar/`;
+                });
+
+                // Inicializar hora y turno
+                actualizarHora();
+                setInterval(actualizarHora, 1000);
+            });
+        </script>
+    </div>
+</body>
+</html>

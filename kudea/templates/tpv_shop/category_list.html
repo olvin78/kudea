@@ -1,0 +1,89 @@
+{% extends 'tpv_shop/base_tpv_shop.html' %}
+{% load static %}
+
+{% block head %}
+<style>
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .card {
+    border: none;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .card img {
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
+  }
+
+  .card-title {
+    font-size: 1.1rem;
+    color: #333;
+  }
+</style>
+{% endblock %}
+
+
+{% block tpv_content %}
+<div class="container mt-4">
+
+  <!-- GRID DE CATEGORÍAS -->
+  <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3">
+
+    {% for category in categories %}
+    <div class="col">
+      <div class="card shadow-sm rounded-3 text-center h-100">
+
+        <a href="{% url 'tpv_shop:category_detail' category.slug %}"
+           class="text-decoration-none">
+
+          <div class="card-body">
+
+            {% if category.icono %}
+              <img src="{{ category.icono.url }}"
+                   class="img-fluid mb-2"
+                   alt="{{ category.nombre }}"
+                   style="max-height:90px;">
+            {% else %}
+              <div class="bg-light rounded d-flex align-items-center justify-content-center mb-2"
+                   style="height:90px;">
+                <i class="fas fa-box-open fa-2x text-muted"></i>
+              </div>
+            {% endif %}
+
+            <!-- NOMBRE DE CATEGORÍA -->
+            <h5 class="card-title">{{ category.nombre }}</h5>
+
+            <small class="text-muted">
+              {{ category.products.count }} productos
+            </small>
+
+          </div>
+
+        </a>
+
+      </div>
+    </div>
+    {% endfor %}
+
+  </div>
+
+</div>
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+  function toggleTicket() {
+    console.log("Ticket oculto");
+  }
+</script>
+{% endblock %}

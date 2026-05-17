@@ -1,0 +1,311 @@
+{% extends "home/base.html" %}
+
+{% block title %}Gestión de Tickets{% endblock %}
+
+{% block head %}
+<style>
+  :root {
+    --primary-blue: #195c96;
+    --secondary-blue: #2c7be5;
+    --success-green: #00d97e;
+    --warning-yellow: #f6c343;
+    --danger-red: #e63757;
+    --light-gray: #f9fafd;
+    --dark-gray: #6e84a3;
+  }
+
+  .main-content {
+    background-color: #f5f7fa;
+    padding: 2rem;
+  }
+
+  /* Filtros */
+  .filter-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .filter-btn {
+    border-radius: 20px;
+    padding: 0.5rem 1.25rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    border-width: 2px;
+    margin: 0.25rem;
+  }
+
+  .filter-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .filter-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+  }
+
+  /* Tabla */
+  .ticket-card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+
+  }
+
+  .table-header {
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+  }
+
+  .table th {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    padding: 1rem 1.25rem;
+    vertical-align: middle;
+    border-bottom: none;
+  }
+
+  .table td {
+    padding: 1rem 1.25rem;
+    vertical-align: middle;
+    border-top: 1px solid rgba(0, 0, 0, 0.03);
+  }
+
+  .ticket-id {
+    font-family: 'Roboto Mono', monospace;
+    font-weight: 500;
+    color: var(--primary-blue);
+  }
+
+  .ticket-id:hover {
+    color: var(--secondary-blue);
+    text-decoration: underline;
+  }
+
+  .status-badge {
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+
+  .status-open {
+    background-color: rgba(44, 123, 229, 0.1);
+    color: var(--secondary-blue);
+  }
+
+  .priority-high {
+    background-color: rgba(230, 55, 87, 0.1);
+    color: var(--danger-red);
+  }
+
+  .priority-medium {
+    background-color: rgba(246, 195, 67, 0.1);
+    color: var(--warning-yellow);
+  }
+
+  .priority-low {
+    background-color: rgba(0, 217, 126, 0.1);
+    color: var(--success-green);
+  }
+
+  /* Paginación */
+  .pagination-container {
+    background-color: var(--light-gray);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .page-item.active .page-link {
+    background-color: var(--primary-blue);
+    border-color: var(--primary-blue);
+  }
+
+  .page-link {
+    color: var(--primary-blue);
+    border-radius: 8px !important;
+    margin: 0 0.25rem;
+    border: none;
+    font-weight: 500;
+  }
+
+  /* Checkbox */
+  .table-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    border: 2px solid #dee2e6;
+  }
+
+  /* Auto-reload toggle */
+  .auto-reload-toggle .form-check-input {
+    width: 1.2em;
+    height: 1.2em;
+    margin-top: 0.1em;
+    cursor: pointer;
+  }
+
+  .auto-reload-toggle .form-check-label {
+    font-size: 0.85rem;
+    color: var(--dark-gray);
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  /* Íconos */
+  .table-icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    color: var(--secondary-blue);
+  }
+
+  /* Efecto hover filas */
+  .table-hover tbody tr:hover {
+    background-color: rgba(44, 123, 229, 0.03) !important;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-content">
+  <!-- Filtros -->
+  <div class="filter-container">
+    <div class="d-flex flex-wrap align-items-center">
+      <button class="filter-btn btn btn-primary">
+        <i class="bi bi-ticket-detailed me-1"></i> Tickets abiertos 
+        <span class="filter-badge badge bg-white text-primary ms-1">49</span>
+      </button>
+
+      <button class="filter-btn btn btn-outline-primary">
+        <i class="bi bi-person-check me-1"></i> Asignados a mí 
+        <span class="filter-badge badge bg-light text-dark ms-1">46</span>
+      </button>
+
+      <button class="filter-btn btn btn-outline-primary">
+        <i class="bi bi-people me-1"></i> Asignados a otros 
+        <span class="filter-badge badge bg-light text-dark ms-1">3</span>
+      </button>
+
+      <button class="filter-btn btn btn-outline-primary">
+        <i class="bi bi-person-x me-1"></i> Sin asignar 
+        <span class="filter-badge badge bg-light text-dark ms-1">0</span>
+      </button>
+
+      <button class="filter-btn btn btn-outline-success">
+        <i class="bi bi-bookmark-star me-1"></i> Marcados 
+        <span class="filter-badge badge bg-light text-dark ms-1">1</span>
+      </button>
+
+      <button class="filter-btn btn btn-outline-warning">
+        <i class="bi bi-clock me-1"></i> Próximos a vencer 
+        <span class="filter-badge badge bg-light text-dark ms-1">0</span>
+      </button>
+
+      <button class="filter-btn btn btn-outline-danger">
+        <i class="bi bi-exclamation-triangle me-1"></i> Vencidos 
+        <span class="filter-badge badge bg-light text-dark ms-1">2</span>
+      </button>
+
+      <div class="ms-auto d-flex align-items-center">
+        <div class="auto-reload-toggle form-check form-switch me-3">
+          <input class="form-check-input" type="checkbox" id="autoReload" checked>
+          <label class="form-check-label" for="autoReload">
+            Recarga automática
+          </label>
+        </div>
+        <button class="filter-btn btn btn-outline-secondary">
+          <i class="bi bi-funnel me-1"></i> Más filtros
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de Tickets -->
+  <div class="card ticket-card">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-header text-white">
+          <tr>
+            <th style="width: 40px;">
+              <input type="checkbox" class="form-check-input table-checkbox">
+            </th>
+            <th>ID</th>
+            <th>Actualizado</th>
+            <th>Cliente</th>
+            <th>Asunto</th>
+            <th>Estado</th>
+            <th>Última respuesta</th>
+            <th>Prioridad</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><input type="checkbox" class="form-check-input table-checkbox"></td>
+            <td><a href="#" class="ticket-id">RAA-J7R-7GUR</a></td>
+            <td>Hace 2 horas</td>
+            <td>Demo Customer</td>
+            <td>
+              <a href="#" class="text-dark">
+                <i class="bi bi-person table-icon"></i> testLT
+              </a>
+            </td>
+            <td><span class="status-badge status-open">En curso</span></td>
+            <td>Demo Customer</td>
+            <td><span class="status-badge priority-low">Baja</span></td>
+          </tr>
+          <tr>
+            <td><input type="checkbox" class="form-check-input table-checkbox"></td>
+            <td><a href="#" class="ticket-id">JUA-D44-JHJQ</a></td>
+            <td>Hace 1 día</td>
+            <td>Demo Customer</td>
+            <td>
+              <a href="#" class="text-dark">
+                <i class="bi bi-person table-icon"></i> hola
+              </a>
+            </td>
+            <td><span class="status-badge status-open">En curso</span></td>
+            <td>Hesk Demo</td>
+            <td><span class="status-badge priority-low">Baja</span></td>
+          </tr>
+          <tr>
+            <td><input type="checkbox" class="form-check-input table-checkbox"></td>
+            <td><a href="#" class="ticket-id">8T3-MPW-4P27</a></td>
+            <td>Hace 3 días</td>
+            <td>123</td>
+            <td>
+              <a href="#" class="text-dark">
+                <i class="bi bi-person table-icon"></i> 123
+              </a>
+            </td>
+            <td><span class="status-badge status-open">En curso</span></td>
+            <td>123</td>
+            <td><span class="status-badge priority-low">Baja</span></td>
+          </tr>
+          <!-- Más filas aquí -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginación -->
+    <div class="pagination-container px-4 py-3">
+      <nav>
+        <ul class="pagination justify-content-center mb-2">
+          <li class="page-item active"><a class="page-link" href="#">1</a></li>
+          <li class="page-item"><a class="page-link" href="#">2</a></li>
+          <li class="page-item"><a class="page-link" href="#">3</a></li>
+          <li class="page-item"><a class="page-link" href="#">4</a></li>
+          <li class="page-item"><a class="page-link" href="#">5</a></li>
+        </ul>
+      </nav>
+      <div class="text-center text-muted small">
+        Mostrando 1-10 de 49 tickets • 5 páginas
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

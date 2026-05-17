@@ -1,0 +1,136 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/ticket_list_styles.css' %}">
+{% endblock %}
+
+{% block content %}
+
+
+<div class="container-fluid ticket-list-container position-relative mb-4 px-3">
+  <div class="container my-4">
+    <div class="d-flex flex-column flex-md-row align-items-center justify-content-between gap-3 text-center text-md-start">
+  
+      <!-- 🔍 Buscador (izquierda en desktop) -->
+      <div class="order-2 order-md-1 ticket-search-wrapper" style="max-width: 280px;">
+        <form method="get" class="w-100">
+          <div class="input-group input-group-sm shadow-sm">
+            <span class="input-group-text">
+              <i data-lucide="search" class="text-muted" style="width: 16px; height: 16px;"></i>
+            </span>
+            <input type="text" name="q" class="form-control"
+                   placeholder="Buscar por ID, nombre o fecha"
+                   value="{{ request.GET.q }}">
+            <button type="submit" class="btn btn-search">Buscar</button>
+          </div>
+        </form>
+      </div>
+  
+      <!-- 🎯 Título -->
+      <div class="order-1 order-md-2 flex-grow-1 px-md-3">
+        <h2 class="fw-semibold text-primary mb-0 text-center text-md-center">Listado de Tickets</h2>
+      </div>
+  
+      <!-- ➕ Botón crear (derecha en desktop, debajo en móvil) -->
+      <div class="order-3 text-center text-md-end">
+        <!-- SOLO EN ESCRITORIO -->
+        <a href="{% url 'support_app:crear_ticket' %}"
+          class="btn btn-primary d-none d-md-inline-flex align-items-center gap-2">
+          <i data-lucide="plus-circle"></i>
+          Crear nuevo ticket
+        </a>
+      </div>
+  
+    </div>
+  </div>
+  
+  
+  
+
+  <div class="table-responsive">
+    <table class="table ticket-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Actualizado</th>
+          <th>Cliente</th>
+          <th>Asunto</th>
+          <th>Estado</th>
+          <th>Última respuesta</th>
+          <th>Prioridad</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ticket in tickets %}
+        <tr>
+          <td>
+            <a href="{% url 'support_app:ticket_detail' ticket.identificador %}">
+
+              {{ ticket.identificador }}
+            </a>
+          </td>
+          <td>{{ ticket.actualizado|date:"Y-m-d H:i" }}</td>
+          <td>{{ ticket.cliente.username }}</td>
+          <td>{{ ticket.asunto }}</td>
+          <td>
+            {% if ticket.estado == 'abierto' %}
+              <span class="estado-badge estado-abierto">
+                <i data-lucide="check-circle"></i> Abierto
+              </span>
+            {% elif ticket.estado == 'en_progreso' %}
+              <span class="estado-badge estado-progreso">
+                <i data-lucide="clock"></i> En progreso
+              </span>
+            {% elif ticket.estado == 'cerrado' %}
+              <span class="estado-badge estado-cerrado">
+                <i data-lucide="x-circle"></i> Cerrado
+              </span>
+            {% else %}
+              {{ ticket.get_estado_display }}
+            {% endif %}
+          </td>
+          <td>
+            {% if ticket.ultima_respuesta %}
+              {{ ticket.ultima_respuesta|date:"Y-m-d H:i" }}
+            {% else %}
+              Sin respuestas aún
+            {% endif %}
+          </td>
+          <td>{{ ticket.get_prioridad_display }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="no-data-message">No hay tickets disponibles.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  
+
+  <!-- Paginación -->
+  {% if is_paginated %}
+  <div class="table-responsive">
+    <table class="table ticket-table">
+        {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+          </li>
+        {% endif %}
+        <li class="page-item disabled">
+          <span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+        </li>
+        {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Siguiente</a>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  {% endif %}
+</div>
+
+{% endblock %}
+
+

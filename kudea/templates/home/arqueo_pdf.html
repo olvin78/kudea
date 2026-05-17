@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informe de Arqueo — {{ tipo|upper }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --k-primary: #1d3557;
+            --k-secondary: #457b9d;
+            --k-text: #2b2d42;
+            --k-muted: #64748b;
+            --k-border: #e2e8f0;
+            --k-white: #ffffff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #f1f5f9;
+            color: var(--k-text);
+            line-height: 1.5;
+            padding: 40px 0;
+        }
+
+        /* CONTROLES ARRIBA */
+        .k-no-print {
+            width: 210mm;
+            margin: 0 auto 20px auto;
+            display: flex;
+            justify-content: flex-end;
+            gap: 20px;
+        }
+
+        .k-btn {
+            padding: 10px 24px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: none;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .k-btn-primary { background: var(--k-primary); color: white; }
+        .k-btn-success { background: #10b981; color: white; }
+        .k-btn-light { background: white; color: var(--k-primary); border: 1px solid var(--k-border); }
+        .k-btn:hover { transform: translateY(-2px); box-shadow: 0 15px 30px rgba(0,0,0,0.15); }
+
+        /* HOJA A4 */
+        .k-invoice {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            padding-bottom: 60px; /* ESPACIO PARA EL FOOTER ABSOLUTO */
+        }
+
+        /* HEADER BLOQUE AZUL */
+        .k-header-block {
+            background: var(--k-primary);
+            color: white;
+            padding: 30px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+
+        .k-header-block::after {
+            content: ">>>>>>";
+            position: absolute;
+            right: 40px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.1rem;
+            letter-spacing: 10px;
+            opacity: 0.1;
+            font-weight: 700;
+        }
+
+        .k-title-wrap h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            line-height: 1;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .k-meta-top {
+            font-size: 0.8rem;
+            font-weight: 500;
+            opacity: 0.85;
+        }
+
+        /* BLOQUES DATOS */
+        .k-data-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            padding: 25px 50px;
+            gap: 40px;
+        }
+
+        .k-data-box h3 {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--k-primary);
+            display: inline-block;
+            margin-bottom: 8px;
+            padding-bottom: 2px;
+        }
+
+        .k-data-box p {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .k-data-box span {
+            font-size: 0.75rem;
+            color: var(--k-muted);
+            font-weight: 400;
+            display: block;
+        }
+
+        /* TABLA */
+        .k-table-wrap {
+            padding: 0 50px;
+            flex: 1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead tr {
+            background: var(--k-primary);
+            color: white;
+        }
+
+        th {
+            text-align: left;
+            padding: 8px 15px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        td {
+            padding: 10px 15px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+
+        /* TOTALES */
+        .k-totals-wrap {
+            padding: 25px 50px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 80px;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+
+        .k-observations {
+            max-width: 380px;
+        }
+
+        .k-observations h4 {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            color: var(--k-primary);
+        }
+
+        .k-observations p {
+            font-size: 0.75rem;
+            color: var(--k-muted);
+            font-weight: 400;
+        }
+
+        .k-totals-box {
+            min-width: 280px;
+        }
+
+        .k-total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 10px;
+            border-bottom: 1px solid var(--k-border);
+            align-items: center;
+        }
+
+        .k-iva-detail {
+            font-size: 0.65rem;
+            color: var(--k-muted);
+            margin: 0 10px;
+            padding: 4px 0;
+            display: flex;
+            justify-content: space-between;
+            font-weight: 400;
+        }
+
+        .k-total-row.main {
+            background: var(--k-primary);
+            color: white;
+            border-radius: 0;
+            padding: 8px 10px;
+            margin-top: 8px;
+        }
+
+        .k-total-label {
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .k-total-value {
+            font-weight: 900;
+            font-size: 1.1rem;
+        }
+
+        /* FOOTER */
+        .k-footer {
+            background: var(--k-primary);
+            color: white;
+            padding: 15px 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 600;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+        }
+
+        @media print {
+            body { background: white; padding: 0; }
+            .k-no-print { display: none; }
+            .k-invoice { 
+                box-shadow: none; 
+                max-width: 100%; 
+                margin: 0; 
+                border: 1px solid #eee;
+                height: 297mm;
+            }
+            @page {
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="k-no-print">
+    <a href="{% url 'home_app:arqueo_menu' %}" class="k-btn k-btn-light">⬅ Volver</a>
+    <form method="POST" style="margin: 0;">
+        {% csrf_token %}
+        {% if fecha_inicio_raw %}<input type="hidden" name="fecha_inicio_raw" value="{{ fecha_inicio_raw }}">{% endif %}
+        {% if fecha_fin_raw %}<input type="hidden" name="fecha_fin_raw" value="{{ fecha_fin_raw }}">{% endif %}
+        <button type="submit" class="k-btn k-btn-success" onclick="return confirm('¿Confirmas guardar este informe de cierre?');">
+            💾 Guardar Cierre
+        </button>
+    </form>
+    <button class="k-btn k-btn-primary" onclick="window.print()">🖨️ Imprimir</button>
+</div>
+
+<div class="k-invoice">
+    <!-- HEADER BLOQUE -->
+    <div class="k-header-block">
+        <div class="k-title-wrap">
+            <h1>ARQUEO</h1>
+            <div class="k-meta-top">
+                FECHA: {% if fecha_inicio == fecha_fin %}{{ fecha_inicio|date:"d/m/Y" }}{% else %}{{ fecha_inicio|date:"d/m/Y" }} - {{ fecha_fin|date:"d/m/Y" }}{% endif %}<br>
+                REGISTRO: {{ tipo|upper }}-{{ hoy|date:"d/m/Y" }}
+            </div>
+        </div>
+    </div>
+
+    <!-- DATOS GRID -->
+    <div class="k-data-grid">
+        <div class="k-data-box">
+            <h3>Responsable:</h3>
+            <p>{% if usuario.get_full_name %}{{ usuario.get_full_name }}{% else %}{{ usuario.username }}{% endif %}</p>
+            <span>Firma del Auditor / Cajero</span>
+        </div>
+        <div class="k-data-box">
+            <h3>Establecimiento:</h3>
+            <p>Kudea Intelligence Store</p>
+            <span>Centro Operativo Retail</span>
+        </div>
+    </div>
+
+    <!-- TABLA AUDITORIA -->
+    <div class="k-table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Descripción de Operación</th>
+                    <th class="text-center">Cant.</th>
+                    <th class="text-right">Importe</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Fondo Inicial de Apertura (Cajón)</td>
+                    <td class="text-center">1</td>
+                    <td class="text-right">{{ fondo_inicial|default:0.00|floatformat:2 }} €</td>
+                </tr>
+                {% for m in por_metodo %}
+                <tr>
+                    <td>Recaudación vía {{ m.metodo_pago__nombre }}</td>
+                    <td class="text-center">{{ m.n_tickets }}</td>
+                    <td class="text-right">{{ m.importe|floatformat:2 }} €</td>
+                </tr>
+                {% endfor %}
+                {% if ventas_anuladas > 0 %}
+                <tr style="color: var(--k-muted);">
+                    <td>Operaciones Anuladas / Canceladas</td>
+                    <td class="text-center">{{ ventas_anuladas }}</td>
+                    <td class="text-right">0.00 €</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- TOTALES -->
+    <div class="k-totals-wrap">
+        <div class="k-observations">
+            <h4>Observaciones:</h4>
+            <p>
+                Este documento certifica el arqueo de caja para el periodo indicado.
+                Todas las operaciones han sido validadas por el sistema Kudea Pro v3.5.
+                Cualquier descuadre debe ser reportado a administración.
+            </p>
+        </div>
+        <div class="k-totals-box">
+            <div class="k-total-row">
+                <span class="k-total-label">Subtotal Ventas</span>
+                <span class="k-total-value">{{ total_subtotal|floatformat:2 }} €</span>
+            </div>
+            
+            {% for item in iva_desglose %}
+            <div class="k-total-row" style="border-bottom: none; padding-bottom: 2px;">
+                <span class="k-total-label" style="color: var(--k-secondary);">IVA ({{ item.porcentaje|floatformat:0 }}%)</span>
+                <span class="k-total-value" style="font-size: 0.9rem;">{{ item.cuota|floatformat:2 }} €</span>
+            </div>
+            <div class="k-iva-detail">
+                <span>Base: {{ item.base|floatformat:2 }} €</span>
+                <span>Cuota: {{ item.cuota|floatformat:2 }} €</span>
+            </div>
+            {% endfor %}
+
+            <div class="k-total-row">
+                <span class="k-total-label">Efectivo Cajón</span>
+                <span class="k-total-value">{{ total_efectivo_neto|floatformat:2 }} €</span>
+            </div>
+            <div class="k-total-row main">
+                <span class="k-total-label">TOTAL AUDITADO</span>
+                <span class="k-total-value">{{ total_bruto|floatformat:2 }} €</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="k-footer">
+        KUDEA ECOSYSTEM — AUDITORÍA FINANCIERA PROFESIONAL
+    </div>
+</div>
+
+</body>
+</html>

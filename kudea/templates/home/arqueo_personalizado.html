@@ -1,0 +1,182 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block title %}Arqueo Personalizado | KUDEA{% endblock %}
+
+{% block head %}
+<style>
+    :root {
+        --pm-primary: #1d3557;
+        --pm-accent: #457b9d;
+        --pm-bg: #f8f9fa;
+        --pm-card-bg: #ffffff;
+        --pm-border: rgba(0,0,0,0.06);
+    }
+
+    body {
+        background-color: var(--pm-bg);
+        font-family: 'Outfit', sans-serif !important;
+    }
+
+    .k-selector-card {
+        background: white;
+        border-radius: 30px;
+        padding: 3.5rem;
+        border: 1px solid var(--pm-border);
+        box-shadow: 0 20px 60px rgba(29, 53, 87, 0.08);
+        max-width: 600px;
+        margin: 4rem auto;
+        text-align: center;
+        animation: slideUp 0.5s ease-out;
+    }
+
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .k-icon-large {
+        width: 80px;
+        height: 80px;
+        background: rgba(29, 53, 87, 0.05);
+        color: var(--pm-primary);
+        border-radius: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin: 0 auto 2rem;
+    }
+
+    .k-title {
+        font-weight: 900;
+        color: var(--pm-primary);
+        font-size: 2rem;
+        letter-spacing: -0.5px;
+        margin-bottom: 0.75rem;
+    }
+
+    .k-subtitle {
+        color: #6c757d;
+        font-weight: 500;
+        margin-bottom: 2.5rem;
+    }
+
+    .k-input-group {
+        text-align: left;
+        margin-bottom: 1.5rem;
+    }
+
+    .k-label {
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: var(--pm-accent);
+        letter-spacing: 0.05em;
+        margin-bottom: 0.6rem;
+        display: block;
+    }
+
+    .k-input {
+        width: 100%;
+        padding: 1rem 1.25rem;
+        border-radius: 16px;
+        border: 1.5px solid #e9ecef;
+        font-weight: 600;
+        font-family: inherit;
+        transition: all 0.3s ease;
+        outline: none;
+        background: #fbfcfd;
+    }
+
+    .k-input:focus {
+        border-color: var(--pm-primary);
+        background: white;
+        box-shadow: 0 0 0 4px rgba(29, 53, 87, 0.05);
+    }
+
+    .k-btn-generate {
+        width: 100%;
+        background: var(--pm-primary);
+        color: white;
+        border: none;
+        padding: 1.25rem;
+        border-radius: 18px;
+        font-weight: 800;
+        font-size: 1rem;
+        margin-top: 1.5rem;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        box-shadow: 0 10px 25px rgba(29, 53, 87, 0.15);
+    }
+
+    .k-btn-generate:hover {
+        transform: translateY(-3px);
+        background: #142a46;
+        box-shadow: 0 15px 35px rgba(29, 53, 87, 0.2);
+        color: white;
+    }
+
+    .k-btn-cancel {
+        display: inline-block;
+        margin-top: 2rem;
+        color: #adb5bd;
+        font-weight: 700;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: color 0.2s;
+    }
+
+    .k-btn-cancel:hover {
+        color: var(--pm-danger);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="k-selector-card">
+        <div class="k-icon-large">
+            <i class="fas fa-calendar-alt"></i>
+        </div>
+        <h1 class="k-title">Rango de Auditoría</h1>
+        <p class="k-subtitle">Selecciona el periodo exacto para generar el arqueo.</p>
+
+        <form method="POST" action="{% url 'home_app:arqueo_personalizado' %}">
+            {% csrf_token %}
+            
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="k-input-group">
+                        <label class="k-label">Fecha de Inicio</label>
+                        <input type="date" name="inicio" class="k-input" value="{{ inicio_prefill }}" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="k-input-group">
+                        <label class="k-label">Fecha de Finalización</label>
+                        <input type="date" name="fin" class="k-input" value="{{ fin_prefill }}" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="k-input-group" style="margin-top: 10px;">
+                <label class="k-label">Fondo Inicial (Opcional)</label>
+                <input type="number" step="0.01" name="fondo" class="k-input" placeholder="Ej: 200.00">
+                <small style="color: #6c757d; font-size: 0.75rem; display: block; margin-top: 5px;">Deja vacío para usar el registro automático.</small>
+            </div>
+
+            <button type="submit" class="btn k-btn-generate">
+                Generar Informe Detallado <i class="fas fa-arrow-right ms-1"></i>
+            </button>
+        </form>
+
+        <a href="{% url 'home_app:arqueo_menu' %}" class="k-btn-cancel">
+            <i class="fas fa-times me-2"></i> Cancelar y volver
+        </a>
+    </div>
+</div>
+{% endblock %}

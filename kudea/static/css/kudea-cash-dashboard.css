@@ -1,0 +1,385 @@
+/* KUDEA Pro Dashboard - Executive Operational Center */
+:root {
+  /* Executive Slate Palette */
+  --k-navy-950: #0f172a;
+  --k-navy-900: #1e293b;
+  --k-navy-800: #334155;
+  --k-slate-500: #64748b;
+  --k-slate-100: #f1f5f9;
+  
+  /* Glowing Accents */
+  --k-emerald: #10b981;
+  --k-emerald-glow: rgba(16, 185, 129, 0.15);
+  --k-sapphire: #3b82f6;
+  --k-sapphire-glow: rgba(59, 130, 246, 0.15);
+  --k-amber: #f59e0b;
+  
+  /* Pro Glass & Depth */
+  --k-card-bg: #ffffff;
+  --k-card-border: rgba(0, 0, 0, 0.04);
+  --k-glass-bg: rgba(255, 255, 255, 0.8);
+  --k-shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+  --k-shadow-md: 0 10px 25px -5px rgba(15, 23, 42, 0.08);
+  --k-shadow-lg: 0 20px 48px -12px rgba(15, 23, 42, 0.12);
+}
+
+body {
+  background-color: #f8fafc;
+  background-image: 
+    radial-gradient(circle at 0px 0px, rgba(59, 130, 246, 0.03) 0%, transparent 40%),
+    radial-gradient(circle at 100% 100%, rgba(16, 185, 129, 0.03) 0%, transparent 40%);
+  font-family: 'Inter', -apple-system, sans-serif;
+  color: var(--k-navy-900);
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+}
+
+.k-wrap {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 32px;
+}
+
+/* --- REFINED EXECUTIVE HEADER --- */
+.k-header {
+  margin-bottom: 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.k-logo {
+  width: 44px;
+  height: 44px;
+  background: var(--k-navy-950);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 800;
+  font-size: 1.3rem;
+  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.15);
+}
+
+.k-header-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--k-navy-950);
+  letter-spacing: -0.04em;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.muted {
+  color: var(--k-slate-500);
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+/* --- SLIM KPI SECTION --- */
+.kpi-card {
+  background: var(--k-card-bg);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: var(--k-shadow-sm);
+  transition: all 0.25s ease;
+  min-height: auto;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--k-shadow-md);
+  border-color: rgba(59, 130, 246, 0.15);
+}
+
+.kpi-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--k-slate-500);
+  margin-bottom: 8px;
+}
+
+.kpi-value {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: var(--k-navy-950);
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+}
+
+.kpi-value.text-success {
+  color: var(--k-emerald) !important;
+}
+
+/* --- COMPACT COMMAND DOCK --- */
+.action-card {
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none !important;
+  color: var(--k-navy-900);
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.action-card:hover {
+  background: var(--k-navy-950);
+  color: white !important;
+  transform: translateY(-4px);
+  box-shadow: var(--k-shadow-md);
+}
+
+.action-icon {
+  font-size: 1.35rem;
+  width: 44px;
+  height: 44px;
+  background: var(--k-slate-100);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.action-card:hover .action-icon {
+  background: rgba(255,255,255,0.12);
+}
+
+.action-name {
+  font-weight: 700;
+  font-size: 0.875rem;
+  letter-spacing: -0.01em;
+}
+
+/* --- SLIM LEDGER --- */
+.k-card {
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: 18px;
+  box-shadow: var(--k-shadow-sm);
+  padding: 24px;
+}
+
+.k-title {
+  font-size: 1.125rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.venta-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  margin-bottom: 4px;
+}
+
+.venta-item:hover {
+  background: var(--k-slate-100);
+  transform: translateX(4px);
+}
+
+.venta-icon-wrapper {
+  width: 36px;
+  height: 36px;
+  background: var(--k-emerald-glow);
+  color: var(--k-emerald);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+}
+
+/* --- PAYMENT METHODS --- */
+.payment-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--k-slate-100);
+  border-radius: 10px;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* --- FILTERS & DATES --- */
+.bg-light {
+  background-color: var(--k-slate-100) !important;
+  border: none !important;
+}
+
+.btn-dark {
+  background: var(--k-navy-950);
+  color: white;
+  border: none;
+  font-weight: 700;
+  padding: 8px 20px;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.btn-dark:hover {
+  background: black;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* --- OPERATIONAL ALERTS --- */
+.alert-strip {
+  background: #fef2f2;
+  border-left: 4px solid var(--k-danger);
+  padding: 12px 20px;
+  border-radius: 12px;
+  margin-bottom: 32px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.alert-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--k-danger);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--k-danger);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.2); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* --- STATUS STRIPS --- */
+.status-strip {
+  padding: 16px 24px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-width: 1px;
+  border-style: solid;
+  margin-bottom: 24px;
+}
+
+.status-strip.success {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+
+.status-strip.danger {
+  background: #fef2f2;
+  border-color: #fee2e2;
+  color: #991b1b;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.pulse-success {
+  background: #22c55e;
+  box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+  animation: pulse-success 2s infinite;
+}
+
+.pulse-danger {
+  background: #ef4444;
+  box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  animation: pulse-danger 2s infinite;
+}
+
+@keyframes pulse-success {
+  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+@keyframes pulse-danger {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+/* --- VELOCITY & PRODUCT PANELS --- */
+.product-rank-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.03);
+}
+
+.product-rank-row:last-child {
+  border-bottom: none;
+}
+
+.rank-badge {
+  font-size: 0.7rem;
+  font-weight: 800;
+  background: var(--k-slate-100);
+  padding: 2px 8px;
+  border-radius: 6px;
+  color: var(--k-navy-950);
+}
+
+.stock-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.stock-critical { background: #fee2e2; color: #991b1b; }
+.stock-warning { background: #fef3c7; color: #92400e; }
+
+/* --- RESPONSIVE OPTIMIZATION --- */
+@media (max-width: 1024px) {
+  .kpi-value { font-size: 2.75rem; }
+  .k-wrap { padding: 24px; }
+}
+
+@media (max-width: 768px) {
+  .k-header { flex-direction: column; align-items: flex-start; gap: 24px; }
+  .k-header-title { font-size: 2rem; }
+  .venta-item { flex-direction: column; align-items: flex-start; gap: 16px; }
+}
+
+/* --- ANIMATIONS --- */
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.kpi-card, .action-card, .k-card {
+  animation: slideUpFade 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.col-md-4:nth-child(1) .kpi-card { animation-delay: 0.1s; }
+.col-md-4:nth-child(2) .kpi-card { animation-delay: 0.2s; }
+.col-md-4:nth-child(3) .kpi-card { animation-delay: 0.3s; }
+
+
+.col-md-4:nth-child(1) .kpi-card { animation-delay: 0.1s; }
+.col-md-4:nth-child(2) .kpi-card { animation-delay: 0.2s; }
+.col-md-4:nth-child(3) .kpi-card { animation-delay: 0.3s; }

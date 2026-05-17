@@ -1,0 +1,142 @@
+{% extends 'tpv/base_tpv.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+  .form-label {
+    font-weight: 600;
+    color: #1D3557;
+  }
+
+  .form-control, .form-select {
+    border-radius: 0.5rem;
+    padding: 0.6rem 0.9rem;
+    font-size: 1rem;
+  }
+
+  .form-check-input {
+    margin-top: 0.3rem;
+    border-radius: 0.35rem;
+  }
+
+  .form-check-label {
+    font-weight: 500;
+    margin-left: 0.5rem;
+  }
+
+  .kudea-form-card {
+    background: white;
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    padding: 2rem;
+  }
+
+  .kudea-btn {
+    background-color: #1D3557;
+    border: none;
+    padding: 0.6rem 1.5rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    color: white;
+  }
+
+  .kudea-btn:hover {
+    background-color: #457B9D;
+  }
+
+  .back-btn {
+    color: #1D3557;
+    padding: 0.5rem 0;
+  }
+
+  .back-btn:hover {
+    color: #457B9D;
+    text-decoration: none;
+  }
+</style>
+
+<div class="container py-4">
+  <a href="{% url 'employee_app:employee_list' %}" class="back-btn d-inline-flex align-items-center mb-3">
+    <i class="fas fa-arrow-left me-2"></i> Volver al listado
+  </a>
+
+  <div class="kudea-form-card">
+    <h4 class="mb-4"><i class="fas fa-user-plus me-2"></i>Nuevo Empleado</h4>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+      {% endif %}
+
+      <div class="row g-4">
+        <!-- Columna izquierda -->
+        <div class="col-md-6">
+          {% for field in form.visible_fields|slice:":10" %}
+            <div class="mb-3">
+              <label class="form-label">{{ field.label }}</label>
+              {{ field }}
+              {% if field.errors %}
+                <div class="text-danger small">{{ field.errors }}</div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+
+        <!-- Columna derecha -->
+        <div class="col-md-6">
+          {% for field in form.visible_fields|slice:"10:" %}
+            <div class="mb-3">
+              <label class="form-label">{{ field.label }}</label>
+              {{ field }}
+              {% if field.errors %}
+                <div class="text-danger small">{{ field.errors }}</div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+        <button type="reset" class="btn btn-outline-secondary">
+          <i class="fas fa-undo me-2"></i> Limpiar
+        </button>
+        <button type="submit" class="kudea-btn">
+          <i class="fas fa-save me-2"></i> Guardar empleado
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const adminCheckbox = document.querySelector('input[name="es_administrador"]');
+
+  const permisos = [
+    'puede_realizar_salidas',
+    'puede_modificar_ventas',
+    'puede_cambiar_tarifa',
+    'puede_cambiar_fecha_hora',
+    'puede_cambiar_subtotales'
+  ];
+
+  if (adminCheckbox) {
+    adminCheckbox.addEventListener('change', function () {
+      const checked = this.checked;
+      permisos.forEach(nombre => {
+        const permisoCheckbox = document.querySelector(`input[name="${nombre}"]`);
+        if (permisoCheckbox) {
+          permisoCheckbox.checked = checked;
+        }
+      });
+    });
+  }
+});
+</script>
+
+
+
+
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends 'home/base.html' %}
+{% load static %}
+
+{% block head %}
+  <!-- Cargar FontAwesome desde CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="{% static 'css/tpc_base.css' %}">
+  
+  <!-- Enlace al CSS específico de la página de inicio de TPV -->
+  <link rel="stylesheet" href="{% static 'css/tpv_index.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<style>
+  /* ==== Estilo de Botones KUDEA TPV ==== */
+  .kudea-tpv-btn {
+    background: #F1FAFE;
+    border: 1px solid #E0E6EC;
+    border-radius: 14px;
+    padding: 14px 16px;
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 12px;
+    font-weight: 600;
+    color: #1D3557;
+    transition: all 0.25s ease;
+    box-shadow: 0 2px 6px rgba(29,53,87,0.05);
+    text-decoration: none;
+  }
+
+  .kudea-tpv-btn i {
+    width: 22px;
+    height: 22px;
+    color: #457B9D;
+  }
+
+  .kudea-tpv-btn:hover {
+    background: #E8F4FB;
+    border-color: #C7D8E5;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(29,53,87,0.12);
+    color: #1D3557;
+    text-decoration: none;
+  }
+
+  .kudea-tpv-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 4px rgba(29,53,87,0.2);
+  }
+</style>
+
+
+<div class="container mt-4">
+
+  <!-- ===== BOTONES KUDEA TPV ===== -->
+  <div class="row row-cols-2 row-cols-md-3 row-cols-lg-6 g-3 mb-4">
+
+    <div class="col">
+      <a href="{% url 'tpv_shop:category_list' %}" class="kudea-tpv-btn">
+        <i data-lucide="grid"></i> Ver Productos
+      </a>
+    </div>
+
+    <div class="col">
+      <a href="{% url 'tpv_shop:cart' %}" class="kudea-tpv-btn">
+        <i data-lucide="shopping-cart"></i> Carrito
+      </a>
+    </div>
+
+    <div class="col">
+      <a href="{% url 'tpv_shop:checkout' %}" class="kudea-tpv-btn">
+        <i data-lucide="credit-card"></i> Cobrar
+      </a>
+    </div>
+
+    <div class="col">
+      <a href="{% url 'tpv_shop:ticket_list' %}" class="kudea-tpv-btn">
+        <i data-lucide="history"></i> Historial
+      </a>
+    </div>
+
+    <div class="col">
+      <a href="#" class="kudea-tpv-btn">
+        <i data-lucide="percent"></i> Descuentos
+      </a>
+    </div>
+
+    <div class="col">
+      <a href="#" class="kudea-tpv-btn">
+        <i data-lucide="settings"></i> Configuración
+      </a>
+    </div>
+
+  </div>
+
+  <!-- Aquí irá el contenido de cada vista -->
+  {% block tpv_content %}{% endblock %}
+</div>
+
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+  lucide.createIcons();
+</script>
+
+{% endblock %}

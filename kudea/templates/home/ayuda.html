@@ -1,0 +1,765 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block title %}Kudea Mentor - Inteligencia de Negocio{% endblock %}
+
+{% block head %}
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+    /* 100% Pure Bulletproof Vanilla CSS - Elegant Dashboard Workspace Layout */
+    .mentor-workspace {
+        display: flex;
+        gap: 20px;
+        max-width: 1280px;
+        margin: 20px auto;
+        padding: 0 20px;
+        height: calc(100vh - 140px);
+        min-height: 550px;
+        font-family: 'Outfit', sans-serif;
+    }
+
+    /* Left Sidebar (Directory) */
+    .mentor-sidebar {
+        width: 320px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        flex-shrink: 0;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+    }
+
+    .sidebar-header {
+        padding: 20px;
+        border-bottom: 1px solid #edf2f7;
+        background: #ffffff;
+    }
+
+    .sidebar-title {
+        font-size: 16px;
+        font-weight: 800;
+        color: #0f172a;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .sidebar-desc {
+        font-size: 12px;
+        color: #64748b;
+        margin: 4px 0 0 0;
+        font-weight: 500;
+        text-align: left;
+    }
+
+    .sidebar-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        background: #f8fafc;
+    }
+
+    .sidebar-item {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 12px 14px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+        text-align: left;
+    }
+
+    .sidebar-item:hover {
+        border-color: #3b82f6;
+        background: #f0f7ff;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.05);
+    }
+
+    .sidebar-item-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+
+    .sidebar-item:nth-child(1) .sidebar-item-icon { background: #eff6ff; color: #3b82f6; }
+    .sidebar-item:nth-child(2) .sidebar-item-icon { background: #ecfdf5; color: #10b981; }
+    .sidebar-item:nth-child(3) .sidebar-item-icon { background: #fef3c7; color: #d97706; }
+    .sidebar-item:nth-child(4) .sidebar-item-icon { background: #fdf2f8; color: #db2777; }
+    .sidebar-item:nth-child(5) .sidebar-item-icon { background: #f5f3ff; color: #8b5cf6; }
+
+    .sidebar-item-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .sidebar-item-title {
+        font-size: 13px;
+        font-weight: 800;
+        color: #334155;
+        margin: 0;
+    }
+
+    .sidebar-item-desc {
+        font-size: 11px;
+        color: #64748b;
+        margin: 2px 0 0 0;
+        font-weight: 500;
+    }
+
+    /* Right Main Chat Window */
+    .mentor-chat-area {
+        flex: 1;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+    }
+
+    .chat-header {
+        padding: 16px 24px;
+        background: #ffffff;
+        border-bottom: 1px solid #edf2f7;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .chat-header-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .chat-header-avatar {
+        width: 38px;
+        height: 38px;
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        color: #ffffff;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.25);
+    }
+
+    .chat-header-info {
+        text-align: left;
+    }
+
+    .chat-header-title {
+        font-size: 14px;
+        font-weight: 800;
+        color: #0f172a;
+        margin: 0;
+    }
+
+    .chat-header-status {
+        font-size: 11px;
+        color: #10b981;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 2px;
+    }
+
+    .status-dot {
+        width: 6px;
+        height: 6px;
+        background-color: #10b981;
+        border-radius: 50%;
+        display: inline-block;
+        animation: statusPulse 1.5s infinite ease-in-out;
+    }
+
+    @keyframes statusPulse {
+        0%, 100% { transform: scale(1); opacity: 0.8; }
+        50% { transform: scale(1.3); opacity: 1; }
+    }
+
+    .chat-clear-btn {
+        background: none;
+        border: none;
+        color: #94a3b8;
+        cursor: pointer;
+        padding: 8px;
+        font-size: 15px;
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+
+    .chat-clear-btn:hover {
+        color: #ef4444;
+        background: #fef2f2;
+    }
+
+    /* Chat Messages Stream */
+    .chat-history {
+        flex: 1;
+        overflow-y: auto;
+        padding: 24px;
+        background: #fcfcfc;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .chat-history::-webkit-scrollbar {
+        width: 6px;
+    }
+    .chat-history::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .chat-history::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    }
+
+    /* Empty Welcome Screen */
+    .chat-welcome {
+        margin: auto;
+        text-align: center;
+        padding: 40px 20px;
+        max-width: 420px;
+    }
+
+    .chat-welcome-icon {
+        width: 54px;
+        height: 54px;
+        background: #eff6ff;
+        color: #3b82f6;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        margin: 0 auto 12px auto;
+        border: 1px solid #dbeafe;
+    }
+
+    .chat-welcome-title {
+        font-size: 18px;
+        font-weight: 800;
+        color: #1e293b;
+        margin: 0 0 6px 0;
+    }
+
+    .chat-welcome-desc {
+        font-size: 13px;
+        color: #64748b;
+        margin: 0;
+        line-height: 1.5;
+        font-weight: 500;
+    }
+
+    /* Chat bubble spacing */
+    .chat-row {
+        display: flex;
+        gap: 12px;
+        width: 100%;
+    }
+
+    .chat-row.user-row {
+        justify-content: flex-end;
+    }
+
+    .chat-row.bot-row {
+        justify-content: flex-start;
+    }
+
+    .chat-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        color: #ffffff;
+        flex-shrink: 0;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .chat-row.user-row .chat-avatar {
+        background: #0f172a;
+        order: 2;
+    }
+
+    .chat-row.bot-row .chat-avatar {
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        order: 1;
+    }
+
+    .chat-bubble-container {
+        display: flex;
+        flex-direction: column;
+        max-width: 75%;
+    }
+
+    .chat-row.user-row .chat-bubble-container {
+        align-items: flex-end;
+        order: 1;
+    }
+
+    .chat-row.bot-row .chat-bubble-container {
+        align-items: flex-start;
+        order: 2;
+    }
+
+    .chat-bubble {
+        padding: 12px 18px;
+        font-size: 13.5px;
+        line-height: 1.6;
+        border-radius: 16px;
+        word-break: break-word;
+    }
+
+    .chat-row.user-row .chat-bubble {
+        background: #0f172a;
+        color: #ffffff;
+        border-bottom-right-radius: 0;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+        text-align: left;
+    }
+
+    .chat-row.bot-row .chat-bubble {
+        background: #ffffff;
+        color: #1e293b;
+        border: 1px solid #e2e8f0;
+        border-left: 4px solid #3b82f6;
+        border-bottom-left-radius: 4px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.015);
+        padding: 16px 20px;
+        text-align: left;
+    }
+
+    .chat-bubble p {
+        margin-bottom: 12px;
+        line-height: 1.65;
+    }
+    .chat-bubble p:last-child {
+        margin-bottom: 0;
+    }
+
+    /* Style the subheadings inside chatbot response */
+    .chat-row.bot-row .chat-bubble h1,
+    .chat-row.bot-row .chat-bubble h2,
+    .chat-row.bot-row .chat-bubble h3 {
+        color: #0f172a;
+        font-weight: 800;
+        font-size: 15px;
+        margin-top: 16px;
+        margin-bottom: 10px;
+        letter-spacing: -0.02em;
+    }
+
+    .chat-row.bot-row .chat-bubble h1:first-child,
+    .chat-row.bot-row .chat-bubble h2:first-child,
+    .chat-row.bot-row .chat-bubble h3:first-child {
+        margin-top: 0;
+    }
+
+    .chat-bubble ul, .chat-bubble ol {
+        margin: 0 0 12px 0;
+        padding-left: 20px;
+    }
+    .chat-bubble li {
+        margin-bottom: 8px;
+        line-height: 1.6;
+    }
+    .chat-bubble li:last-child {
+        margin-bottom: 0;
+    }
+
+    .chat-bubble b, .chat-bubble strong {
+        color: #1e3a8a;
+        font-weight: 700;
+    }
+    .chat-row.user-row .chat-bubble b, .chat-row.user-row .chat-bubble strong {
+        color: #60a5fa;
+    }
+
+    .chat-row.bot-row .chat-bubble hr {
+        border: 0;
+        border-top: 1px dashed #e2e8f0;
+        margin: 16px 0;
+    }
+
+    .chat-sender-name {
+        font-size: 9px;
+        font-weight: 700;
+        color: #94a3b8;
+        margin-top: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+    }
+
+    /* Footer Input Area */
+    .chat-footer {
+        padding: 16px 24px;
+        background: #ffffff;
+        border-top: 1px solid #edf2f7;
+    }
+
+    .chat-input-group {
+        display: flex;
+        align-items: center;
+        background: #f1f5f9;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 4px 12px;
+        transition: all 0.2s;
+    }
+
+    .chat-input-group:focus-within {
+        background: #ffffff;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+
+    .chat-input {
+        width: 100%;
+        border: none !important;
+        background: transparent !important;
+        padding: 8px 4px !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        color: #1e293b !important;
+        outline: none !important;
+        box-shadow: none !important;
+    }
+
+    .chat-input::placeholder {
+        color: #94a3b8;
+    }
+
+    .chat-send-btn {
+        background: #0f172a;
+        color: #ffffff;
+        border: none;
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        flex-shrink: 0;
+    }
+
+    .chat-send-btn:hover {
+        background: #3b82f6;
+        transform: scale(1.03);
+    }
+
+    /* Typing Bouncing Dots */
+    .chat-typing-dots {
+        display: flex;
+        gap: 5px;
+        align-items: center;
+        padding: 4px 8px;
+    }
+
+    .typing-dot {
+        width: 7px;
+        height: 7px;
+        background-color: #3b82f6;
+        border-radius: 50%;
+        display: inline-block;
+        animation: typingBounce 1.4s infinite ease-in-out;
+    }
+
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; background-color: #a78bfa; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; background-color: #f472b6; }
+
+    @keyframes typingBounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .mentor-workspace {
+            flex-direction: column;
+            height: auto;
+        }
+        .mentor-sidebar {
+            width: 100%;
+        }
+        .mentor-chat-area {
+            height: 480px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mentor-bg">
+    <!-- Ambient Glow Blobs -->
+    <div class="glow-blob-1"></div>
+    <div class="glow-blob-2"></div>
+
+    <!-- Modern Double Column Workspace Layout -->
+    <div class="mentor-workspace">
+        
+        <!-- Left Sidebar directory of guides -->
+        <div class="mentor-sidebar">
+            <div class="sidebar-header">
+                <h3 class="sidebar-title"><i class="fas fa-brain" style="color: #3b82f6;"></i> Temas de Ayuda</h3>
+                <p class="sidebar-desc">Haz clic en un tema para consultarlo con tu Mentor local.</p>
+            </div>
+            
+            <div class="sidebar-list">
+                <div class="sidebar-item" onclick="quickAsk('¿Cómo cobrar una venta?')">
+                    <div class="sidebar-item-icon">
+                        <i class="fas fa-cash-register"></i>
+                    </div>
+                    <div class="sidebar-item-info">
+                        <h4 class="sidebar-item-title">Cobrar una venta</h4>
+                        <span class="sidebar-item-desc">Operación básica de TPV</span>
+                    </div>
+                </div>
+
+                <div class="sidebar-item" onclick="quickAsk('Tengo un fallo en balance')">
+                    <div class="sidebar-item-icon">
+                        <i class="fas fa-vault"></i>
+                    </div>
+                    <div class="sidebar-item-info">
+                        <h4 class="sidebar-item-title">Arqueo & Balance</h4>
+                        <span class="sidebar-item-desc">Cuadres diarios de efectivo</span>
+                    </div>
+                </div>
+
+                <div class="sidebar-item" onclick="quickAsk('¿El IVA está incluido?')">
+                    <div class="sidebar-item-icon">
+                        <i class="fas fa-percentage"></i>
+                    </div>
+                    <div class="sidebar-item-info">
+                        <h4 class="sidebar-item-title">IVA e Impuestos</h4>
+                        <span class="sidebar-item-desc">Configuración fiscal local</span>
+                    </div>
+                </div>
+
+                <div class="sidebar-item" onclick="quickAsk('¿Cómo creo un producto?')">
+                    <div class="sidebar-item-icon">
+                        <i class="fas fa-box-open"></i>
+                    </div>
+                    <div class="sidebar-item-info">
+                        <h4 class="sidebar-item-title">Crear un producto</h4>
+                        <span class="sidebar-item-desc">Añadir stock y catálogo</span>
+                    </div>
+                </div>
+
+                <div class="sidebar-item" onclick="quickAsk('⏱️ Control de Horario: Cómo Registrar la Jornada (Fichajes)')">
+                    <div class="sidebar-item-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="sidebar-item-info">
+                        <h4 class="sidebar-item-title">Registro de Jornada</h4>
+                        <span class="sidebar-item-desc">Fichajes QR de personal</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Main Chat Workspace -->
+        <div class="mentor-chat-area">
+            
+            <!-- Chat header info -->
+            <div class="chat-header">
+                <div class="chat-header-left">
+                    <div class="chat-header-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="chat-header-info">
+                        <h3 class="chat-header-title">Kudea Mentor</h3>
+                        <span class="chat-header-status">
+                            <span class="status-dot"></span> En línea
+                        </span>
+                    </div>
+                </div>
+                <div>
+                    <button onclick="clearChat()" class="chat-clear-btn" title="Limpiar Conversación">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Scrollable Conversation Pane -->
+            <div class="chat-history" id="chatHistory">
+                <!-- Initial Welcome state -->
+                <div id="chatEmptyState" class="chat-welcome">
+                    <div class="chat-welcome-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <h3 class="chat-welcome-title">¡Bienvenido a Kudea Mentor!</h3>
+                    <p class="chat-welcome-desc">Escribe una duda en la barra inferior o pulsa cualquiera de los temas prácticos del menú lateral para comenzar a chatear.</p>
+                </div>
+            </div>
+
+            <!-- Chat Footer Input Field -->
+            <div class="chat-footer">
+                <div class="chat-input-group">
+                    <i class="fas fa-brain" style="color: #94a3b8; font-size: 16px; margin: 0 8px 0 4px;"></i>
+                    <input type="text" id="mentorInput" class="chat-input" placeholder="Pregúntale algo a tu Mentor..." autocomplete="off">
+                    <button class="chat-send-btn" onclick="askMentor()">
+                        <i class="fas fa-arrow-up" style="font-size: 12px;"></i>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+    const mentorInput = document.getElementById('mentorInput');
+    const chatHistory = document.getElementById('chatHistory');
+    const chatEmptyState = document.getElementById('chatEmptyState');
+
+    async function askMentor(text = null) {
+        const query = text || mentorInput.value.trim();
+        if (!query) return;
+
+        // Limpiar entrada
+        mentorInput.value = '';
+
+        // Ocultar pantalla de bienvenida
+        if (chatEmptyState) {
+            chatEmptyState.style.display = 'none';
+        }
+
+        // 1. Agregar burbuja de usuario a la conversación
+        const userHtml = `
+            <div class="chat-row user-row animate-fade-in">
+                <div class="chat-bubble-container">
+                    <div class="chat-bubble">
+                        ${query}
+                    </div>
+                    <span class="chat-sender-name">{{ request.user.username|capfirst }}</span>
+                </div>
+                <div class="chat-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+            </div>
+        `;
+        chatHistory.insertAdjacentHTML('beforeend', userHtml);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+
+        // 2. Agregar indicador de escritura
+        const loaderId = 'loader_' + Date.now();
+        const loaderHtml = `
+            <div id="${loaderId}" class="chat-row bot-row animate-fade-in">
+                <div class="chat-avatar">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="chat-bubble-container">
+                    <div class="chat-bubble" style="background: rgba(255, 255, 255, 0.9);">
+                        <div class="chat-typing-dots">
+                            <span class="typing-dot"></span>
+                            <span class="typing-dot"></span>
+                            <span class="typing-dot"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        chatHistory.insertAdjacentHTML('beforeend', loaderHtml);
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+
+        try {
+            const response = await fetch("{% url 'home_app:mentor_api' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ query: query })
+            });
+
+            const data = await response.json();
+            
+            // Eliminar indicador de escritura
+            const loaderElement = document.getElementById(loaderId);
+            if (loaderElement) {
+                loaderElement.remove();
+            }
+
+            // Parsear markdown
+            const parsedMarkdown = marked.parse(data.respuesta || "No he podido procesar esa consulta.");
+            
+            // 3. Agregar burbuja de respuesta de Kudea Mentor
+            const botHtml = `
+                <div class="chat-row bot-row animate-fade-in">
+                    <div class="chat-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="chat-bubble-container">
+                        <div class="chat-bubble">
+                            ${parsedMarkdown}
+                        </div>
+                        <span class="chat-sender-name">KUDEA MENTOR</span>
+                    </div>
+                </div>
+            `;
+            chatHistory.insertAdjacentHTML('beforeend', botHtml);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+        } catch (error) {
+            // Eliminar indicador si falla
+            const loaderElement = document.getElementById(loaderId);
+            if (loaderElement) {
+                loaderElement.remove();
+            }
+            
+            alert("Error al conectar con Kudea Mentor.");
+        }
+    }
+
+    function quickAsk(text) {
+        askMentor(text);
+    }
+
+    function clearChat() {
+        if (confirm("¿Estás seguro de que quieres limpiar la conversación?")) {
+            chatHistory.innerHTML = `
+                <div id="chatEmptyState" class="chat-welcome">
+                    <div class="chat-welcome-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <h3 class="chat-welcome-title">¡Bienvenido a Kudea Mentor!</h3>
+                    <p class="chat-welcome-desc">Escribe una duda en la barra inferior o pulsa cualquiera de los temas prácticos del menú lateral para comenzar a chatear.</p>
+                </div>
+            `;
+        }
+    }
+
+    mentorInput.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            askMentor();
+        }
+    });
+</script>
+{% endblock %}

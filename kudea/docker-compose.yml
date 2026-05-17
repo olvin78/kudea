@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    # El nombre de nuestro contenedor
+    container_name: kudea_web
+    # Mapeamos el puerto 8000 de nuestro PC al puerto 8000 del contenedor
+    ports:
+      - "8000:8000"
+    # Este 'volumes' es LA MAGIA que salva tus datos y tu código:
+    # 1. .: /app -> "Sincroniza mi carpeta actual del PC (/kudea) con la /app del contenedor"
+    # Todo lo que toques en tu PC o en la base de datos se guarda en ambos sitios.
+    volumes:
+      - .:/app
+    # Variables de entorno adicionales si las necesitas en un futuro
+    environment:
+      - DEBUG=1
+      # Puedes poner aquí claves de bases de datos externas más adelante

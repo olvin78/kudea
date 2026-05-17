@@ -1,0 +1,25 @@
+{% extends 'tpv_shop/base_tpv_shop.html' %}
+{% block tpv_content %}
+
+<div class="container py-5 text-center">
+  <div class="row justify-content-center">
+    <div class="col-lg-6">
+
+      <div class="card p-5 shadow-sm border-0 rounded-4">
+        <div class="text-success display-4 mb-3">
+          <i class="fas fa-check-circle"></i>
+        </div>
+
+        <h3 class="fw-bold mb-3">¡Recibo enviado!</h3>
+        <p class="text-muted mb-4">Hemos enviado un recibo a <strong>{{ email }}</strong>. Revisa tu bandeja de entrada (y también la carpeta de spam).</p>
+
+        <a href="{% url 'tpv_shop:product_list' %}" class="btn btn-outline-primary rounded-pill">
+          <i class="fas fa-arrow-left me-2"></i> Volver a productos
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}

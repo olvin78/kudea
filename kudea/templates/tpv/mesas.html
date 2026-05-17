@@ -1,0 +1,253 @@
+{% extends 'tpv/base_tpv.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+:root {
+    --kudea-primary: #1D3557;
+    --kudea-secondary: #457B9D;
+    --kudea-accent: #A8DADC;
+    --kudea-light: #F1FAEE;
+    --kudea-text: #18465e;
+    --kudea-card-bg: #FFFFFF; /* Fondo de las tarjetas */
+    --kudea-border: #E0E0E0; /* Color de los bordes */
+    --kudea-success: #81C784; /* Verde suave */
+    --kudea-danger: #E57373; /* Rojo suave */
+    --kudea-warning: #FFB74D; /* Amarillo suave */
+}
+
+body {
+    background-color: var(--kudea-light);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--kudea-text);
+}
+
+.container-fluid {
+    padding: 20px;
+}
+
+.mb-3.text-end {
+    text-align: right !important;
+}
+
+/* Estilo de los botones de filtro */
+.btn-group .btn {
+    border: 1px solid var(--kudea-border);
+    background-color: var(--kudea-secondary);
+    color: white!important;
+    border-radius: 8px;
+    padding: 8px 15px;
+    margin-right: 5px;
+    font-weight: 600;
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+}
+
+/* Hover sobre los botones */
+.btn-group .btn:hover {
+    background-color: var(--kudea-primary);
+    color: white;
+    border-color: var(--kudea-primary);
+}
+
+/* Botón activo */
+.btn-group .btn.active {
+    background-color: var(--kudea-primary);
+    color: white;
+    border-color: var(--kudea-primary);
+}
+
+
+/* Listado de Mesas */
+#listado-mesas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.mesa-card-item {
+    flex: 0 0 calc(50% - 15px); /* Dos columnas en pantallas pequeñas */
+}
+
+@media (min-width: 768px) {
+    .mesa-card-item {
+        flex: 0 0 calc(33.33% - 15px); /* Tres columnas en pantallas medianas */
+    }
+}
+
+@media (min-width: 992px) {
+    .mesa-card-item {
+        flex: 0 0 calc(25% - 15px); /* Cuatro columnas en pantallas grandes */
+    }
+}
+
+.card.mesa-card {
+    background-color: var(--kudea-card-bg);
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    border: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 15px;
+}
+
+.card.mesa-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.badge.badge-estado {
+    font-size: 0.8rem;
+    font-weight: bold;
+    border-radius: 8px;
+    padding: 6px 10px;
+    margin-bottom: 10px;
+    display: inline-block;
+}
+
+.mesa-card-item[data-estado="libre"] .badge.badge-estado {
+    background-color: var(--kudea-success);
+    color: var(--kudea-light);
+}
+
+.mesa-card-item[data-estado="ocupada"] .badge.badge-estado {
+    background-color: var(--kudea-danger);
+    color: var(--kudea-light);
+}
+
+.mesa-card-item[data-estado="reservada"] .badge.badge-estado {
+    background-color: var(--kudea-warning);
+    color: var(--kudea-text); /* Mantener texto oscuro para contraste */
+}
+
+.card.mesa-card h4 {
+    font-size: 1.2rem;
+    color: var(--kudea-primary);
+    margin-bottom: 5px;
+}
+
+.card.mesa-card p {
+    font-size: 0.9rem;
+    color: var(--kudea-text);
+    margin-bottom: 10px;
+}
+
+.btn.btn-sm.btn-kudea.w-100.mt-2 {
+    background-color: var(--kudea-accent);
+    color: var(--kudea-primary);
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+    text-decoration: none;
+    display: inline-block;
+    width: 100%;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.btn.btn-sm.btn-kudea.w-100.mt-2:hover {
+    background-color: var(--kudea-secondary);
+    color: var(--kudea-light);
+}
+</style>
+
+<div class="container-fluid p-3">
+
+    <div class="mb-3">
+        <a href="{% url 'tpv_app:tpv_index' %}" class="btn btn-outline-secondary">
+          <i class="fas fa-arrow-left me-2"></i>Volver al TPV
+        </a>
+      </div>
+
+      
+    <div class="mb-3 text-end">
+        <div class="btn-group" role="group" aria-label="Filtros de mesas">
+            <button class="btn btn-outline-primary active" onclick="filtrarMesas('todas')" style="color: var(--kudea-primary); border-color: var(--kudea-primary);">Todas</button>
+            <button class="btn btn-outline-primary" onclick="filtrarMesas('libre')" style="color: var(--kudea-primary); border-color: var(--kudea-primary);">Libres</button>
+            <button class="btn btn-outline-primary" onclick="filtrarMesas('ocupada')" style="color: var(--kudea-primary); border-color: var(--kudea-primary);">Ocupadas</button>
+            <button class="btn btn-outline-primary" onclick="filtrarMesas('reservada')" style="color: var(--kudea-primary); border-color: var(--kudea-primary);">Reservadas</button>
+        </div>
+    </div>
+
+    <div class="row" id="listado-mesas">
+        {% for mesa in mesas %}
+        <div class="col-6 col-md-4 col-lg-3 mb-3 mesa-card-item" data-estado="{{ mesa.estado }}">
+            <div class="card mesa-card h-100 position-relative">
+    
+                <!-- Botón pequeño de eliminar -->
+                <button type="button" class="btn btn-sm p-0 position-absolute" style="top: 8px; right: 8px; background: none; border: none; color: #ccc;" title="Eliminar Mesa"
+                    data-bs-toggle="modal" data-bs-target="#confirmarEliminarModal{{ mesa.id }}">
+                    <i class="fas fa-times"></i>
+                </button>
+    
+                <div class="card-body text-center">
+                    <span class="badge badge-estado mb-2">{{ mesa.get_estado_display }}</span>
+                    <h4 class="mb-2" style="color: var(--kudea-primary);">{{ mesa.nombre }}</h4>
+                    <p class="small" style="color: var(--kudea-text);">{{ mesa.capacidad }} personas</p>
+                    <a href="{% url 'tpv_app:mesa_comanda_redirect' mesa.pk %}" class="btn btn-sm btn-kudea w-100 mt-2">
+                        <i class="fas fa-chair me-1"></i> Gestionar Mesa
+                    </a>
+                </div>
+            </div>
+        </div>
+    
+        <!-- Modal de Confirmación -->
+        <div class="modal fade" id="confirmarEliminarModal{{ mesa.id }}" tabindex="-1" aria-labelledby="confirmarEliminarModalLabel{{ mesa.id }}" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="confirmarEliminarModalLabel{{ mesa.id }}">Confirmar eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+              </div>
+              <div class="modal-body">
+                ¿Estás seguro de que quieres eliminar la mesa <strong>{{ mesa.nombre }}</strong>?
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form action="{% url 'tpv_app:mesa_delete' mesa.pk %}" method="post" style="margin: 0;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+    
+        {% empty %}
+        <div class="col-12">
+            <p class="text-center text-muted" style="color: var(--kudea-text);">No hay mesas registradas.</p>
+        </div>
+        {% endfor %}
+    </div>
+    
+</div>
+
+<script>
+function filtrarMesas(estado) {
+    const mesas = document.querySelectorAll('.mesa-card-item');
+    mesas.forEach(mesa => {
+        if (estado === 'todas' || mesa.getAttribute('data-estado') === estado) {
+            mesa.style.display = 'block';
+        } else {
+            mesa.style.display = 'none';
+        }
+    });
+
+    // Actualizar botón activo
+    const botones = document.querySelectorAll('.btn-group .btn');
+    botones.forEach(btn => {
+        btn.classList.remove('active');
+        btn.style.backgroundColor = 'transparent';
+        btn.style.color = 'var(--kudea-text)';
+        btn.style.borderColor = 'var(--kudea-border)';
+    });
+    event.target.classList.add('active');
+    event.target.style.backgroundColor = 'var(--kudea-primary)';
+    event.target.style.color = 'var(--kudea-light)';
+    event.target.style.borderColor = 'var(--kudea-primary)';
+}
+</script>
+{% endblock %}

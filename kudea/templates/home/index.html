@@ -1,0 +1,187 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block title %}KUDEA - Dashboard{% endblock %}
+
+{% block head %}
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" href="{% static 'css/index.css' %}">
+
+<style>
+    :root {
+        --kudea-dark: #1D3557;
+        --kudea-medium: #457B9D;
+        --kudea-light: #A8DADC;
+        --kudea-accent: #F1FAEE;
+    }
+
+    .btn-outline-kudea {
+        border: 2px solid var(--kudea-medium);
+        color: var(--kudea-medium);
+        font-weight: 600;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-outline-kudea:hover {
+        background-color: var(--kudea-medium);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(69, 123, 157, 0.2);
+    }
+
+    .bg-kudea {
+        background-color: var(--kudea-medium) !important;
+        color: white !important;
+    }
+
+    /* Estética de cards suave */
+    .feature-card-cute {
+        border: 1px solid #f1f5f9;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+    }
+    .feature-card-cute:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-8 py-10">
+    
+    <!-- Welcome Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-6">
+        <div class="space-y-2">
+            <h1 class="text-4xl font-bold tracking-tight text-dark-blue">
+                ¡Hola, {{ user.first_name|default:user.username }}! 👋
+            </h1>
+            <p class="text-slate-400 font-medium">Bienvenido de nuevo al centro de control de KUDEA.</p>
+        </div>
+        <div class="flex items-center gap-3">
+
+
+            <!-- Fecha -->
+            <div class="bg-white p-3 px-5 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3">
+                <div class="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-green-600">
+                    <i data-lucide="calendar" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Hoy es</p>
+                    <p class="font-bold text-dark-blue">{% now "d M, Y" %}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Summary Row -->
+    <div class="row g-3 mb-8">
+        <div class="col-md-4">
+            <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4">
+                <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-primary-blue">
+                    <i data-lucide="trending-up" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0">Ventas Hoy</p>
+                    <h3 class="text-xl font-bold text-dark-blue">{{ ventas_total_hoy|floatformat:2 }} €</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4">
+                <div class="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center text-green-600">
+                    <i data-lucide="shopping-cart" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0">Operaciones</p>
+                    <h3 class="text-xl font-bold text-dark-blue">{{ ventas_count_hoy }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4">
+                <div class="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600">
+                    <i data-lucide="package" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0">Inventario</p>
+                    <h3 class="text-xl font-bold text-dark-blue">{{ total_productos }} <small class="text-slate-300 font-medium">Art.</small></h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Grid -->
+    <div class="row g-3 mb-10">
+        <div class="col-6 col-md-4 col-lg-2">
+            <a href="{% url 'home_app:tpv_general' %}" class="no-underline group">
+                <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-center transition-all group-hover:-translate-y-1 group-hover:shadow-md group-hover:border-primary-blue/20 h-full flex flex-col items-center justify-center">
+                    <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-primary-blue mb-2 group-hover:scale-110 transition-transform">
+                        <i data-lucide="store" class="w-6 h-6"></i>
+                    </div>
+                    <span class="text-sm font-bold text-dark-blue">TPV</span>
+                </div>
+            </a>
+        </div>
+        
+        <div class="col-6 col-md-4 col-lg-2">
+            <a href="{% url 'home_app:lista_productos' %}" class="no-underline group">
+                <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-center transition-all group-hover:-translate-y-1 group-hover:shadow-md group-hover:border-primary-blue/20 h-full flex flex-col items-center justify-center">
+                    <div class="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600 mb-2 group-hover:scale-110 transition-transform">
+                        <i data-lucide="box" class="w-6 h-6"></i>
+                    </div>
+                    <span class="text-sm font-bold text-dark-blue">Productos</span>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-2">
+            <a href="{% url 'home_app:lista_ventas' %}" class="no-underline group">
+                <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-center transition-all group-hover:-translate-y-1 group-hover:shadow-md group-hover:border-primary-blue/20 h-full flex flex-col items-center justify-center">
+                    <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center text-green-600 mb-2 group-hover:scale-110 transition-transform">
+                        <i data-lucide="history" class="w-6 h-6"></i>
+                    </div>
+                    <span class="text-sm font-bold text-dark-blue">Ventas</span>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-2">
+            <a href="{% url 'home_app:arqueo_menu' %}" class="no-underline group">
+                <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-center transition-all group-hover:-translate-y-1 group-hover:shadow-md group-hover:border-primary-blue/20 h-full flex flex-col items-center justify-center">
+                    <div class="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 mb-2 group-hover:scale-110 transition-transform">
+                        <i data-lucide="coins" class="w-6 h-6"></i>
+                    </div>
+                    <span class="text-sm font-bold text-dark-blue">Arqueo</span>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-2">
+            <a href="{% url 'stock_app:movement_list' %}" class="no-underline group">
+                <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-center transition-all group-hover:-translate-y-1 group-hover:shadow-md group-hover:border-primary-blue/20 h-full flex flex-col items-center justify-center">
+                    <div class="w-12 h-12 bg-primary-blue rounded-xl flex items-center justify-center text-white mb-2 group-hover:scale-110 transition-transform">
+                        <i data-lucide="warehouse" class="w-6 h-6"></i>
+                    </div>
+                    <span class="text-sm font-bold text-dark-blue">Stock Hub</span>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-6 col-md-4 col-lg-2">
+            <a href="{% url 'home_app:ayuda' %}" class="no-underline group">
+                <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-center transition-all group-hover:-translate-y-1 group-hover:shadow-md group-hover:border-slate-200 h-full flex flex-col items-center justify-center">
+                    <div class="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 mb-2 group-hover:scale-110 transition-transform">
+                        <i data-lucide="help-circle" class="w-6 h-6"></i>
+                    </div>
+                    <span class="text-sm font-bold text-slate-400">Ayuda</span>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    lucide.createIcons();
+</script>
+{% endblock %}

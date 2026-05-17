@@ -1,0 +1,387 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block head %}
+{{ block.super }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+  .factura-container {
+    max-width: 1000px;
+    margin: 30px auto;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    overflow: hidden;
+  }
+
+  .factura-header {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    color: white;
+    padding: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .factura-header h1 {
+    margin: 0;
+    font-size: 2.5rem;
+    font-weight: 700;
+  }
+
+  .factura-header p {
+    margin: 5px 0 0;
+    opacity: 0.9;
+  }
+
+  .factura-info-empresa {
+    text-align: right;
+  }
+
+  .factura-body {
+    padding: 40px;
+  }
+
+  .factura-titulo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #e2e8f0;
+  }
+
+  .factura-titulo h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+  }
+
+  .factura-numero {
+    background: #4361ee;
+    color: white;
+    padding: 8px 20px;
+    border-radius: 40px;
+    font-weight: 600;
+  }
+
+  .direcciones-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
+    margin-bottom: 30px;
+  }
+
+  .direccion-card {
+    padding: 20px;
+    background: #f8fafc;
+    border-radius: 12px;
+  }
+
+  .direccion-titulo {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 10px;
+  }
+
+  .direccion-nombre {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 5px;
+  }
+
+  .direccion-detalle {
+    color: #475569;
+    line-height: 1.6;
+  }
+
+  .info-factura-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-bottom: 40px;
+    padding: 20px;
+    background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+    border-radius: 12px;
+  }
+
+  .info-factura-item {
+    text-align: center;
+  }
+
+  .info-factura-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: #64748b;
+  }
+
+  .info-factura-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e293b;
+  }
+
+  .tabla-productos {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 30px;
+  }
+
+  .tabla-productos th {
+    background: #f1f5f9;
+    padding: 15px;
+    text-align: left;
+    color: #475569;
+    font-weight: 600;
+  }
+
+  .tabla-productos td {
+    padding: 15px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .tabla-productos tfoot td {
+    border-bottom: none;
+    padding-top: 20px;
+  }
+
+  .totales {
+    width: 300px;
+    margin-left: auto;
+  }
+
+  .totales table {
+    width: 100%;
+  }
+
+  .totales td {
+    padding: 8px 0;
+  }
+
+  .totales .total-final {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #4361ee;
+  }
+
+  .notas {
+    margin-top: 30px;
+    padding: 20px;
+    background: #f8fafc;
+    border-radius: 12px;
+    border-left: 4px solid #4361ee;
+  }
+
+  .notas h4 {
+    margin: 0 0 10px 0;
+    color: #1e293b;
+  }
+
+  .factura-footer {
+    padding: 20px 40px;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8fafc;
+  }
+
+  .btn-imprimir {
+    background: #4361ee;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 40px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+  }
+
+  .btn-imprimir:hover {
+    background: #3046b0;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+  }
+
+  .btn-volver {
+    background: #e2e8f0;
+    color: #1e293b;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 40px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+  }
+
+  .btn-volver:hover {
+    background: #cbd5e1;
+  }
+
+  @media print {
+    body { background: white; }
+    .factura-container { box-shadow: none; margin: 0; }
+    .btn-imprimir, .btn-volver { display: none; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="factura-container">
+
+  <!-- HEADER EMPRESA -->
+  <div class="factura-header">
+    <div>
+      <h1>KUDEA</h1>
+      <p>Sistema de Gestión Empresarial</p>
+    </div>
+    <div class="factura-info-empresa">
+      <p><strong>NIF:</strong> B-12345678</p>
+      <p>C/ Principal 123, 28001 Madrid</p>
+      <p>📞 912 345 678 · 📧 facturas@kudea.com</p>
+    </div>
+  </div>
+
+  <!-- TÍTULO Y NÚMERO -->
+  <div class="factura-body">
+
+    <div class="factura-titulo">
+      <h2>FACTURA</h2>
+      <span class="factura-numero">F-{{ movimiento.id }}-{{ movimiento.fecha|date:"Y" }}</span>
+    </div>
+
+    <!-- DIRECCIONES -->
+    <div class="direcciones-grid">
+      <div class="direccion-card">
+        <div class="direccion-titulo">EMITIDA POR</div>
+        <div class="direccion-nombre">KUDEA SOLUCIONES S.L.</div>
+        <div class="direccion-detalle">
+          C/ Principal 123<br>
+          28001 Madrid<br>
+          NIF: B-12345678
+        </div>
+      </div>
+
+      <div class="direccion-card">
+        <div class="direccion-titulo">CLIENTE</div>
+        <div class="direccion-nombre">
+          {% if movimiento.created_by %}
+            {{ movimiento.created_by.get_full_name|default:movimiento.created_by.username }}
+          {% else %}
+            Cliente Final
+          {% endif %}
+        </div>
+        <div class="direccion-detalle">
+          C/ Cliente 45, 08001 Barcelona<br>
+          NIF: 12345678A<br>
+          cliente@email.com
+        </div>
+      </div>
+    </div>
+
+    <!-- INFORMACIÓN DE LA FACTURA -->
+    <div class="info-factura-grid">
+      <div class="info-factura-item">
+        <div class="info-factura-label">FECHA EMISIÓN</div>
+        <div class="info-factura-value">{{ movimiento.fecha|date:"d/m/Y" }}</div>
+      </div>
+      <div class="info-factura-item">
+        <div class="info-factura-label">FECHA VENCIMIENTO</div>
+        <div class="info-factura-value">{{ movimiento.fecha|date:"d/m/Y" }}</div>
+      </div>
+      <div class="info-factura-item">
+        <div class="info-factura-label">MÉTODO PAGO</div>
+        <div class="info-factura-value">
+          {% if movimiento.metodo_pago == 'efectivo' %}Efectivo
+          {% elif movimiento.metodo_pago == 'tarjeta' %}Tarjeta
+          {% elif movimiento.metodo_pago == 'transferencia' %}Transferencia
+          {% else %}No especificado{% endif %}
+        </div>
+      </div>
+      <div class="info-factura-item">
+        <div class="info-factura-label">FORMA DE PAGO</div>
+        <div class="info-factura-value">Contado</div>
+      </div>
+    </div>
+
+    <!-- TABLA DE PRODUCTOS / CONCEPTOS -->
+    <table class="tabla-productos">
+      <thead>
+        <tr>
+          <th>CANT.</th>
+          <th>DESCRIPCIÓN</th>
+          <th>PRECIO UNIT.</th>
+          <th>IMPORTE</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td>
+            <strong>{{ movimiento.concepto }}</strong><br>
+            <small style="color: #64748b;">{{ movimiento.get_tipo_display }}</small>
+          </td>
+          <td>{{ movimiento.cantidad|floatformat:2 }} €</td>
+          <td><strong>{{ movimiento.cantidad|floatformat:2 }} €</strong></td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="4">
+            <div class="totales">
+              <table>
+                <tr>
+                  <td>Base imponible:</td>
+                  <td class="text-end">{{ movimiento.cantidad|floatformat:2 }} €</td>
+                </tr>
+                <tr>
+                  <td>IVA (21%):</td>
+                  <td class="text-end">{{ movimiento.cantidad|floatformat:2 }} €</td>
+                </tr>
+                <tr>
+                  <td class="total-final">TOTAL FACTURA:</td>
+                  <td class="text-end total-final">{{ movimiento.cantidad|floatformat:2 }} €</td>
+                </tr>
+              </table>
+            </div>
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <!-- NOTAS -->
+    <div class="notas">
+      <h4><i class="fa fa-file-text me-2" style="color: #4361ee;"></i>Detalle de la operación</h4>
+      <p style="color: #475569;">
+        <strong>Concepto:</strong> {{ movimiento.concepto }}<br>
+        <strong>Tipo:</strong> {{ movimiento.get_tipo_display }}<br>
+        <strong>Cuenta:</strong> {{ movimiento.cuenta.nombre }}<br>
+        <strong>Registrado por:</strong> {{ movimiento.created_by.username|default:"Sistema" }}
+      </p>
+    </div>
+
+  </div>
+
+  <!-- FOOTER CON BOTONES -->
+  <div class="factura-footer no-print">
+    <a href="{% url 'cashflow:movement_list' %}" class="btn-volver">
+      <i class="fa fa-arrow-left me-2"></i> Volver al listado
+    </a>
+    <button onclick="window.print()" class="btn-imprimir">
+      <i class="fa fa-print me-2"></i> Imprimir factura
+    </button>
+  </div>
+
+</div>
+{% endblock %}

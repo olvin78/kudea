@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Presupuesto | KUDEA</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --kudea-primary: #2c3e50;
+            --kudea-secondary: #3498db;
+            --kudea-accent: #e74c3c;
+            --kudea-light: #ecf0f1;
+            --kudea-dark: #2c3e50;
+            --kudea-success: #27ae60;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8fafc;
+            color: var(--kudea-dark);
+        }
+        
+        .form-container {
+            background-color: #ffffff;
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-weight: 700;
+            color: var(--kudea-primary);
+            position: relative;
+            padding-bottom: 15px;
+        }
+        
+        h2:after {
+            content: '';
+            position: absolute;
+            width: 60px;
+            height: 4px;
+            background: var(--kudea-secondary);
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 2px;
+        }
+        
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+        
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: block;
+            color: var(--kudea-primary);
+        }
+        
+        .form-group input, 
+        .form-group select, 
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .form-group input:focus, 
+        .form-group select:focus, 
+        .form-group textarea:focus {
+            border-color: var(--kudea-secondary);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+            outline: none;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+        
+        .btn-submit {
+            background-color: var(--kudea-secondary);
+            color: white;
+            font-weight: 600;
+            padding: 0.875rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            width: 100%;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn-submit:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(41, 128, 185, 0.3);
+        }
+        
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        /* Estilos para la tabla de items - SIN SCROLL */
+        .item-table-container {
+            width: 100%;
+            margin: 2rem 0;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+            overflow: hidden;
+        }
+        
+        .item-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        
+        .item-table th {
+            background-color: var(--kudea-primary);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+        
+        .item-table td {
+            padding: 0.75rem;
+            text-align: center;
+            border-bottom: 1px solid #e0e0e0;
+            background-color: white;
+            word-break: break-word;
+        }
+        
+        .item-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .item-table input {
+            width: 90%;
+            padding: 0.5rem;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        
+        .item-table input:focus {
+            border-color: var(--kudea-secondary);
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        /* Column widths */
+        .item-table th:nth-child(1), .item-table td:nth-child(1) { width: 5%; } /* # */
+        .item-table th:nth-child(2), .item-table td:nth-child(2) { width: 35%; } /* Descripción */
+        .item-table th:nth-child(3), .item-table td:nth-child(3) { width: 10%; } /* Cantidad */
+        .item-table th:nth-child(4), .item-table td:nth-child(4) { width: 15%; } /* Precio */
+        .item-table th:nth-child(5), .item-table td:nth-child(5) { width: 10%; } /* Descuento */
+        .item-table th:nth-child(6), .item-table td:nth-child(6) { width: 15%; } /* Subtotal */
+        .item-table th:nth-child(7), .item-table td:nth-child(7) { width: 10%; } /* Acción */
+        
+        .remove-item-btn {
+            background-color: var(--kudea-accent);
+            color: white;
+            border: none;
+            padding: 0.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 90%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .remove-item-btn:hover {
+            background-color: #c0392b;
+            transform: translateY(-1px);
+        }
+        
+        #add-item-btn {
+            background-color: var(--kudea-primary);
+            color: white;
+            font-weight: 600;
+            padding: 0.875rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            width: 100%;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-bottom: 1rem;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        
+        #add-item-btn:hover {
+            background-color: #1a252f;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(44, 62, 80, 0.2);
+        }
+        
+        .btn-add-client {
+            background-color: var(--kudea-success);
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s;
+            text-decoration: none;
+            width: 100%;
+        }
+        
+        .btn-add-client:hover {
+            background-color: #219955;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.2);
+            color: white;
+        }
+        
+        .btn-view-budget {
+            background-color: var(--kudea-secondary);
+            color: white;
+            font-weight: 600;
+            padding: 0.875rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            width: 100%;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+        
+        .btn-view-budget:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(41, 128, 185, 0.3);
+            color: white;
+        }
+        
+        /* Efecto hover para filas de la tabla */
+        .item-table tr {
+            transition: all 0.2s;
+        }
+        
+        .item-table tr:hover {
+            background-color: rgba(236, 240, 241, 0.5);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 992px) {
+            .form-container {
+                padding: 1.5rem;
+            }
+            
+            h2 {
+                font-size: 1.75rem;
+            }
+            
+            .form-row {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            /* Ajustar tabla en móviles */
+            .item-table th:nth-child(1), .item-table td:nth-child(1) { width: 8%; }
+            .item-table th:nth-child(2), .item-table td:nth-child(2) { width: 30%; }
+            .item-table th:nth-child(3), .item-table td:nth-child(3) { width: 12%; }
+            .item-table th:nth-child(4), .item-table td:nth-child(4) { width: 15%; }
+            .item-table th:nth-child(5), .item-table td:nth-child(5) { width: 12%; }
+            .item-table th:nth-child(6), .item-table td:nth-child(6) { width: 15%; }
+            .item-table th:nth-child(7), .item-table td:nth-child(7) { width: 8%; }
+            
+            .item-table input {
+                width: 85%;
+            }
+            
+            .remove-item-btn {
+                padding: 0.4rem;
+                width: 85%;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            /* Simplificar tabla en móviles muy pequeños */
+            .item-table th:nth-child(5), .item-table td:nth-child(5),
+            .item-table th:nth-child(6), .item-table td:nth-child(6) {
+                display: none;
+            }
+            
+            .item-table th:nth-child(1), .item-table td:nth-child(1) { width: 10%; }
+            .item-table th:nth-child(2), .item-table td:nth-child(2) { width: 45%; }
+            .item-table th:nth-child(3), .item-table td:nth-child(3) { width: 20%; }
+            .item-table th:nth-child(4), .item-table td:nth-child(4) { width: 15%; }
+            .item-table th:nth-child(7), .item-table td:nth-child(7) { width: 10%; }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container py-5">
+        <div class="row">
+            <div class="col-12">
+                <div class="form-container">
+                    <h2><i class="fas fa-file-invoice-dollar me-2"></i>Crear Presupuesto</h2>
+
+                    <!-- Botón para agregar cliente -->
+                    <a href="{% url 'budget_app:add_client' %}" class="btn-add-client">
+                        <i class="fas fa-user-plus"></i> Agregar Cliente Nuevo
+                    </a>
+
+                    <form method="POST">
+                        {% csrf_token %}
+
+                        <!-- Formulario de Presupuesto -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="id_cliente"><i class="fas fa-user-tie me-2"></i>Cliente</label>
+                                {{ form.cliente }}
+                            </div>
+                            <div class="form-group">
+                                <label for="id_agente"><i class="fas fa-user me-2"></i>Agente</label>
+                                {{ form.agente }}
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="id_descripcion"><i class="fas fa-align-left me-2"></i>Descripción</label>
+                            {{ form.descripcion }}
+                        </div>
+
+                        <!-- Ítems del presupuesto -->
+                        <h4 class="mt-4"><i class="fas fa-list-ul me-2"></i>Ítems del Presupuesto</h4>
+                        {{ item_formset.management_form }}
+                        <div class="item-table-container">
+                            <table class="item-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Descripción</th>
+                                        <th>Cantidad</th>
+                                        <th>P. Unitario</th>
+                                        <th>Descuento %</th>
+                                        <th>Subtotal</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="item-rows">
+                                    {% for form in item_formset %}
+                                    <tr class="item-form">
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ form.descripcion }}</td>
+                                        <td>{{ form.cantidad }}</td>
+                                        <td>{{ form.precio_unitario }}</td>
+                                        <td>{{ form.descuento }}</td>
+                                        <td>
+                                            <input type="text" class="form-control subtotal" value="0.00" readonly>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="remove-item-btn">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Botón para agregar más ítems -->
+                        <button type="button" class="btn" id="add-item-btn">
+                            <i class="fas fa-plus-circle"></i> Agregar Producto/Servicio
+                        </button>
+
+                        <!-- Botón de Envío -->
+                        <button type="submit" class="btn-submit">
+                            <i class="fas fa-save me-2"></i> Crear Presupuesto
+                        </button>
+
+                        {% if form.instance.pk %}
+                        <a href="{% url 'budget_app:budget_detail' form.instance.pk %}" class="btn-view-budget">
+                            <i class="fas fa-eye me-2"></i> Ver Presupuesto
+                        </a>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Agregar nuevo item
+            document.getElementById('add-item-btn').addEventListener('click', function() {
+                const tableBody = document.getElementById('item-rows');
+                const totalForms = document.getElementById("id_items-TOTAL_FORMS");
+                const formNum = parseInt(totalForms.value);
+                const newRow = document.createElement('tr');
+                newRow.className = 'item-form';
+                newRow.innerHTML = `
+                    <td>${formNum + 1}</td>
+                    <td><input type="text" name="items-${formNum}-descripcion" class="form-control" required></td>
+                    <td><input type="number" name="items-${formNum}-cantidad" class="form-control" min="1" value="1" required></td>
+                    <td><input type="number" name="items-${formNum}-precio_unitario" class="form-control" step="0.01" value="0" required></td>
+                    <td><input type="number" name="items-${formNum}-descuento" class="form-control" step="0.01" value="0"></td>
+                    <td><input type="text" class="form-control subtotal" value="0.00" readonly></td>
+                    <td><button type="button" class="remove-item-btn"><i class="fas fa-trash-alt"></i></button></td>
+                `;
+                tableBody.appendChild(newRow);
+                totalForms.value = formNum + 1;
+
+                // Agregar evento al botón de eliminar
+                newRow.querySelector('.remove-item-btn').addEventListener('click', function() {
+                    newRow.remove();
+                    updateRowNumbers();
+                    totalForms.value = document.querySelectorAll('#item-rows tr').length;
+                });
+
+                // Agregar eventos para calcular subtotal
+                const inputs = newRow.querySelectorAll('input[type="number"]');
+                inputs.forEach(input => {
+                    input.addEventListener('change', calculateSubtotal);
+                    input.addEventListener('keyup', calculateSubtotal);
+                });
+            });
+
+            // Función para actualizar números de fila
+            function updateRowNumbers() {
+                const rows = document.querySelectorAll('#item-rows tr');
+                rows.forEach((row, index) => {
+                    row.cells[0].textContent = index + 1;
+                });
+            }
+
+            // Función para calcular subtotal
+            function calculateSubtotal() {
+                const row = this.closest('tr');
+                const cantidad = parseFloat(row.querySelector('input[name*="cantidad"]').value) || 0;
+                const precio = parseFloat(row.querySelector('input[name*="precio_unitario"]').value) || 0;
+                const descuento = parseFloat(row.querySelector('input[name*="descuento"]').value) || 0;
+                
+                let subtotal = cantidad * precio;
+                if (descuento > 0) {
+                    subtotal = subtotal * (1 - (descuento / 100));
+                }
+                
+                row.querySelector('.subtotal').value = subtotal.toFixed(2);
+            }
+
+            // Agregar eventos para calcular subtotal a las filas existentes
+            document.querySelectorAll('#item-rows tr').forEach(row => {
+                const inputs = row.querySelectorAll('input[type="number"]');
+                inputs.forEach(input => {
+                    input.addEventListener('change', calculateSubtotal);
+                    input.addEventListener('keyup', calculateSubtotal);
+                });
+
+                // Agregar evento al botón de eliminar
+                const removeBtn = row.querySelector('.remove-item-btn');
+                if (removeBtn) {
+                    removeBtn.addEventListener('click', function() {
+                        row.remove();
+                        updateRowNumbers();
+                        document.getElementById("id_items-TOTAL_FORMS").value = 
+                            document.querySelectorAll('#item-rows tr').length;
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

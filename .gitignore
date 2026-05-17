@@ -3,3 +3,5 @@ env/
 __pycache__/
 *.pyc
 .env
+backup_kudea_local/
+kudea_backup_git_interno_*/

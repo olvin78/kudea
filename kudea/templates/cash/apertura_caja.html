@@ -1,0 +1,492 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block title %}Apertura de Caja | KUDEA Pro{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+  /* Custom premium styles for fintech aperture */
+  :root {
+    --primary-indigo: #4f46e5;
+    --primary-emerald: #10b981;
+    --glass-bg: rgba(255, 255, 255, 0.75);
+    --glass-border: rgba(255, 255, 255, 0.4);
+  }
+
+  .premium-bg {
+    position: relative;
+    background: #f8fafc;
+    min-height: 90vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 2.5rem 1rem;
+  }
+
+  /* Animated Ambient Glow Blobs */
+  .glow-blob-1, .glow-blob-2 {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.35;
+    z-index: 1;
+    pointer-events: none;
+    animation: floatBlobs 20s infinite alternate;
+  }
+
+  .glow-blob-1 {
+    width: 450px;
+    height: 450px;
+    background: radial-gradient(circle, #818cf8 0%, rgba(99, 102, 241, 0) 70%);
+    top: -100px;
+    left: -100px;
+  }
+
+  .glow-blob-2 {
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, #34d399 0%, rgba(52, 211, 153, 0) 70%);
+    bottom: -150px;
+    right: -100px;
+    animation-delay: -10s;
+  }
+
+  @keyframes floatBlobs {
+    0% {
+      transform: translate(0, 0) scale(1);
+    }
+    100% {
+      transform: translate(80px, 50px) scale(1.15);
+    }
+  }
+
+  .premium-container {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 520px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--glass-border);
+    border-radius: 3rem;
+    box-shadow: 0 30px 100px -15px rgba(15, 23, 42, 0.08), 
+                0 0 0 1px rgba(15, 23, 42, 0.02);
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Premium Header */
+  .premium-header {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    padding: 3rem 2rem 2.5rem 2rem;
+    text-align: center;
+    color: white;
+    position: relative;
+  }
+
+  .premium-header::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #6366f1 0%, #10b981 100%);
+  }
+
+  .user-avatar-badge {
+    width: 72px;
+    height: 72px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem auto;
+    font-size: 1.75rem;
+    color: #38bdf8;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  }
+
+  .premium-header h1 {
+    font-size: 2rem;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.35rem;
+    background: linear-gradient(to right, #ffffff, #cbd5e1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .premium-body {
+    padding: 2.5rem 2.5rem;
+  }
+
+  /* Tactile Tiles */
+  .fintech-tile {
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    border-radius: 2rem;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .fintech-tile:hover {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: rgba(99, 102, 241, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.05);
+  }
+
+  .fintech-tile-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+  }
+
+  .fintech-tile-icon.amber {
+    background: #fef3c7;
+    color: #d97706;
+  }
+
+  /* Quick Cash Buttons */
+  .quick-cash-pad {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+  }
+
+  .btn-quick-cash {
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    border-radius: 1rem;
+    padding: 0.65rem 0.25rem;
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #475569;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .btn-quick-cash:hover {
+    background: var(--primary-indigo);
+    border-color: var(--primary-indigo);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+  }
+
+  .btn-quick-cash.reset {
+    background: #fee2e2;
+    border-color: #fee2e2;
+    color: #ef4444;
+  }
+  .btn-quick-cash.reset:hover {
+    background: #ef4444;
+    border-color: #ef4444;
+    color: white;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+  }
+
+  /* Tactile Cash Input */
+  .cash-display-container {
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid #e2e8f0;
+    border-radius: 2.25rem;
+    padding: 1rem;
+    transition: all 0.25s ease;
+    position: relative;
+  }
+
+  .cash-display-container:focus-within {
+    border-color: var(--primary-indigo);
+    box-shadow: 0 0 0 5px rgba(99, 102, 241, 0.15);
+    background: white;
+  }
+
+  .cash-display-input {
+    width: 100%;
+    border: none !important;
+    background: transparent !important;
+    font-size: 3.25rem !important;
+    font-weight: 900 !important;
+    color: #0f172a !important;
+    text-align: center !important;
+    padding: 0 !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  /* PIN Display Container */
+  .pin-container {
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid #e2e8f0;
+    border-radius: 2rem;
+    padding: 0.85rem 1rem;
+    transition: all 0.25s ease;
+  }
+
+  .pin-container:focus-within {
+    border-color: var(--primary-emerald);
+    box-shadow: 0 0 0 5px rgba(16, 185, 129, 0.15);
+    background: white;
+  }
+
+  .pin-input {
+    width: 100%;
+    border: none !important;
+    background: transparent !important;
+    font-size: 2.25rem !important;
+    font-weight: 900 !important;
+    color: #0f172a !important;
+    text-align: center !important;
+    padding: 0 !important;
+    outline: none !important;
+    box-shadow: none !important;
+    letter-spacing: 0.75rem !important;
+  }
+
+  /* Modern textarea */
+  .modern-textarea-container {
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid #e2e8f0;
+    border-radius: 1.5rem;
+    padding: 0.85rem;
+    transition: all 0.25s ease;
+  }
+
+  .modern-textarea-container:focus-within {
+    border-color: var(--primary-indigo);
+    box-shadow: 0 0 0 5px rgba(99, 102, 241, 0.15);
+    background: white;
+  }
+
+  /* Glowing submit button */
+  .btn-submit-cash {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border: none;
+    border-radius: 2rem;
+    color: white;
+    font-weight: 900;
+    font-size: 1.15rem;
+    padding: 1.25rem 2rem;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 10px 25px -5px rgba(5, 150, 105, 0.3), 
+                0 0 0 1px rgba(5, 150, 105, 0.05);
+  }
+
+  .btn-submit-cash:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 35px -5px rgba(5, 150, 105, 0.4), 
+                0 0 0 2px rgba(5, 150, 105, 0.15);
+    filter: brightness(1.05);
+  }
+
+  .btn-submit-cash:active {
+    transform: translateY(0);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="premium-bg">
+    <!-- Glow Blobs -->
+    <div class="glow-blob-1"></div>
+    <div class="glow-blob-2"></div>
+
+    <div class="premium-container">
+        {% if apertura_activa %}
+        <!-- CASE: ALREADY OPEN -->
+        <div class="p-12 text-center">
+            <div class="w-24 h-24 bg-emerald-100 text-emerald-600 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-6 border-4 border-emerald-50 shadow-inner">
+                <i class="fas fa-check-double"></i>
+            </div>
+            <h2 class="text-3xl font-black text-slate-800 tracking-tight mb-2">Caja Abierta</h2>
+            <p class="text-slate-500 font-medium mb-8">Tu jornada de ventas está activa y lista en el sistema.</p>
+            
+            <div class="bg-slate-50/50 backdrop-blur border border-slate-100 rounded-3xl p-6 mb-8">
+                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Fondo Inicial Asignado</div>
+                <div class="text-5xl font-black text-dark-blue">€{{ apertura_activa.fondo_inicial|floatformat:2 }}</div>
+            </div>
+            
+            <div class="space-y-4">
+                <a href="{% url 'home_app:tpv_general' %}" class="flex items-center justify-center gap-3 w-full bg-dark-blue hover:bg-slate-800 text-white py-4.5 rounded-2xl font-bold transition-all shadow-xl shadow-dark-blue/20">
+                    Ir al Punto de Venta <i class="fas fa-arrow-right text-xs"></i>
+                </a>
+                <a href="{% url 'cash_app:cash_index' %}" class="flex items-center justify-center w-full bg-white text-slate-700 border border-slate-200 py-4.5 rounded-2xl font-bold hover:bg-slate-50 transition-all">
+                    Volver al Panel Central
+                </a>
+            </div>
+        </div>
+
+        {% else %}
+        <!-- CASE: NEED TO OPEN -->
+        <header class="premium-header">
+            <div class="user-avatar-badge">
+                <i class="fas fa-cash-register"></i>
+            </div>
+            <h1>¡Hola, {{ request.user.username|capfirst }}!</h1>
+            <p class="text-slate-300 font-medium text-xs">Iniciando jornada operativa en Kudea</p>
+        </header>
+
+        <div class="premium-body">
+            
+            {# Recuperar de cierre anterior #}
+            {% if ultimo_cierre %}
+            <div class="fintech-tile">
+                <div class="fintech-tile-icon amber">
+                    <i class="fas fa-undo-alt"></i>
+                </div>
+                <div class="flex-grow">
+                    <div class="text-amber-800 font-black uppercase text-[9px] tracking-widest mb-0.5">Último Arqueo Cerrado</div>
+                    <div class="text-[13px] text-slate-700 font-bold leading-relaxed mb-2">
+                        El {{ ultimo_cierre.fecha }} finalizó con <span class="text-amber-700 font-black">€{{ ultimo_cierre.efectivo_retirado|floatformat:2 }}</span>.
+                    </div>
+                    <button type="button" onclick="setFondoInicial('{{ ultimo_cierre.efectivo_retirado|floatformat:2 }}')" class="bg-amber-500 hover:bg-amber-600 text-white px-3.5 py-1.5 rounded-xl text-[10px] font-black transition-all shadow-md shadow-amber-500/20">
+                        USAR ESTE FONDO
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+
+            {# Lista de cierres recientes #}
+            {% if cierres_recientes %}
+            <div class="mb-6">
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">
+                    <i class="fas fa-history mr-1"></i> Recuperar Histórico Reciente
+                </label>
+                <div class="flex flex-wrap gap-2">
+                    {% for cierre in cierres_recientes %}
+                    <button type="button" onclick="setFondoInicial('{{ cierre.efectivo_retirado|floatformat:2 }}')" class="bg-slate-100/50 hover:bg-slate-200/80 text-slate-600 border border-slate-200/50 px-3 py-2 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1.5" title="{{ cierre.fecha }} - {{ cierre.tipo }}">
+                        <span class="opacity-60 text-[10px]">📅 {{ cierre.fecha|date:"d/m" }}</span>
+                        <span class="text-slate-800 font-black">€{{ cierre.efectivo_retirado|floatformat:0 }}</span>
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <form method="post" autocomplete="off" class="space-y-6">
+                {% csrf_token %}
+
+                <!-- Importe Inicial -->
+                <div>
+                    <label for="{{ form.fondo_inicial.id_for_label }}" class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1 text-center">Fondo Inicial en Efectivo (€)</label>
+                    <div class="cash-display-container">
+                        <input type="number" 
+                               name="{{ form.fondo_inicial.name }}" 
+                               id="{{ form.fondo_inicial.id_for_label }}"
+                               class="cash-display-input"
+                               placeholder="0.00"
+                               step="0.01"
+                               min="0"
+                               value="{{ form.fondo_inicial.value|default:'' }}"
+                               required
+                               autofocus>
+                    </div>
+                    {% if form.fondo_inicial.errors %}
+                        <div class="text-red-500 text-xs font-bold mt-2 text-center bg-red-50 py-2 rounded-xl border border-red-100">{{ form.fondo_inicial.errors }}</div>
+                    {% endif %}
+
+                    <!-- Quick Cash Pad -->
+                    <div class="quick-cash-pad">
+                        <button type="button" onclick="addFondoValue(50)" class="btn-quick-cash">+50€</button>
+                        <button type="button" onclick="addFondoValue(100)" class="btn-quick-cash">+100€</button>
+                        <button type="button" onclick="addFondoValue(200)" class="btn-quick-cash">+200€</button>
+                        <button type="button" onclick="resetFondoValue()" class="btn-quick-cash reset"><i class="fas fa-trash-alt mr-1"></i> Borrar</button>
+                    </div>
+                </div>
+
+                <!-- PIN de Seguridad -->
+                <div>
+                    <label for="pin_apertura" class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1 text-center">PIN de Autorización (4 dígitos)</label>
+                    <div class="pin-container">
+                        <input type="password" 
+                               name="pin_apertura" 
+                               id="pin_apertura"
+                               class="pin-input"
+                               placeholder="••••"
+                               maxlength="4"
+                               pattern="\d{4}"
+                               title="Debe contener exactamente 4 números"
+                               required>
+                    </div>
+                </div>
+
+                <!-- Notas -->
+                <div>
+                    <label for="{{ form.notas.id_for_label }}" class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 px-1">Comentarios / Observaciones</label>
+                    <div class="modern-textarea-container">
+                        <textarea name="{{ form.notas.name }}" 
+                                  id="{{ form.notas.id_for_label }}" 
+                                  class="w-full border-none bg-transparent text-sm font-medium text-slate-700 outline-none resize-none p-1" 
+                                  rows="2" 
+                                  placeholder="Ej: Cambio suelto de 1€, 2€ y billetes de 10€...">{{ form.notas.value|default:'' }}</textarea>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn-submit-cash">
+                    <i class="fas fa-coins"></i> Abrir Caja y Comenzar Jornada
+                </button>
+            </form>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<script>
+  function setFondoInicial(valor) {
+      const inputFondo = document.getElementById('{{ form.fondo_inicial.id_for_label }}');
+      if (inputFondo) {
+          inputFondo.value = parseFloat(valor).toFixed(2);
+          inputFondo.dispatchEvent(new Event('input'));
+          // Enfocar el campo de PIN para comodidad del usuario
+          const inputPin = document.getElementById('pin_apertura');
+          if (inputPin) {
+              inputPin.focus();
+          }
+      }
+  }
+
+  function addFondoValue(cantidad) {
+      const inputFondo = document.getElementById('{{ form.fondo_inicial.id_for_label }}');
+      if (inputFondo) {
+          let currentVal = parseFloat(inputFondo.value) || 0;
+          inputFondo.value = (currentVal + cantidad).toFixed(2);
+          inputFondo.dispatchEvent(new Event('input'));
+          inputFondo.focus();
+      }
+  }
+
+  function resetFondoValue() {
+      const inputFondo = document.getElementById('{{ form.fondo_inicial.id_for_label }}');
+      if (inputFondo) {
+          inputFondo.value = '';
+          inputFondo.dispatchEvent(new Event('input'));
+          inputFondo.focus();
+      }
+  }
+</script>
+{% endblock %}

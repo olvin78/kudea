@@ -1,0 +1,657 @@
+{
+    "support": {
+        "modelos": [
+            {
+                "nombre": "TipoTicket",
+                "campos": [
+                    "nombre"
+                ]
+            },
+            {
+                "nombre": "Ticket",
+                "campos": []
+            }
+        ],
+        "vistas": [
+            "TicketDetailView",
+            "SelectTicketCategoryView",
+            "TicketListView",
+            "TicketDeleteView",
+            "CrearTicketView",
+            "TicketUpdateView"
+        ]
+    },
+    "tpv_shop": {
+        "modelos": [
+            {
+                "nombre": "Service",
+                "campos": [
+                    "name",
+                    "description",
+                    "price",
+                    "is_active",
+                    "duration",
+                    "slug"
+                ]
+            },
+            {
+                "nombre": "Cart",
+                "campos": [
+                    "created_at"
+                ]
+            },
+            {
+                "nombre": "CartItem",
+                "campos": [
+                    "quantity"
+                ]
+            },
+            {
+                "nombre": "Ticket",
+                "campos": [
+                    "ticket_number",
+                    "date",
+                    "total",
+                    "payment_method",
+                    "closed",
+                    "is_returned"
+                ]
+            },
+            {
+                "nombre": "TicketItem",
+                "campos": [
+                    "product_name",
+                    "quantity",
+                    "discount",
+                    "price"
+                ]
+            },
+            {
+                "nombre": "Invoice",
+                "campos": [
+                    "ticket",
+                    "client_name",
+                    "client_nif",
+                    "address",
+                    "issued_date"
+                ]
+            },
+            {
+                "nombre": "CajaArqueo",
+                "campos": [
+                    "fecha",
+                    "efectivo_inicial",
+                    "efectivo_final",
+                    "tarjeta_total",
+                    "bizum_total",
+                    "total_ventas",
+                    "total_articulos_vendidos",
+                    "observaciones"
+                ]
+            }
+        ],
+        "vistas": [
+            "EliminarTicketView",
+            "EmailFormView",
+            "ReceiptSelectionView",
+            "RemoveFromCartView",
+            "CajaArqueoDetailView",
+            "FinalizarCompraView",
+            "CajaArqueoListView",
+            "guardar_arqueo_auto",
+            "ProductDetailView",
+            "ProductListView",
+            "TicketDetailView",
+            "TicketListView",
+            "CajaArqueoDeleteView",
+            "ArqueoAutomaticoView",
+            "CategoryListView",
+            "CajaArqueoCreateView",
+            "tickets_del_dia",
+            "ServiceDetailView",
+            "CartView",
+            "ServiceListView",
+            "TpvShopIndexView",
+            "CategoryDetailView"
+        ]
+    },
+    "tpv": {
+        "modelos": [
+            {
+                "nombre": "Mesa",
+                "campos": [
+                    "nombre",
+                    "estado",
+                    "capacidad",
+                    "creada"
+                ]
+            },
+            {
+                "nombre": "Comanda",
+                "campos": [
+                    "fecha_creacion",
+                    "estado",
+                    "total"
+                ]
+            },
+            {
+                "nombre": "ComandaItem",
+                "campos": [
+                    "cantidad",
+                    "precio_unitario"
+                ]
+            },
+            {
+                "nombre": "Ticket",
+                "campos": [
+                    "fecha_creacion",
+                    "estado",
+                    "total"
+                ]
+            },
+            {
+                "nombre": "Empleado",
+                "campos": [
+                    "nombre",
+                    "apellidos",
+                    "nif",
+                    "usuario",
+                    "email",
+                    "telefono",
+                    "movil",
+                    "direccion",
+                    "cp",
+                    "poblacion",
+                    "provincia",
+                    "codigo",
+                    "es_administrador",
+                    "puede_realizar_salidas",
+                    "puede_cambiar_fecha_hora",
+                    "puede_modificar_ventas",
+                    "puede_cambiar_subtotales",
+                    "puede_cambiar_tarifa",
+                    "esta_de_baja",
+                    "fecha_baja",
+                    "observaciones",
+                    "fecha_creacion",
+                    "ultima_modificacion"
+                ]
+            }
+        ],
+        "vistas": [
+            "TpvCobrosView",
+            "TpvMesasView",
+            "ProductFilterView",
+            "MesaCategoriasView",
+            "MesaProductosPorCategoriaView",
+            "EmpleadoUpdateView",
+            "ComandaDetailView",
+            "MesaDeleteView",
+            "ProductListView",
+            "ProductUpdateView",
+            "MesaUpdateView",
+            "EmpleadoCreateView",
+            "ComandaCreateView",
+            "TpvIndexView",
+            "ProductCreateView",
+            "ToggleMesaEstadoView",
+            "TpvComandasView",
+            "MesaComandaActivaRedirectView",
+            "ComandaCerrarView",
+            "EmpleadoListView",
+            "AgregarProductoACamadaView",
+            "MesaDetailView",
+            "ComandaListView",
+            "TpvHistorialView",
+            "AgregarProductoAComandaView",
+            "ProductDeleteView",
+            "MesaCreateView",
+            "TpvConfigView"
+        ]
+    },
+    "invoice": {
+        "modelos": [
+            {
+                "nombre": "Factura",
+                "campos": [
+                    "numero",
+                    "serie",
+                    "tipo",
+                    "estado",
+                    "fecha_emision",
+                    "fecha_vencimiento",
+                    "fecha_pago",
+                    "emisor_nombre",
+                    "emisor_nif",
+                    "emisor_direccion",
+                    "emisor_codigo_postal",
+                    "emisor_ciudad",
+                    "emisor_provincia",
+                    "emisor_pais",
+                    "emisor_email",
+                    "emisor_telefono",
+                    "emisor_registro_mercantil",
+                    "cliente_nombre",
+                    "cliente_apellidos",
+                    "cliente_empresa",
+                    "cliente_nif",
+                    "cliente_direccion",
+                    "cliente_ciudad",
+                    "cliente_provincia",
+                    "cliente_pais",
+                    "cliente_codigo_postal",
+                    "cliente_telefono",
+                    "cliente_email",
+                    "cliente_tipo",
+                    "subtotal",
+                    "descuento_global",
+                    "base_imponible",
+                    "iva",
+                    "total_iva",
+                    "recargo_equivalencia",
+                    "total_recargo",
+                    "irpf",
+                    "total_irpf",
+                    "total",
+                    "metodo_pago",
+                    "condiciones_pago",
+                    "cuenta_bancaria",
+                    "referencia_pago",
+                    "enviada",
+                    "forma_envio",
+                    "tracking_envio",
+                    "leyenda_factura",
+                    "motivo_rectificacion",
+                    "exportacion",
+                    "exenta_iva",
+                    "motivo_exencion",
+                    "creada_en",
+                    "modificada_en",
+                    "notas_internas",
+                    "id_externo",
+                    "sincronizado_con_contabilidad",
+                    "fecha_sincronizacion"
+                ]
+            },
+            {
+                "nombre": "ItemFactura",
+                "campos": [
+                    "descripcion",
+                    "referencia",
+                    "cantidad",
+                    "unidad_medida",
+                    "precio_unitario",
+                    "descuento",
+                    "tipo_iva",
+                    "total_bruto",
+                    "notas"
+                ]
+            }
+        ],
+        "vistas": [
+            "FacturaListView",
+            "FacturaDeleteView",
+            "anular_factura",
+            "FacturaCreateView",
+            "FacturaDetailView",
+            "FacturaUpdateView"
+        ]
+    },
+    "home": {
+        "modelos": [
+            {
+                "nombre": "Modulo",
+                "campos": [
+                    "nombre",
+                    "clave",
+                    "activo"
+                ]
+            },
+            {
+                "nombre": "MetodoPago",
+                "campos": [
+                    "nombre",
+                    "descripcion",
+                    "imagen",
+                    "activo",
+                    "acepta_cambio"
+                ]
+            },
+            {
+                "nombre": "Venta",
+                "campos": [
+                    "codigo",
+                    "subtotal",
+                    "iva",
+                    "total",
+                    "descuento",
+                    "recibido",
+                    "cambio",
+                    "estado",
+                    "notas",
+                    "creado_en",
+                    "actualizado_en"
+                ]
+            },
+            {
+                "nombre": "DetalleVenta",
+                "campos": [
+                    "cantidad",
+                    "precio_unitario",
+                    "total"
+                ]
+            },
+            {
+                "nombre": "ConfiguracionTPV",
+                "campos": [
+                    "nombre_tienda",
+                    "logo",
+                    "iva_por_defecto",
+                    "moneda",
+                    "imprimir_tickets",
+                    "mostrar_stock",
+                    "actualizado_en"
+                ]
+            },
+            {
+                "nombre": "CajaArqueo",
+                "campos": [
+                    "efectivo_inicial",
+                    "efectivo_final",
+                    "total_ventas",
+                    "diferencia",
+                    "creado_en"
+                ]
+            }
+        ],
+        "vistas": [
+            "obtener_productos",
+            "KudeaLandingPageView",
+            "HomePageView",
+            "TpvGeneralView",
+            "reporte_ventas",
+            "guardar_venta",
+            "registrar_cierre_desde_rango"
+        ]
+    },
+    "accounts": {
+        "modelos": [],
+        "vistas": [
+            "AccountsListView"
+        ]
+    },
+    "reporting": {
+        "modelos": [],
+        "vistas": [
+            "DashboardPrincipalView"
+        ]
+    },
+    "cashflow": {
+        "modelos": [
+            {
+                "nombre": "Cuenta",
+                "campos": [
+                    "nombre",
+                    "iban",
+                    "numero_cuenta",
+                    "entidad",
+                    "activa"
+                ]
+            },
+            {
+                "nombre": "Movimiento",
+                "campos": []
+            }
+        ],
+        "vistas": [
+            "get_date_range",
+            "MovimientoDetailView",
+            "detalle_movimiento_api",
+            "crear_movimiento_ajax",
+            "CashflowListView"
+        ]
+    },
+    "attendance": {
+        "modelos": [
+            {
+                "nombre": "Punch",
+                "campos": [
+                    "clock_in",
+                    "clock_out"
+                ]
+            }
+        ],
+        "vistas": [
+            "verificar_password",
+            "PunchView",
+            "EmployeeDetailView",
+            "PunchCreateView",
+            "QRTokenPunchView",
+            "FichajeTouchMenuView",
+            "BuscarHistorialView",
+            "QRListView",
+            "EmployeeMonthlyReportView",
+            "QRScanView",
+            "EmployeeListView"
+        ]
+    },
+    "recordlog": {
+        "modelos": [],
+        "vistas": [
+            "RecordOrderView"
+        ]
+    },
+    "customer": {
+        "modelos": [
+            {
+                "nombre": "Cliente",
+                "campos": [
+                    "nombre",
+                    "dni",
+                    "codigo_postal",
+                    "correo",
+                    "telefono"
+                ]
+            }
+        ],
+        "vistas": [
+            "CustomerCreateView",
+            "search_cliente"
+        ]
+    },
+    "product": {
+        "modelos": [
+            {
+                "nombre": "Categoria",
+                "campos": [
+                    "nombre",
+                    "slug",
+                    "icono",
+                    "descripcion",
+                    "creado_en",
+                    "actualizado_en"
+                ]
+            },
+            {
+                "nombre": "Producto",
+                "campos": []
+            }
+        ],
+        "vistas": [
+            "HomePageView"
+        ]
+    },
+    "employee": {
+        "modelos": [
+            {
+                "nombre": "Employee",
+                "campos": [
+                    "user",
+                    "nombre",
+                    "apellidos",
+                    "usuario",
+                    "codigo",
+                    "qr_token",
+                    "nfc_uid",
+                    "nif",
+                    "numero_seguridad_social",
+                    "telefono",
+                    "movil",
+                    "direccion",
+                    "cp",
+                    "poblacion",
+                    "provincia",
+                    "es_administrador",
+                    "puede_realizar_salidas",
+                    "puede_cambiar_fecha_hora",
+                    "puede_modificar_ventas",
+                    "puede_cambiar_subtotales",
+                    "puede_cambiar_tarifa",
+                    "esta_de_baja",
+                    "fecha_baja",
+                    "observaciones",
+                    "fecha_creacion",
+                    "ultima_modificacion"
+                ]
+            }
+        ],
+        "vistas": [
+            "EmployeeUpdateView",
+            "EmpleadoListView",
+            "EmpleadoCreateView",
+            "EmpleadoUpdateView",
+            "EmployeeCreateView",
+            "EmployeeListView"
+        ]
+    },
+    "stock": {
+        "modelos": [
+            {
+                "nombre": "Movement",
+                "campos": [
+                    "cantidad",
+                    "tipo",
+                    "fecha",
+                    "observaciones"
+                ]
+            }
+        ],
+        "vistas": [
+            "movement_create",
+            "informe_inventario_pdf",
+            "MovementListView",
+            "informe_inventario_data"
+        ]
+    },
+    "budget": {
+        "modelos": [
+            {
+                "nombre": "Client",
+                "campos": [
+                    "nombre",
+                    "empresa",
+                    "nif",
+                    "email",
+                    "telefono",
+                    "direccion",
+                    "ciudad",
+                    "codigo_postal",
+                    "date_joined"
+                ]
+            },
+            {
+                "nombre": "Budget",
+                "campos": [
+                    "fecha_creacion",
+                    "descripcion",
+                    "total",
+                    "impuesto_porcentaje"
+                ]
+            },
+            {
+                "nombre": "BudgetItem",
+                "campos": [
+                    "descripcion",
+                    "cantidad",
+                    "precio_unitario",
+                    "descuento",
+                    "subtotal"
+                ]
+            }
+        ],
+        "vistas": [
+            "delete_budget_item",
+            "budget_success",
+            "BudgetDetailView",
+            "add_client",
+            "BudgetListView",
+            "BudgetCreateView",
+            "BudgetMainView",
+            "BudgetUpdateView"
+        ]
+    },
+    "cash": {
+        "modelos": [
+            {
+                "nombre": "AperturaCaja",
+                "campos": [
+                    "fondo_inicial",
+                    "fecha",
+                    "hora_apertura",
+                    "hora_cierre",
+                    "estado",
+                    "notas"
+                ]
+            },
+            {
+                "nombre": "CierreCaja",
+                "campos": [
+                    "tipo",
+                    "fecha_inicio",
+                    "fecha_fin",
+                    "fecha",
+                    "hora_cierre",
+                    "fondo_inicial",
+                    "efectivo_esperado",
+                    "efectivo_retirado",
+                    "total_ventas",
+                    "notas"
+                ]
+            }
+        ],
+        "vistas": [
+            "CashIndexView"
+        ]
+    },
+    "config": {
+        "modelos": [
+            {
+                "nombre": "ConfiguracionFiscal",
+                "campos": [
+                    "nombre",
+                    "iva_general",
+                    "fondo_caja_defecto"
+                ]
+            }
+        ],
+        "vistas": []
+    },
+    "payments": {
+        "modelos": [
+            {
+                "nombre": "MetodoPago",
+                "campos": [
+                    "nombre",
+                    "descripcion",
+                    "imagen",
+                    "activo",
+                    "acepta_cambio"
+                ]
+            }
+        ],
+        "vistas": [
+            "PaymentMethodsView",
+            "DeletePaymentMethodView"
+        ]
+    }
+}

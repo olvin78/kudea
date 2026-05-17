@@ -1,0 +1,417 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block title %}{% if is_edit %}Editar Artículo{% else %}Crear Artículo{% endif %} - Kudea{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/kudea-cash-dashboard.css' %}">
+<style>
+  /* PREMIUM FORM STYLES */
+  .k-header {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid rgba(0,0,0,0.04);
+    border-radius: 20px;
+    padding: 32px;
+    margin-bottom: 32px;
+    box-shadow: var(--k-shadow-sm);
+  }
+
+  .k-form-card {
+    background: white;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 24px;
+    padding: 40px;
+    box-shadow: var(--k-shadow-md);
+  }
+
+  .k-form-label {
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--k-slate-500);
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .k-form-input {
+    background: #f8fafc;
+    border: 1.5px solid rgba(15, 23, 42, 0.06);
+    border-radius: 12px;
+    padding: 12px 16px;
+    width: 100%;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--k-navy-950);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .k-form-input:focus {
+    outline: none;
+    border-color: var(--k-navy-950);
+    background: white;
+    box-shadow: 0 4px 15px rgba(15, 23, 42, 0.08);
+    transform: translateY(-1px);
+  }
+
+  .k-input-group {
+    display: flex;
+    gap: 10px;
+  }
+
+  .btn-k-action {
+    background: var(--k-slate-100);
+    color: var(--k-navy-950);
+    border: none;
+    padding: 0 16px;
+    border-radius: 10px;
+    font-weight: 700;
+    transition: all 0.2s;
+  }
+
+  .btn-k-action:hover {
+    background: var(--k-navy-950);
+    color: white;
+  }
+
+  .k-image-preview-box {
+    width: 100%;
+    height: 200px;
+    border: 2px dashed rgba(0,0,0,0.06);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: #f8fafc;
+    margin-top: 10px;
+  }
+
+  .k-image-preview-box img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+
+  .btn-save-pro {
+    background: linear-gradient(135deg, var(--k-navy-950) 0%, #1e293b 100%);
+    color: white !important;
+    padding: 14px 32px;
+    border-radius: 14px;
+    font-weight: 800;
+    border: none;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.2);
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .btn-save-pro:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 35px rgba(15, 23, 42, 0.3);
+    filter: brightness(1.1);
+  }
+
+  .k-modal-content {
+    border-radius: 24px;
+    border: none;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  }
+
+  .k-modal-header {
+    background: var(--k-navy-950);
+    color: white;
+    border-radius: 24px 24px 0 0;
+    padding: 24px 32px;
+  }
+
+  .btn-k-secondary {
+    background: #f1f5f9;
+    color: var(--k-slate-600);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    padding: 10px 24px;
+    border-radius: 12px;
+    font-weight: 700;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+  }
+
+  .btn-k-secondary:hover {
+    background: #e2e8f0;
+    color: var(--k-navy-950);
+    border-color: rgba(15, 23, 42, 0.15);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+  }
+
+  .form-switch .form-check-input {
+    width: 3em;
+    height: 1.5em;
+    cursor: pointer;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="k-wrap">
+  <!-- HEADER -->
+  <div class="k-header d-flex justify-content-between align-items-center">
+    <div>
+      <h1 class="k-header-title">{% if is_edit %}Editar Artículo{% else %}Nuevo Artículo{% endif %}</h1>
+      <p class="muted mb-0">{% if is_edit %}Modifica los datos del producto seleccionado{% else %}Configuración maestra del producto y stock básico{% endif %}</p>
+    </div>
+    <a href="{% url 'home_app:lista_productos' %}" class="btn-k-secondary">
+      <i class="fas fa-arrow-left"></i> Volver al Listado
+    </a>
+  </div>
+
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <div class="k-form-card">
+        {% if form.errors %}
+        <div class="alert alert-danger border-0 rounded-4 mb-4" style="background: #fee2e2; color: #991b1b;">
+          <h6 class="fw-bold mb-2">Se detectaron inconsistencias:</h6>
+          <ul class="mb-0 small fw-bold">
+            {% for field in form %}{% for error in field.errors %}<li>{{ field.label }}: {{ error }}</li>{% endfor %}{% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data" novalidate id="productForm">
+          {% csrf_token %}
+
+          <div class="row g-4">
+            <!-- COLUMNA IZQUIERDA: DATOS PRINCIPALES -->
+            <div class="col-md-7">
+              <div class="mb-4">
+                <label class="k-form-label">Nombre del Producto</label>
+                <input type="text" name="nombre" value="{{ form.nombre.value|default:'' }}" class="k-form-input" placeholder="Ej: Coca Cola Zero 330ml" required>
+              </div>
+
+              <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                <label class="k-form-label">Código EAN / Barras</label>
+                <input type="text" name="codigo_barras" value="{{ form.codigo_barras.value|default:form.initial.codigo_barras|default:'' }}" class="k-form-input" placeholder="Auto-generación si vacío">
+              </div>
+                <div class="col-md-6">
+                  <label class="k-form-label">Categoría</label>
+                  <div class="k-input-group">
+                    <select name="categoria" class="k-form-input">
+                      {% for value, text in form.fields.categoria.choices %}
+                      <option value="{{ value }}" {% if form.categoria.value|stringformat:'s' == value|stringformat:'s' %}selected{% endif %}>{{ text }}</option>
+                      {% endfor %}
+                    </select>
+                    <button type="button" class="btn-k-action" data-bs-toggle="modal" data-bs-target="#crearCategoriaModal">
+                      <i class="fas fa-plus"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row g-4 mb-2">
+                <div class="col-md-3">
+                  <label class="k-form-label">Precio Base</label>
+                  <div class="position-relative">
+                    <span class="position-absolute translate-middle-y top-50 start-0 ps-3 text-muted">€</span>
+                    <input type="number" id="id_precio" name="precio" value="{{ form.precio.value|default:'' }}" class="k-form-input ps-5" step="0.01" required>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <label class="k-form-label">IVA (%)</label>
+                  <select name="porcentaje_iva" id="id_porcentaje_iva" class="k-form-input">
+                    {% for value, text in form.fields.porcentaje_iva.choices %}
+                    <option value="{{ value }}" {% if form.porcentaje_iva.value|stringformat:'s' == value|stringformat:'s' %}selected{% endif %}>{{ text }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-md-3">
+                  <label class="k-form-label">Descuento (%)</label>
+                  <input type="number" id="id_descuento" name="descuento" value="{{ form.descuento.value|default:'0' }}" class="k-form-input" min="0" max="100">
+                </div>
+                <div class="col-md-3">
+                  <label class="k-form-label">Costo (Opcional)</label>
+                  <div class="position-relative">
+                    <span class="position-absolute translate-middle-y top-50 start-0 ps-3 text-muted">€</span>
+                    <input type="number" name="costo" value="{{ form.costo.value|default:'' }}" class="k-form-input ps-5" step="0.01">
+                  </div>
+                </div>
+              </div>
+              <div class="mb-4">
+                <div class="p-3 bg-success bg-opacity-10 border border-success border-opacity-25 rounded-3 d-flex justify-content-between align-items-center">
+                  <span class="fw-bold text-success">Precio de Venta al Público (PVP Final):</span>
+                  <span class="fw-900 fs-5 text-success" id="pvp-final-display">0.00 €</span>
+                </div>
+              </div>
+
+              <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                  <label class="k-form-label">Stock Actual</label>
+                  <input type="number" name="stock" value="{{ form.stock.value|default:'0' }}" class="k-form-input">
+                </div>
+                <div class="col-md-6">
+                  <label class="k-form-label">Alertar Mínimo</label>
+                  <input type="number" name="stock_minimo" value="{{ form.stock_minimo.value|default:'10' }}" class="k-form-input">
+                </div>
+              </div>
+            </div>
+
+            <!-- COLUMNA DERECHA: CONFIGURACIÓN Y MEDIA -->
+            <div class="col-md-5">
+              <div class="mb-4">
+                <label class="k-form-label">Tipo de Operación</label>
+                <select name="tipo_producto" class="k-form-input">
+                  {% for value, text in form.fields.tipo_producto.choices %}
+                  <option value="{{ value }}" {% if form.tipo_producto.value == value %}selected{% endif %}>{{ text }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="mb-4">
+                <label class="k-form-label">Activos Visuales (Imagen)</label>
+                <input type="file" name="imagen" class="form-control k-form-input" id="id_imagen">
+                <div class="k-image-preview-box" id="imagePreview">
+                  {% if form.instance.imagen %}
+                  <img src="{{ form.instance.imagen.url }}">
+                  {% else %}
+                  <div class="text-center">
+                    <i class="fas fa-image fa-3x text-slate-100 mb-2"></i>
+                    <p class="small text-muted mb-0">Vista previa del artículo</p>
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="d-flex align-items-center justify-content-between p-3 rounded-4 bg-light">
+                <div>
+                  <h6 class="fw-bold mb-0">Estatus Operativo</h6>
+                  <p class="small text-muted mb-0">Visible en el punto de venta</p>
+                </div>
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" name="activo" id="id_activo" {% if form.activo.value %}checked{% endif %}>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="my-5" style="opacity: 0.05;">
+
+          <div class="d-flex justify-content-end gap-3">
+            <a href="{% url 'home_app:lista_productos' %}" class="btn-k-secondary" style="padding: 14px 32px;">
+              Cancelar Operación
+            </a>
+            <button type="submit" class="btn-save-pro">
+              <i class="fas fa-check-circle"></i> Confirmar y Guardar Artículo
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CREAR CATEGORÍA "FINE" -->
+<div class="modal fade" id="crearCategoriaModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content k-modal-content">
+      <div class="k-modal-header">
+        <h5 class="modal-title fw-bold"><i class="fas fa-layer-group me-2"></i>Nueva Categoría Operativa</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <form id="form-crear-categoria">
+          {% csrf_token %}
+          <div class="mb-4">
+            <label class="k-form-label">Nombre de Categoría</label>
+            <input type="text" class="k-form-input" id="nuevaCategoriaNombre" placeholder="Ej: Bebidas Frías" required>
+          </div>
+          <div class="mb-4">
+            <label class="k-form-label">Descripción (Opcional)</label>
+            <textarea class="k-form-input" id="nuevaCategoriaDescripcion" rows="3" placeholder="Descripción breve para reporte..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-dark w-100 py-3 fw-bold rounded-4" style="background: var(--k-navy-950);">
+            Establecer Categoría
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // MANEJO DE CATEGORÍA AJAX
+  document.getElementById("form-crear-categoria").addEventListener("submit", function (e) {
+    e.preventDefault();
+    const nombre = document.getElementById("nuevaCategoriaNombre").value;
+    const descripcion = document.getElementById("nuevaCategoriaDescripcion").value;
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    fetch("{% url 'home_app:crear_categoria_ajax' %}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrfToken,
+      },
+      body: JSON.stringify({ nombre, descripcion }),
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          const select = document.querySelector('select[name="categoria"]');
+          const option = document.createElement("option");
+          option.value = data.id;
+          option.textContent = data.nombre;
+          option.selected = true;
+          select.appendChild(option);
+          bootstrap.Modal.getInstance(document.getElementById("crearCategoriaModal")).hide();
+          document.getElementById("form-crear-categoria").reset();
+        } else {
+          alert(data.error || "Error al crear la categoría");
+        }
+      });
+  });
+
+  // Script para previsualizar imagen
+  document.getElementById('id_imagen').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById('imagePreview');
+    
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        preview.innerHTML = `<img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: contain;">`;
+      }
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // Calculadora de Precio Final
+  document.addEventListener('DOMContentLoaded', function() {
+    const inputPrecio = document.getElementById('id_precio');
+    const inputIva = document.getElementById('id_porcentaje_iva');
+    const inputDescto = document.getElementById('id_descuento');
+    const displayPvp = document.getElementById('pvp-final-display');
+
+    function calcularPVP() {
+      const precioBase = parseFloat(inputPrecio.value) || 0;
+      const iva = parseFloat(inputIva.value) || 0;
+      const descuento = parseFloat(inputDescto.value) || 0;
+
+      const precioConIva = precioBase * (1 + (iva / 100));
+      const precioFinal = precioConIva * (1 - (descuento / 100));
+
+      displayPvp.textContent = precioFinal.toFixed(2) + ' €';
+    }
+
+    if (inputPrecio) {
+      inputPrecio.addEventListener('input', calcularPVP);
+      inputIva.addEventListener('change', calcularPVP);
+      inputDescto.addEventListener('input', calcularPVP);
+      calcularPVP(); // Calcular inicial
+    }
+  });
+</script>
+{% endblock %}
