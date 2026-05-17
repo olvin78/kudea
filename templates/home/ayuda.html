@@ -344,19 +344,66 @@
 
     .chat-row.bot-row .chat-bubble {
         background: #ffffff;
-        color: #334155;
-        border: 1px solid #edf2f7;
-        border-bottom-left-radius: 0;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+        color: #1e293b;
+        border: 1px solid #e2e8f0;
+        border-left: 4px solid #3b82f6;
+        border-bottom-left-radius: 4px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.015);
+        padding: 16px 20px;
         text-align: left;
     }
 
-    .chat-bubble p { margin-bottom: 10px; }
-    .chat-bubble p:last-child { margin-bottom: 0; }
-    .chat-bubble ul, .chat-bubble ol { margin-bottom: 10px; padding-left: 20px; }
-    .chat-bubble li { margin-bottom: 4px; }
-    .chat-bubble b, .chat-bubble strong { color: #1d4ed8; font-weight: 700; }
-    .chat-row.user-row .chat-bubble b, .chat-row.user-row .chat-bubble strong { color: #60a5fa; }
+    .chat-bubble p {
+        margin-bottom: 12px;
+        line-height: 1.65;
+    }
+    .chat-bubble p:last-child {
+        margin-bottom: 0;
+    }
+
+    /* Style the subheadings inside chatbot response */
+    .chat-row.bot-row .chat-bubble h1,
+    .chat-row.bot-row .chat-bubble h2,
+    .chat-row.bot-row .chat-bubble h3 {
+        color: #0f172a;
+        font-weight: 800;
+        font-size: 15px;
+        margin-top: 16px;
+        margin-bottom: 10px;
+        letter-spacing: -0.02em;
+    }
+
+    .chat-row.bot-row .chat-bubble h1:first-child,
+    .chat-row.bot-row .chat-bubble h2:first-child,
+    .chat-row.bot-row .chat-bubble h3:first-child {
+        margin-top: 0;
+    }
+
+    .chat-bubble ul, .chat-bubble ol {
+        margin: 0 0 12px 0;
+        padding-left: 20px;
+    }
+    .chat-bubble li {
+        margin-bottom: 8px;
+        line-height: 1.6;
+    }
+    .chat-bubble li:last-child {
+        margin-bottom: 0;
+    }
+
+    .chat-bubble b, .chat-bubble strong {
+        color: #1e3a8a;
+        font-weight: 700;
+    }
+    .chat-row.user-row .chat-bubble b, .chat-row.user-row .chat-bubble strong {
+        color: #60a5fa;
+    }
+
+    .chat-row.bot-row .chat-bubble hr {
+        border: 0;
+        border-top: 1px dashed #e2e8f0;
+        margin: 16px 0;
+    }
 
     .chat-sender-name {
         font-size: 9px;
