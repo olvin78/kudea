@@ -1,119 +1,294 @@
 {% extends "home/base.html" %}
 {% load static %}
 
-{% block title %}Kudea Mentor - Inteligencia Local{% endblock %}
+{% block title %}Kudea Mentor - Inteligencia de Negocio{% endblock %}
 
 {% block head %}
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <style>
     :root {
         --k-navy: #0f172a;
         --k-accent: #3b82f6;
-        --k-mentor-glow: rgba(59, 130, 246, 0.5);
+        --k-mentor-glow: rgba(59, 130, 246, 0.4);
+        --glass-bg: rgba(255, 255, 255, 0.78);
+        --glass-border: rgba(255, 255, 255, 0.4);
     }
 
-    body { background: #f8fafc; font-family: 'Inter', sans-serif; }
+    body {
+        background: #f8fafc;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .mentor-bg {
+        position: relative;
+        background: #f8fafc;
+        min-height: 90vh;
+        overflow: hidden;
+        padding-bottom: 5rem;
+    }
+
+    /* Ambient Glow Blobs */
+    .glow-blob-1, .glow-blob-2 {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(140px);
+        opacity: 0.35;
+        z-index: 1;
+        pointer-events: none;
+        animation: floatBlobs 25s infinite alternate;
+    }
+
+    .glow-blob-1 {
+        width: 550px;
+        height: 550px;
+        background: radial-gradient(circle, #3b82f6 0%, rgba(59, 130, 246, 0) 70%);
+        top: -150px;
+        left: -100px;
+    }
+
+    .glow-blob-2 {
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, #a78bfa 0%, rgba(167, 139, 250, 0) 70%);
+        bottom: -100px;
+        right: -100px;
+        animation-delay: -12s;
+    }
+
+    @keyframes floatBlobs {
+        0% {
+            transform: translate(0, 0) scale(1);
+        }
+        100% {
+            transform: translate(100px, 60px) scale(1.15);
+        }
+    }
 
     .mentor-header {
-        background: radial-gradient(circle at top right, #1e293b, #0f172a);
-        padding: 6rem 1rem 10rem;
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        padding: 5.5rem 1rem 6.5rem;
         text-align: center;
         color: white;
-        border-radius: 0 0 60px 60px;
+        border-radius: 0 0 50px 50px;
         position: relative;
+        z-index: 10;
+        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.05);
+    }
+
+    .mentor-header::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(90deg, #3b82f6 0%, #a78bfa 50%, #f472b6 100%);
     }
 
     .mentor-ai-badge {
-        background: rgba(59, 130, 246, 0.2);
-        color: var(--k-accent);
-        padding: 8px 20px;
+        background: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+        padding: 8px 24px;
         border-radius: 100px;
-        font-weight: 800;
+        font-weight: 900;
         font-size: 0.8rem;
         text-transform: uppercase;
         letter-spacing: 0.2em;
         border: 1px solid rgba(59, 130, 246, 0.3);
-        display: inline-block;
-        margin-bottom: 2rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+    }
+
+    .mentor-title {
+        font-size: 3.5rem;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        margin-bottom: 1rem;
+        background: linear-gradient(to right, #60a5fa, #c084fc, #f472b6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
     }
 
     .main-search-wrapper {
         max-width: 800px;
-        margin: -80px auto 0;
-        padding: 0 1rem;
+        margin: -45px auto 0;
+        padding: 0 1.5rem;
         z-index: 100;
         position: relative;
     }
 
     .mentor-box {
-        background: white;
-        border-radius: 35px;
-        box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.25);
-        padding: 1.5rem;
-        border: 1px solid #e2e8f0;
-        transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 2.25rem;
+        box-shadow: 0 30px 70px -15px rgba(15, 23, 42, 0.12), 
+                    0 0 0 1px rgba(15, 23, 42, 0.04);
+        padding: 1.25rem;
+        border: 1px solid var(--glass-border);
     }
 
     .mentor-input-group {
         display: flex;
         gap: 1rem;
         align-items: center;
-        background: #f1f5f9;
-        padding: 0.75rem 1.5rem;
-        border-radius: 25px;
-        transition: all 0.3s ease;
+        background: #f8fafc;
+        padding: 0.5rem 1.25rem;
+        border-radius: 1.75rem;
+        border: 1.5px solid #e2e8f0;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .mentor-input-group:focus-within {
         background: white;
-        box-shadow: 0 0 0 3px var(--k-mentor-glow);
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
     }
 
     #mentorInput {
         border: none;
         background: transparent;
         width: 100%;
-        padding: 1rem 0;
-        font-size: 1.25rem;
-        font-weight: 500;
+        padding: 0.85rem 0;
+        font-size: 1.15rem;
+        font-weight: 600;
         color: var(--k-navy);
+        outline: none;
     }
 
-    #mentorInput:focus { outline: none; }
+    #mentorInput::placeholder {
+        color: #94a3b8;
+    }
+
+    .brain-icon-anim {
+        color: #3b82f6;
+        animation: slowPulse 3s infinite ease-in-out;
+    }
+
+    @keyframes slowPulse {
+        0%, 100% { transform: scale(1); opacity: 0.8; }
+        50% { transform: scale(1.1); opacity: 1; }
+    }
 
     .ask-btn {
-        background: var(--k-navy);
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         color: white;
         border: none;
-        width: 50px;
-        height: 50px;
-        border-radius: 18px;
+        width: 48px;
+        height: 48px;
+        border-radius: 1.25rem;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.25rem;
-        transition: all 0.3s ease;
+        font-size: 1.1rem;
+        transition: all 0.2s ease-in-out;
+        box-shadow: 0 8px 16px rgba(15, 23, 42, 0.15);
+        cursor: pointer;
     }
 
     .ask-btn:hover {
-        background: var(--k-accent);
-        transform: scale(1.05);
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        transform: translateY(-1px) scale(1.05);
+        box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
     }
 
-    /* Chat Response Area */
+    /* Suggestion Grid */
+    .suggestions-container {
+        max-width: 800px;
+        margin: 3rem auto 0;
+        padding: 0 1.5rem;
+        z-index: 10;
+        position: relative;
+    }
+
+    .suggestions-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    @media (max-width: 640px) {
+        .suggestions-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .suggestion-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 1.5rem;
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        cursor: pointer;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        text-align: left;
+    }
+
+    .suggestion-card:hover {
+        background: white;
+        border-color: #3b82f6;
+        transform: translateY(-2px);
+        box-shadow: 0 12px 24px -10px rgba(59, 130, 246, 0.15);
+    }
+
+    .suggestion-icon {
+        width: 42px;
+        height: 42px;
+        background: #eff6ff;
+        color: #3b82f6;
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+
+    .suggestion-card:nth-child(2) .suggestion-icon { background: #ecfdf5; color: #10b981; }
+    .suggestion-card:nth-child(3) .suggestion-icon { background: #fef3c7; color: #d97706; }
+    .suggestion-card:nth-child(4) .suggestion-icon { background: #fdf2f8; color: #db2777; }
+
+    .suggestion-card h4 {
+        font-weight: 800;
+        font-size: 0.95rem;
+        color: #1e293b;
+        margin: 0 0 0.15rem 0;
+    }
+
+    .suggestion-card p {
+        font-size: 0.8rem;
+        color: #64748b;
+        margin: 0;
+        font-weight: 500;
+    }
+
+    /* Response Area */
     .response-area {
         max-width: 800px;
-        margin: 4rem auto;
-        padding: 0 1rem;
+        margin: 3rem auto;
+        padding: 0 1.5rem;
+        z-index: 10;
+        position: relative;
     }
 
     .mentor-response {
-        background: white;
-        border-radius: 30px;
-        padding: 3rem;
-        border: 1px solid #e2e8f0;
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 2.5rem;
+        padding: 3rem 2.5rem;
+        border: 1px solid var(--glass-border);
+        box-shadow: 0 30px 60px -15px rgba(15, 23, 42, 0.08);
         display: none;
-        animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        animation: slideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
     @keyframes slideUp {
@@ -122,127 +297,174 @@
     }
 
     .mentor-avatar {
-        width: 60px;
-        height: 60px;
-        background: var(--k-navy);
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
         color: white;
-        border-radius: 20px;
+        border-radius: 1.25rem;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.5rem;
-        margin-bottom: 2rem;
-        box-shadow: 0 10px 20px rgba(15, 23, 42, 0.2);
+        font-size: 1.4rem;
+        margin-bottom: 1.75rem;
+        box-shadow: 0 10px 20px rgba(59, 130, 246, 0.25);
     }
 
     .response-text {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         line-height: 1.8;
         color: #334155;
     }
 
+    .response-text p {
+        margin-bottom: 1.25rem;
+    }
+
     .response-text b, .response-text strong {
-        color: var(--k-accent);
+        color: #1d4ed8;
         font-weight: 800;
     }
 
+    .response-text code {
+        background: #f1f5f9;
+        color: #0f172a;
+        padding: 2px 6px;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 0.9rem;
+    }
+
+    /* Pulse Loader */
     .pulse-loader {
         display: none;
         text-align: center;
-        padding: 2rem;
+        padding: 3rem;
+        background: rgba(255, 255, 255, 0.6);
+        border-radius: 2.5rem;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.02);
+    }
+
+    .loader-dots {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
     }
 
     .dot {
-        height: 12px;
-        width: 12px;
-        background-color: var(--k-accent);
+        height: 14px;
+        width: 14px;
+        background-color: #3b82f6;
         border-radius: 50%;
         display: inline-block;
-        margin: 0 4px;
-        animation: pulse 1.5s infinite ease-in-out;
+        animation: pulse 1.4s infinite ease-in-out;
     }
 
-    .dot:nth-child(2) { animation-delay: 0.2s; }
-    .dot:nth-child(3) { animation-delay: 0.4s; }
+    .dot:nth-child(2) { animation-delay: 0.2s; background-color: #a78bfa; }
+    .dot:nth-child(3) { animation-delay: 0.4s; background-color: #f472b6; }
 
     @keyframes pulse {
-        0%, 100% { transform: scale(0.8); opacity: 0.5; }
+        0%, 100% { transform: scale(0.8); opacity: 0.4; }
         50% { transform: scale(1.2); opacity: 1; }
-    }
-
-    /* Suggestion Chips */
-    .suggestions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.75rem;
-        margin-top: 1.5rem;
-        justify-content: center;
-    }
-
-    .chip {
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        color: white;
-        padding: 8px 18px;
-        border-radius: 100px;
-        font-size: 0.9rem;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .chip:hover {
-        background: white;
-        color: var(--k-navy);
-        transform: translateY(-2px);
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="mentor-header">
-    <div class="container">
-        <span class="mentor-ai-badge">IA Local Activada</span>
-        <h1 class="display-3 fw-black mb-3" style="letter-spacing: -0.05em;">Kudea Mentor</h1>
-        <p class="fs-4 opacity-75 mb-0">Pregúntame cualquier cosa o pídeme que detecte un fallo</p>
-        
-        <div class="suggestions">
-            <div class="chip" onclick="quickAsk('¿Cómo cobrar una venta?')">¿Cómo cobrar una venta?</div>
-            <div class="chip" onclick="quickAsk('¿El IVA está incluido?')">¿El IVA está incluido?</div>
-            <div class="chip" onclick="quickAsk('Tengo un fallo en balance')">Tengo un fallo en balance</div>
-            <div class="chip" onclick="quickAsk('¿Cómo creo un producto?')">¿Cómo creo un producto?</div>
+<div class="mentor-bg">
+    <!-- Ambient Glow Blobs -->
+    <div class="glow-blob-1"></div>
+    <div class="glow-blob-2"></div>
+
+    <div class="mentor-header">
+        <div class="container">
+            <span class="mentor-ai-badge"><i class="fas fa-brain"></i> IA Local Activada</span>
+            <h1 class="mentor-title">Kudea Mentor</h1>
+            <p class="fs-4 opacity-75 mb-0 max-w-2xl mx-auto font-medium">Tu copiloto inteligente. Pregúntame sobre el TPV, arqueos de caja, stock o pídeme solucionar incidencias.</p>
         </div>
     </div>
-</div>
 
-<div class="main-search-wrapper">
-    <div class="mentor-box">
-        <div class="mentor-input-group">
-            <i class="fas fa-brain text-muted fs-4"></i>
-            <input type="text" id="mentorInput" placeholder="Escribe tu duda aquí..." autocomplete="off">
-            <button class="ask-btn" onclick="askMentor()">
-                <i class="fas fa-arrow-right"></i>
-            </button>
+    <div class="main-search-wrapper">
+        <div class="mentor-box">
+            <div class="mentor-input-group">
+                <i class="fas fa-brain fs-4 brain-icon-anim"></i>
+                <input type="text" id="mentorInput" placeholder="¿Cómo te puedo ayudar hoy con tu Kudea?..." autocomplete="off">
+                <button class="ask-btn" onclick="askMentor()">
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
         </div>
     </div>
-</div>
 
-<div class="response-area">
-    <div class="pulse-loader" id="loader">
-        <div class="dot"></div>
-        <div class="dot"></div>
-        <div class="dot"></div>
-        <p class="mt-3 text-muted fw-bold">Kudea Mentor está consultando su memoria...</p>
+    <!-- Interactive Suggestion Grid -->
+    <div class="suggestions-container" id="suggestionsBox">
+        <div class="suggestions-grid">
+            <div class="suggestion-card" onclick="quickAsk('¿Cómo cobrar una venta?')">
+                <div class="suggestion-icon">
+                    <i class="fas fa-cash-register"></i>
+                </div>
+                <div>
+                    <h4>Cobrar una venta</h4>
+                    <p>Guía paso a paso en el TPV</p>
+                </div>
+            </div>
+            
+            <div class="suggestion-card" onclick="quickAsk('Tengo un fallo en balance')">
+                <div class="suggestion-icon">
+                    <i class="fas fa-vault"></i>
+                </div>
+                <div>
+                    <h4>Arqueo & Balance</h4>
+                    <p>Auditar caja y descuadres</p>
+                </div>
+            </div>
+
+            <div class="suggestion-card" onclick="quickAsk('¿El IVA está incluido?')">
+                <div class="suggestion-icon">
+                    <i class="fas fa-percentage"></i>
+                </div>
+                <div>
+                    <h4>IVA e Impuestos</h4>
+                    <p>Visualizar precios en cajas</p>
+                </div>
+            </div>
+
+            <div class="suggestion-card" onclick="quickAsk('¿Cómo creo un producto?')">
+                <div class="suggestion-icon">
+                    <i class="fas fa-box-open"></i>
+                </div>
+                <div>
+                    <h4>Crear un producto</h4>
+                    <p>Añadir catálogo y stock</p>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="mentor-response" id="responseBox">
-        <div class="mentor-avatar">
-            <i class="fas fa-robot"></i>
+    <!-- Response Display Area -->
+    <div class="response-area">
+        <div class="pulse-loader" id="loader">
+            <div class="loader-dots">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+            <p class="mt-3 text-muted fw-bold">Kudea Mentor está consultando su memoria y base de datos...</p>
         </div>
-        <div id="responseText" class="response-text">
-            <!-- La respuesta aparecerá aquí -->
-        </div>
-        <div class="mt-5 pt-4 border-top">
-            <p class="small text-muted mb-0">Esta respuesta ha sido generada localmente basándose en la arquitectura de tu Kudea.</p>
+
+        <div class="mentor-response" id="responseBox">
+            <div class="mentor-avatar">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div id="responseText" class="response-text">
+                <!-- La respuesta aparecerá aquí -->
+            </div>
+            <div class="mt-5 pt-4 border-top">
+                <p class="small text-muted mb-0">Esta respuesta ha sido generada localmente basándose en el comportamiento real de tu Kudea.</p>
+            </div>
         </div>
     </div>
 </div>
@@ -253,6 +475,7 @@
     const responseBox = document.getElementById('responseBox');
     const responseText = document.getElementById('responseText');
     const loader = document.getElementById('loader');
+    const suggestionsBox = document.getElementById('suggestionsBox');
 
     async function askMentor(text = null) {
         const query = text || mentorInput.value.trim();
@@ -261,6 +484,7 @@
         // Limpiar y mostrar loader
         mentorInput.value = query;
         responseBox.style.display = 'none';
+        suggestionsBox.style.display = 'none';
         loader.style.display = 'block';
 
         try {
@@ -277,11 +501,12 @@
             loader.style.display = 'none';
             responseBox.style.display = 'block';
             
-            // Usar marked para parsear markdown de la respuesta si es necesario
+            // Usar marked para parsear markdown de la respuesta
             responseText.innerHTML = marked.parse(data.respuesta || "No he podido procesar esa consulta.");
 
         } catch (error) {
             loader.style.display = 'none';
+            suggestionsBox.style.display = 'block';
             alert("Error al conectar con Kudea Mentor.");
         }
     }
