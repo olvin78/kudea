@@ -11,6 +11,7 @@ class Categoria(models.Model):
     slug = models.SlugField(max_length=100, unique=True, blank=True)
     icono = models.ImageField(upload_to='categorias/', blank=True, null=True)
     descripcion = models.TextField(blank=True, null=True)
+    porcentaje_iva = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('15.00'), validators=[MinValueValidator(0), MaxValueValidator(100)])
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)
 
@@ -36,20 +37,12 @@ class Producto(models.Model):
         FISICO = 'fisico', 'Físico'
         DIGITAL = 'digital', 'Digital'
 
-    VALORES_IVA = [
-        (Decimal('21.00'), '21%'),
-        (Decimal('15.00'), '15%'),
-        (Decimal('10.00'), '10%'),
-        (Decimal('4.00'), '4%'),
-        (Decimal('0.00'), '0% (Exento)'),
-    ]
-
     codigo_barras = models.CharField(max_length=50, unique=True, blank=True, null=True)
     nombre = models.CharField(max_length=200)
     slug = models.SlugField(unique=True, blank=True, null=True)
     categoria = models.ForeignKey('Categoria', on_delete=models.SET_NULL, null=True, blank=True, related_name='products')
     precio = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
-    porcentaje_iva = models.DecimalField(max_digits=5, decimal_places=2, choices=VALORES_IVA, default=Decimal('21.00'))
+    porcentaje_iva = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('15.00'), validators=[MinValueValidator(0), MaxValueValidator(100)])
     costo = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)], blank=True, null=True)
     descuento = models.DecimalField(max_digits=5, decimal_places=2, default=0, validators=[MinValueValidator(0), MaxValueValidator(100)])
     stock = models.IntegerField(default=0, validators=[MinValueValidator(0)])
@@ -70,7 +63,7 @@ class Producto(models.Model):
         ordering = ['nombre']
 
     def __str__(self):
-        return f"{self.nombre} - {self.precio}€"
+        return f"{self.nombre} - {self.precio}"
 
     @property
     def necesita_reposicion(self):
@@ -104,5 +97,9 @@ class Producto(models.Model):
                 if not Producto.objects.filter(codigo_barras=new_code).exists():
                     self.codigo_barras = new_code
                     break
+
+        # Inherit IVA from category on creation (only when pk is not set yet)
+        if not self.pk and self.categoria and self.categoria.porcentaje_iva is not None:
+            self.porcentaje_iva = self.categoria.porcentaje_iva
 
         super().save(*args, **kwargs)

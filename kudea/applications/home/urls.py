@@ -84,6 +84,7 @@ urlpatterns = [
     # ===========================
     path("ayuda/", views.HelpCenterView.as_view(), name="ayuda"),
     path("acerca/", views.AboutVersionView.as_view(), name="acerca_version"),
+    path("home/docs/sistema/", views.SistemaDocsView.as_view(), name="sistema_docs"),
 ]
 
 # Servir archivos media en desarrollo

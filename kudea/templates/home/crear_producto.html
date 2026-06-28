@@ -20,7 +20,7 @@
     background: white;
     border: 1px solid rgba(0, 0, 0, 0.05);
     border-radius: 24px;
-    padding: 40px;
+    padding: 52px 56px;
     box-shadow: var(--k-shadow-md);
   }
 
@@ -170,7 +170,7 @@
   </div>
 
   <div class="row justify-content-center">
-    <div class="col-lg-10">
+    <div class="col-xl-11 col-lg-12">
       <div class="k-form-card">
         {% if form.errors %}
         <div class="alert alert-danger border-0 rounded-4 mb-4" style="background: #fee2e2; color: #991b1b;">
@@ -194,9 +194,25 @@
 
               <div class="row g-4 mb-4">
                 <div class="col-md-6">
-                <label class="k-form-label">Código EAN / Barras</label>
-                <input type="text" name="codigo_barras" value="{{ form.codigo_barras.value|default:form.initial.codigo_barras|default:'' }}" class="k-form-input" placeholder="Auto-generación si vacío">
-              </div>
+                  <label class="k-form-label">Código EAN / Barras</label>
+                  <div class="k-input-group">
+                    <input type="text" name="codigo_barras" id="id_codigo_barras"
+                           value="{{ form.codigo_barras.value|default:form.initial.codigo_barras|default:'' }}"
+                           class="k-form-input"
+                           placeholder="Auto-generación si vacío"
+                           readonly
+                           style="background:#f1f5f9; color:#94a3b8; cursor:not-allowed;">
+                    <button type="button" id="btn-unlock-barcode" class="btn-k-action" title="Desbloquear para editar"
+                            onclick="toggleBarcode()">
+                      <i class="fas fa-lock" id="icon-lock-barcode"></i>
+                    </button>
+                    <button type="button" class="btn-k-action" title="Generar nuevo código"
+                            onclick="refreshBarcode()" id="btn-refresh-barcode" style="display:none;">
+                      <i class="fas fa-sync-alt"></i>
+                    </button>
+                  </div>
+                  <p class="text-[10px] text-slate-400 mt-1 mb-0" id="barcode-hint">🔒 Bloqueado — pulsa el candado para editar</p>
+                </div>
                 <div class="col-md-6">
                   <label class="k-form-label">Categoría</label>
                   <div class="k-input-group">
@@ -212,49 +228,72 @@
                 </div>
               </div>
 
-              <div class="row g-4 mb-2">
-                <div class="col-md-3">
-                  <label class="k-form-label">Precio Base</label>
+              <div class="row g-3 mb-2">
+                <div class="col-md-4">
+                  <label class="k-form-label">Precio sin IVA (base)</label>
                   <div class="position-relative">
-                    <span class="position-absolute translate-middle-y top-50 start-0 ps-3 text-muted">€</span>
-                    <input type="number" id="id_precio" name="precio" value="{{ form.precio.value|default:'' }}" class="k-form-input ps-5" step="0.01" required>
+                    <span class="position-absolute translate-middle-y top-50 start-0 ps-3 text-muted fw-bold">{{ moneda }}</span>
+                    <input type="number" id="id_precio" name="precio" value="{{ form.precio.value|default:'' }}" class="k-form-input ps-5" step="0.01" min="0" required>
                   </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                   <label class="k-form-label">IVA (%)</label>
-                  <select name="porcentaje_iva" id="id_porcentaje_iva" class="k-form-input">
-                    {% for value, text in form.fields.porcentaje_iva.choices %}
-                    <option value="{{ value }}" {% if form.porcentaje_iva.value|stringformat:'s' == value|stringformat:'s' %}selected{% endif %}>{{ text }}</option>
-                    {% endfor %}
-                  </select>
+                  <input type="number" name="porcentaje_iva" id="id_porcentaje_iva" value="{{ form.porcentaje_iva.value|default:'15.00' }}" class="k-form-input" step="0.01" min="0" max="100">
                 </div>
-                <div class="col-md-3">
-                  <label class="k-form-label">Descuento (%)</label>
+                <div class="col-md-2">
+                  <label class="k-form-label">Dto. (%)</label>
                   <input type="number" id="id_descuento" name="descuento" value="{{ form.descuento.value|default:'0' }}" class="k-form-input" min="0" max="100">
                 </div>
-                <div class="col-md-3">
-                  <label class="k-form-label">Costo (Opcional)</label>
+                <div class="col-md-4">
+                  <label class="k-form-label">Costo (opcional)</label>
                   <div class="position-relative">
-                    <span class="position-absolute translate-middle-y top-50 start-0 ps-3 text-muted">€</span>
-                    <input type="number" name="costo" value="{{ form.costo.value|default:'' }}" class="k-form-input ps-5" step="0.01">
+                    <span class="position-absolute translate-middle-y top-50 start-0 ps-3 text-muted fw-bold">{{ moneda }}</span>
+                    <input type="number" name="costo" value="{{ form.costo.value|default:'' }}" class="k-form-input ps-5" step="0.01" min="0">
                   </div>
                 </div>
               </div>
+              <div id="iva-helper-banner" class="d-none mb-4">
+                <div class="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 text-center">
+                  <p class="mb-0 text-blue-700 font-semibold text-sm" id="iva-helper-text">📌 IVA heredado de la categoría</p>
+                </div>
+              </div>
               <div class="mb-4">
-                <div class="p-3 bg-success bg-opacity-10 border border-success border-opacity-25 rounded-3 d-flex justify-content-between align-items-center">
-                  <span class="fw-bold text-success">Precio de Venta al Público (PVP Final):</span>
-                  <span class="fw-900 fs-5 text-success" id="pvp-final-display">0.00 €</span>
+                <div class="row g-2">
+                  <div class="col-6 col-lg-3">
+                    <div class="bg-white border border-slate-200 rounded-xl px-4 py-4 text-center d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;">
+                      <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider d-block mb-2" style="line-height:1.2; min-height:28px;">Precio sin IVA</span>
+                      <strong class="text-slate-800" style="font-size:1.35rem;" id="bd-precio">0.00</strong>
+                    </div>
+                  </div>
+                  <div class="col-6 col-lg-3">
+                    <div class="bg-blue-50 border border-blue-100 rounded-xl px-4 py-4 text-center d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;">
+                      <span class="text-[10px] font-bold text-blue-500 uppercase tracking-wider d-block mb-2" style="line-height:1.2; min-height:28px;">IVA <span id="bd-iva-label">15</span>%</span>
+                      <strong class="text-blue-700" style="font-size:1.35rem;" id="bd-iva">0.00</strong>
+                    </div>
+                  </div>
+                  <div class="col-6 col-lg-3">
+                    <div class="bg-amber-50 border border-amber-100 rounded-xl px-4 py-4 text-center d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;">
+                      <span class="text-[10px] font-bold text-amber-600 uppercase tracking-wider d-block mb-2" style="line-height:1.2; min-height:28px;">Precio con IVA</span>
+                      <strong class="text-amber-700" style="font-size:1.35rem;" id="bd-base">0.00</strong>
+                    </div>
+                  </div>
+                  <div class="col-6 col-lg-3">
+                    <div class="bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-4 text-center d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;">
+                      <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider d-block mb-2" style="line-height:1.2; min-height:28px;">Total Final</span>
+                      <strong class="text-emerald-700" style="font-size:1.35rem;" id="bd-total">0.00</strong>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               <div class="row g-4 mb-4">
                 <div class="col-md-6">
                   <label class="k-form-label">Stock Actual</label>
-                  <input type="number" name="stock" value="{{ form.stock.value|default:'0' }}" class="k-form-input">
+                  <input type="number" name="stock" value="{{ form.stock.value|default:'0' }}" class="k-form-input" min="0">
                 </div>
                 <div class="col-md-6">
                   <label class="k-form-label">Alertar Mínimo</label>
-                  <input type="number" name="stock_minimo" value="{{ form.stock_minimo.value|default:'10' }}" class="k-form-input">
+                  <input type="number" name="stock_minimo" value="{{ form.stock_minimo.value|default:'5' }}" class="k-form-input" min="0">
                 </div>
               </div>
             </div>
@@ -330,7 +369,7 @@
           </div>
           <div class="mb-4">
             <label class="k-form-label">Descripción (Opcional)</label>
-            <textarea class="k-form-input" id="nuevaCategoriaDescripcion" rows="3" placeholder="Descripción breve para reporte..."></textarea>
+            <textarea class="k-form-input" id="nuevaCategoriaDescripcion" rows="4" placeholder="Descripción breve para reporte..." style="min-height: 100px;"></textarea>
           </div>
           <button type="submit" class="btn btn-dark w-100 py-3 fw-bold rounded-4" style="background: var(--k-navy-950);">
             Establecer Categoría
@@ -342,6 +381,46 @@
 </div>
 
 <script>
+  // ────────────────────────────────────────────
+  // LOCK / UNLOCK CÓDIGO DE BARRAS
+  // ────────────────────────────────────────────
+  function toggleBarcode() {
+    const input = document.getElementById('id_codigo_barras');
+    const icon  = document.getElementById('icon-lock-barcode');
+    const hint  = document.getElementById('barcode-hint');
+    const refreshBtn = document.getElementById('btn-refresh-barcode');
+    const locked = input.hasAttribute('readonly');
+    if (locked) {
+      input.removeAttribute('readonly');
+      input.style.background   = '';
+      input.style.color        = '';
+      input.style.cursor       = '';
+      icon.classList.replace('fa-lock', 'fa-lock-open');
+      refreshBtn.style.display = '';
+      hint.textContent = '✏️ Modo edición — pulsa 🔄 para generar otro código';
+      hint.style.color = '#16a34a';
+      input.focus();
+    } else {
+      input.setAttribute('readonly', true);
+      input.style.background = '#f1f5f9';
+      input.style.color      = '#94a3b8';
+      input.style.cursor     = 'not-allowed';
+      icon.classList.replace('fa-lock-open', 'fa-lock');
+      refreshBtn.style.display = 'none';
+      hint.textContent = '🔒 Bloqueado — pulsa el candado para editar';
+      hint.style.color = '';
+    }
+  }
+
+  function refreshBarcode() {
+    const input = document.getElementById('id_codigo_barras');
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = 'KUD-';
+    for (let i = 0; i < 8; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+    input.value = code;
+    input.focus();
+  }
+
   // MANEJO DE CATEGORÍA AJAX
   document.getElementById("form-crear-categoria").addEventListener("submit", function (e) {
     e.preventDefault();
@@ -393,17 +472,23 @@
     const inputPrecio = document.getElementById('id_precio');
     const inputIva = document.getElementById('id_porcentaje_iva');
     const inputDescto = document.getElementById('id_descuento');
-    const displayPvp = document.getElementById('pvp-final-display');
+    const moneda = '{{ moneda }}';
 
     function calcularPVP() {
-      const precioBase = parseFloat(inputPrecio.value) || 0;
+      const base = parseFloat(inputPrecio.value) || 0;
       const iva = parseFloat(inputIva.value) || 0;
       const descuento = parseFloat(inputDescto.value) || 0;
 
-      const precioConIva = precioBase * (1 + (iva / 100));
-      const precioFinal = precioConIva * (1 - (descuento / 100));
+      const tasa = iva / 100;
+      const montoIva = base * tasa;
+      const precioConIva = base + montoIva;
+      const totalFinal = precioConIva * (1 - (descuento / 100));
 
-      displayPvp.textContent = precioFinal.toFixed(2) + ' €';
+      document.getElementById('bd-precio').textContent = base.toFixed(2);
+      document.getElementById('bd-iva-label').textContent = iva;
+      document.getElementById('bd-iva').textContent = montoIva.toFixed(2);
+      document.getElementById('bd-base').textContent = precioConIva.toFixed(2);
+      document.getElementById('bd-total').textContent = totalFinal.toFixed(2);
     }
 
     if (inputPrecio) {
@@ -411,6 +496,30 @@
       inputIva.addEventListener('change', calcularPVP);
       inputDescto.addEventListener('input', calcularPVP);
       calcularPVP(); // Calcular inicial
+    }
+
+    // Auto-llenar IVA según categoría seleccionada
+    const categoriasIVAData = {{ categorias_iva|safe }};
+    const selCategoria = document.querySelector('select[name="categoria"]');
+    const ivaBanner = document.getElementById('iva-helper-banner');
+    const ivaText = document.getElementById('iva-helper-text');
+
+    function actualizarIVAporCategoria() {
+      const catId = selCategoria?.value;
+      if (catId && categoriasIVAData[catId] !== undefined) {
+        inputIva.value = categoriasIVAData[catId];
+        ivaBanner.classList.remove('d-none');
+        ivaText.textContent = '📌 IVA ' + categoriasIVAData[catId] + '% heredado de la categoría';
+        if (typeof calcularPVP === 'function') calcularPVP();
+      } else {
+        ivaBanner.classList.remove('d-none');
+        ivaText.textContent = '⚠️ Sin categoría seleccionada — ingresá el IVA manualmente';
+      }
+    }
+
+    if (selCategoria) {
+      selCategoria.addEventListener('change', actualizarIVAporCategoria);
+      actualizarIVAporCategoria();
     }
   });
 </script>

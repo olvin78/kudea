@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.utils.timezone import localdate
 from datetime import timedelta
 from applications.home.models import Venta, DetalleVenta
-from .models import AperturaCaja
+from .models import AperturaCaja, Caja
 from .forms import AperturaCajaForm
 
 
@@ -185,28 +185,66 @@ class AperturaCajaView(LoginRequiredMixin, View):
             estado="abierta"
         ).first()
 
+    def _apertura_pausada(self, user):
+        return AperturaCaja.objects.filter(
+            usuario=user,
+            estado="pausada"
+        ).first()
+
+    def _cierres_por_caja(self):
+        from applications.cash.models import CierreCaja
+        cierres = {}
+        for c in Caja.objects.filter(activa=True):
+            ultimo = CierreCaja.objects.filter(caja=c).order_by('-hora_cierre').first()
+            if ultimo:
+                cierres[c.id] = ultimo
+        return cierres
+
+    def _get_moneda(self):
+        from applications.home.models import ConfiguracionTPV
+        cfg = ConfiguracionTPV.objects.first()
+        return cfg.moneda if cfg else "C$"
+
     def get(self, request, *args, **kwargs):
         apertura = self._apertura_hoy(request.user)
-        form = AperturaCajaForm()
+        apertura_pausada = self._apertura_pausada(request.user)
+        from applications.config.models import ConfiguracionFiscal
+        cfg_fiscal = ConfiguracionFiscal.objects.first()
+        if apertura_pausada:
+            fondo_defecto = float(apertura_pausada.fondo_inicial)
+        else:
+            fondo_defecto = cfg_fiscal.fondo_caja_defecto if cfg_fiscal else 200
+        form = AperturaCajaForm(initial={'fondo_inicial': fondo_defecto})
         
-        # Buscar últimos cierres para recuperar
+        cajas_disponibles = Caja.objects.filter(activa=True)
+        cierres_por_caja = self._cierres_por_caja()
+
+        import json
+        from django.utils.dateformat import format as date_format
+        cierres_json = {}
+        for cid, cierre in cierres_por_caja.items():
+            cierres_json[str(cid)] = {
+                'fecha': date_format(cierre.fecha, 'd/m/Y'),
+                'monto': str(cierre.efectivo_retirado),
+            }
+
+        # Últimos 7 días de cierres para cada caja
         from applications.cash.models import CierreCaja
-        
-        # Buscar el último cierre (de cualquier fecha)
-        ultimo_cierre = CierreCaja.objects.order_by('-hora_cierre').first()
-        
-        # También buscar cierres recientes (últimos 7 días)
         from datetime import timedelta
         hace_7_dias = localdate() - timedelta(days=7)
         cierres_recientes = CierreCaja.objects.filter(
             fecha__gte=hace_7_dias
         ).order_by('-fecha', '-hora_cierre')[:5]
-        
+
         return render(request, self.template_name, {
             "form": form,
             "apertura_activa": apertura,
-            "ultimo_cierre": ultimo_cierre,
+            "apertura_pausada": apertura_pausada,
+            "cierres_por_caja": cierres_por_caja,
+            "cierres_json": json.dumps(cierres_json, ensure_ascii=False),
             "cierres_recientes": cierres_recientes,
+            "moneda": self._get_moneda(),
+            "cajas": cajas_disponibles,
         })
 
     def post(self, request, *args, **kwargs):
@@ -216,54 +254,108 @@ class AperturaCajaView(LoginRequiredMixin, View):
             messages.warning(request, "Ya existe una apertura de caja abierta para hoy.")
             return redirect("home_app:tpv_general")
 
-        # Validar PIN de apertura de caja
-        from applications.home.models import ConfiguracionTPV
-        config_tpv = ConfiguracionTPV.objects.first()
-        pin_correcto = config_tpv.pin_apertura if (config_tpv and config_tpv.pin_apertura) else "1234"
-        
+        caja_id = request.POST.get('caja_id', '')
+        caja = None
+        if caja_id:
+            caja = Caja.objects.filter(id=caja_id, activa=True).first()
+
+        if not caja:
+            messages.error(request, "Selecciona una caja válida.")
+            return redirect("cash_app:apertura_caja")
+
+        # Bloquear si la caja ya tiene una apertura abierta o pausada por OTRO usuario
+        apertura_existente = AperturaCaja.objects.filter(
+            caja=caja,
+            estado__in=['abierta', 'pausada']
+        ).exclude(usuario=request.user).first()
+        if apertura_existente:
+            estado_txt = "abierta" if apertura_existente.estado == "abierta" else "en pausa"
+            messages.error(request, f"La caja '{caja.nombre}' ya está {estado_txt} por {apertura_existente.usuario.username}. No puedes abrirla hasta que se cierre.")
+            return redirect("cash_app:apertura_caja")
+
+        # Reanudar si el mismo usuario tiene una apertura pausada en esta caja
+        apertura_pausada = AperturaCaja.objects.filter(
+            usuario=request.user,
+            caja=caja,
+            estado="pausada"
+        ).first()
+        if apertura_pausada:
+            # Validar PIN también para reanudar
+            pin_correcto = caja.pin if caja.pin else "1234"
+            pin_usuario = request.POST.get('pin_apertura', '').strip()
+            if pin_usuario != pin_correcto:
+                messages.error(request, f"PIN incorrecto para reanudar '{caja.nombre}'.")
+                return redirect("cash_app:apertura_caja")
+            apertura_pausada.estado = "abierta"
+            apertura_pausada.save()
+            messages.success(request, f"Turno reanudado en '{caja.nombre}'.")
+            return redirect("home_app:tpv_general")
+
+        # Validar PIN contra la caja seleccionada
+        pin_correcto = caja.pin if caja.pin else "1234"
         pin_usuario = request.POST.get('pin_apertura', '').strip()
         if pin_usuario != pin_correcto:
-            messages.error(request, "El PIN de seguridad de apertura introducido es incorrecto.")
+            messages.error(request, f"El PIN de seguridad para '{caja.nombre}' es incorrecto.")
             
-            # Recargar cierres recientes para renderizar de nuevo la página con el error
             form = AperturaCajaForm(request.POST)
-            from applications.cash.models import CierreCaja
-            ultimo_cierre = CierreCaja.objects.order_by('-hora_cierre').first()
-            
-            from datetime import timedelta
-            hace_7_dias = localdate() - timedelta(days=7)
-            cierres_recientes = CierreCaja.objects.filter(
-                fecha__gte=hace_7_dias
-            ).order_by('-fecha', '-hora_cierre')[:5]
-            
-            return render(request, self.template_name, {
-                "form": form,
-                "apertura_activa": None,
-                "ultimo_cierre": ultimo_cierre,
-                "cierres_recientes": cierres_recientes,
-            })
+            ctx = self._build_error_context(request)
+            ctx.update({"form": form, "apertura_activa": None, "apertura_pausada": None})
+            return render(request, self.template_name, ctx)
         
         form = AperturaCajaForm(request.POST)
         if form.is_valid():
             ap = form.save(commit=False)
             ap.usuario = request.user
             ap.fecha = localdate()
+            ap.caja = caja
             ap.save()
-            messages.success(request, f"Caja abierta con fondo inicial de {ap.fondo_inicial} €")
+            from applications.home.models import ConfiguracionTPV
+            moneda = ConfiguracionTPV.objects.first().moneda if ConfiguracionTPV.objects.exists() else "C$"
+            messages.success(request, f"Caja '{caja.nombre}' abierta con fondo inicial de {ap.fondo_inicial} {moneda}")
             return redirect("home_app:tpv_general")
 
-        # Recargar cierres si el formulario no es válido
+        # Si el form no es válido
+        ctx = self._build_error_context(request)
+        ctx.update({"form": form, "apertura_activa": None, "apertura_pausada": None})
+        return render(request, self.template_name, ctx)
+
+    def _build_error_context(self, request):
         from applications.cash.models import CierreCaja
-        ultimo_cierre = CierreCaja.objects.order_by('-hora_cierre').first()
+        import json
+        from django.utils.dateformat import format as date_format
         from datetime import timedelta
+        cajas_disponibles = Caja.objects.filter(activa=True)
+        cierres_por_caja = self._cierres_por_caja()
+        cierres_json = {}
+        for cid, cierre in cierres_por_caja.items():
+            cierres_json[str(cid)] = {
+                'fecha': date_format(cierre.fecha, 'd/m/Y'),
+                'monto': str(cierre.efectivo_retirado),
+            }
         hace_7_dias = localdate() - timedelta(days=7)
         cierres_recientes = CierreCaja.objects.filter(
             fecha__gte=hace_7_dias
         ).order_by('-fecha', '-hora_cierre')[:5]
-
-        return render(request, self.template_name, {
-            "form": form,
-            "apertura_activa": None,
-            "ultimo_cierre": ultimo_cierre,
+        return {
+            "cierres_por_caja": cierres_por_caja,
+            "cierres_json": json.dumps(cierres_json, ensure_ascii=False),
             "cierres_recientes": cierres_recientes,
-        })
+            "moneda": self._get_moneda(),
+            "cajas": cajas_disponibles,
+        }
+
+
+class PauseCajaView(LoginRequiredMixin, View):
+    def post(self, request, *args, **kwargs):
+        apertura = AperturaCaja.objects.filter(
+            usuario=request.user,
+            estado="abierta"
+        ).first()
+        if not apertura:
+            messages.error(request, "No tienes ninguna caja abierta para pausar.")
+            return redirect("home_app:tpv_general")
+        apertura.estado = "pausada"
+        apertura.save()
+        caja_nombre = apertura.caja.nombre if apertura.caja else "Caja"
+        messages.success(request, f"'{caja_nombre}' pausada. Vuelve a abrir caja para reanudar.")
+        return redirect("cash_app:apertura_caja")

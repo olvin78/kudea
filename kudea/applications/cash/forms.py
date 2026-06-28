@@ -7,7 +7,7 @@ class AperturaCajaForm(forms.ModelForm):
         model = AperturaCaja
         fields = ['fondo_inicial', 'notas']
         labels = {
-            'fondo_inicial': 'Fondo inicial (€)',
+            'fondo_inicial': 'Fondo inicial',
             'notas': 'Notas de apertura',
         }
         widgets = {

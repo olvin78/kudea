@@ -100,7 +100,7 @@ class ConfiguracionTPV(models.Model):
     iva_por_defecto = models.DecimalField(
         max_digits=5,
         decimal_places=2,
-        default=21,
+        default=15,
         validators=[MinValueValidator(0)]
     )
     moneda = models.CharField(max_length=10, default="€")

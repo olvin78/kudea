@@ -1,5 +1,10 @@
 from django.contrib import admin
-from .models import AperturaCaja, CierreCaja
+from .models import AperturaCaja, CierreCaja, Caja
+
+@admin.register(Caja)
+class CajaAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'pin', 'predeterminada', 'activa', 'creado_en')
+    list_filter = ('activa',)
 
 @admin.register(AperturaCaja)
 class AperturaCajaAdmin(admin.ModelAdmin):

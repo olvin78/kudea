@@ -8,7 +8,7 @@ class ConfiguracionFiscal(models.Model):
     iva_general = models.DecimalField(
         max_digits=5,
         decimal_places=2,
-        default=21.00
+        default=15.00
     )
     fondo_caja_defecto = models.DecimalField(
         max_digits=10,

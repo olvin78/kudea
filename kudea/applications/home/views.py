@@ -27,7 +27,7 @@ import string
 # ============================
 # Proyecto imports
 # ============================
-from .models import Producto, Venta, DetalleVenta, Categoria
+from .models import Producto, Venta, DetalleVenta, Categoria, ConfiguracionTPV
 from applications.config.models import ConfiguracionFiscal
 from applications.payments.models import MetodoPago
 from applications.product.forms import ProductoForm
@@ -51,9 +51,8 @@ def _parse_sale_items(items):
             raise ValueError("La cantidad debe ser mayor que cero")
 
         producto = Producto.objects.select_for_update().get(pk=product_id)
-        # Omitido para permitir ventas con stock negativo (solo modo aviso en frontend)
-        # if producto.stock < cantidad:
-        #     raise ValueError(f"Stock insuficiente para {producto.nombre}")
+        if producto.stock < cantidad:
+            raise ValueError(f"Stock insuficiente para {producto.nombre} (disponible: {producto.stock}, solicitado: {cantidad})")
 
         unit_price = Decimal(str(raw_item.get("precio", producto.precio)))
         parsed_items.append({
@@ -133,6 +132,7 @@ class TpvGeneralView(LoginRequiredMixin, TemplateView):
         context['categorias'] = Categoria.objects.all().order_by('nombre')
         context['metodos_pago2'] = MetodoPago.objects.filter(activo=True)
         context['config'] = ConfiguracionFiscal.objects.first()
+        tpv_config = ConfiguracionTPV.objects.first()
         # Balance del día
         hoy = localdate()
         apertura = AperturaCaja.objects.filter(usuario=self.request.user, fecha=hoy, estado="abierta").first()
@@ -141,6 +141,8 @@ class TpvGeneralView(LoginRequiredMixin, TemplateView):
         context["balance_caja"] = fondo + ventas_hoy
         context["caja_abierta"] = apertura is not None
         context['current_user'] = self.request.user
+        context['moneda'] = tpv_config.moneda if tpv_config else 'C$'
+        context['caja_nombre'] = apertura.caja.nombre if apertura and apertura.caja else 'Principal'
         return context
 
 class KudeaLandingPageView(TemplateView):
@@ -295,7 +297,7 @@ class CrearProductoView(LoginRequiredMixin, CreateView):
     template_name = 'home/crear_producto.html'
 
     def get_object(self, queryset=None):
-        pk = self.request.GET.get('id')
+        pk = self.request.GET.get('id') or self.request.GET.get('edit')
         if pk:
             return Producto.objects.filter(pk=pk).first()
         return None
@@ -310,22 +312,43 @@ class CrearProductoView(LoginRequiredMixin, CreateView):
     def get_initial(self):
         initial = super().get_initial()
         instance = self.get_object()
-        if not instance:
-            # Generar código automático solo para nuevos productos
-            while True:
-                new_code = 'KUD-' + ''.join(random.choices(string.digits, k=8))
-                if not Producto.objects.filter(codigo_barras=new_code).exists():
-                    initial['codigo_barras'] = new_code
-                    break
+        if instance:
+            # Editando: usar el código real del producto, limpiar sesión si existe
+            if 'nuevo_codigo_barras' in self.request.session:
+                del self.request.session['nuevo_codigo_barras']
+        else:
+            # Nuevo producto: mantener el mismo código entre refreshes
+            if 'nuevo_codigo_barras' not in self.request.session:
+                while True:
+                    new_code = 'KUD-' + ''.join(random.choices(string.digits, k=8))
+                    if not Producto.objects.filter(codigo_barras=new_code).exists():
+                        self.request.session['nuevo_codigo_barras'] = new_code
+                        break
+            initial['codigo_barras'] = self.request.session['nuevo_codigo_barras']
         return initial
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['is_edit'] = self.get_object() is not None
+        context['categorias_iva'] = {
+            str(cat.id): float(cat.porcentaje_iva)
+            for cat in Categoria.objects.all()
+        }
+        from applications.home.models import ConfiguracionTPV
+        cfg = ConfiguracionTPV.objects.first()
+        context['moneda'] = cfg.moneda if cfg else 'C$'
         return context
 
     def form_valid(self, form):
-        # El form.save() manejará tanto el insert como el update ya que instance está seteado
+        # El usuario ingresa "Precio sin IVA"; almacenamos precio con IVA incluido
+        precio_sin_iva = form.cleaned_data.get('precio', Decimal('0'))
+        iva_pct = form.cleaned_data.get('porcentaje_iva', Decimal('0'))
+        precio_con_iva = precio_sin_iva * (Decimal('1') + iva_pct / Decimal('100'))
+        form.instance.precio = precio_con_iva
+
+        # Limpiar código de barras de la sesión para el próximo producto nuevo
+        if 'nuevo_codigo_barras' in self.request.session:
+            del self.request.session['nuevo_codigo_barras']
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -700,14 +723,23 @@ def guardar_venta(request):
             p_iva = getattr(producto, 'porcentaje_iva', Decimal("21"))
             if not p_iva: 
                 p_iva = Decimal("21")
-                
-            item_iva = item_neto * (Decimal(p_iva) / Decimal("100"))
+            
+            # El precio ya incluye IVA. Extraemos el IVA del precio.
+            iva_rate = Decimal(p_iva) / Decimal("100")
+            item_iva = item_neto - (item_neto / (Decimal("1") + iva_rate))
             iva += item_iva
 
-        # subtotal es el bruto que se registra en Venta
         subtotal = subtotal_bruto
-        total = subtotal - descuento + iva
-        cambio = recibido - total
+        total = subtotal - descuento
+
+        if recibido < total:
+            return JsonResponse({
+                "success": False,
+                "code": "INSUFFICIENT_PAYMENT",
+                "error": f"El importe recibido ({recibido} €) es menor que el total ({total} €)."
+            }, status=400)
+
+        cambio = max(Decimal("0"), recibido - total)
 
         print("💰 Subtotal:", subtotal)
         print("💰 IVA Total:", iva)
@@ -809,6 +841,11 @@ def guardar_venta(request):
 
         except Exception as e:
             print("❌ ERROR EN CASHFLOW:", str(e))
+            return JsonResponse({
+                "success": False,
+                "code": "CASHFLOW_ERROR",
+                "error": f"Venta creada pero error al registrar en contabilidad: {str(e)}"
+            }, status=500)
 
         return JsonResponse({
             "success": True,
@@ -1084,6 +1121,7 @@ def registrar_cierre_desde_rango(request, tipo, fecha_inicio, fecha_fin):
         defaults={
             'fecha': hoy,
             'usuario': request.user,
+            'caja': apertura_activa.caja if apertura_activa and apertura_activa.caja else (apertura.caja if apertura and apertura.caja else None),
             'fondo_inicial': fondo_inicial,
             'efectivo_esperado': total_esperado,
             'efectivo_retirado': total_efectivo_neto,
@@ -1092,7 +1130,7 @@ def registrar_cierre_desde_rango(request, tipo, fecha_inicio, fecha_fin):
     )
     
     # Cerrar la sesión de caja (AperturaCaja)
-    apertura_activa = AperturaCaja.objects.filter(estado='abierta').first()
+    apertura_activa = AperturaCaja.objects.filter(usuario=request.user, estado='abierta').first()
     if apertura_activa:
         apertura_activa.estado = 'cerrada'
         apertura_activa.hora_cierre = timezone.now()
@@ -1364,6 +1402,10 @@ class AboutVersionView(LoginRequiredMixin, TemplateView):
         context['build_id'] = os.environ.get('KUDEA_BUILD', 'local')
         context['runtime_env'] = 'development' if settings.DEBUG else 'production'
         return context
+
+
+class SistemaDocsView(LoginRequiredMixin, TemplateView):
+    template_name = 'home/sistema_docs.html'
 
 
 # ============================================================

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Documentación del Sistema TPV - KUDEA</title>
+<style>
+  @page { margin: 2cm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', 'Outfit', sans-serif;
+    font-size: 11pt;
+    line-height: 1.6;
+    color: #1e293b;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  h1 { font-size: 24pt; color: #1D3557; border-bottom: 3px solid #10b981; padding-bottom: 8px; }
+  h2 { font-size: 16pt; color: #1D3557; margin-top: 2rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; }
+  h3 { font-size: 13pt; color: #457B9D; margin-top: 1.5rem; }
+  p { margin: 0.5rem 0; }
+  ul, ol { margin: 0.5rem 0; padding-left: 1.5rem; }
+  li { margin: 0.3rem 0; }
+  code { background: #f1f5f9; padding: 1px 5px; border-radius: 4px; font-size: 10pt; }
+  pre { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; overflow-x: auto; font-size: 9pt; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 10pt; }
+  th, td { border: 1px solid #e2e8f0; padding: 8px 12px; text-align: left; }
+  th { background: #f1f5f9; font-weight: 700; color: #1D3557; }
+  .note { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 1rem; border-radius: 8px; margin: 1rem 0; }
+  .success { background: #f0fdf4; border-left: 4px solid #10b981; padding: 1rem; border-radius: 8px; margin: 1rem 0; }
+  .danger { background: #fef2f2; border-left: 4px solid #ef4444; padding: 1rem; border-radius: 8px; margin: 1rem 0; }
+  .footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; font-size: 9pt; color: #94a3b8; text-align: center; }
+  .page-break { page-break-before: always; }
+  @media print { body { padding: 0; } }
+</style>
+</head>
+<body>
+<div style="margin-bottom: 1.5rem;">
+  <a href="/home" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; background: #1D3557; color: white; text-decoration: none; border-radius: 8px; font-size: 10pt; font-weight: 500;">
+    ← Volver al inicio
+  </a>
+</div>
+
+<h1>📋 Documentación del Sistema TPV - KUDEA</h1>
+<p style="font-size: 10pt; color: #64748b;">Versión 1.0 — {% now "d/m/Y" %}</p>
+
+<!-- ============================================ -->
+<h2>1. Arquitectura del Sistema de IVA</h2>
+<!-- ============================================ -->
+
+<h3>1.1. Concepto Fundamental</h3>
+<p>En KUDEA, el <strong>precio de cada producto ya incluye el IVA</strong>. Esto significa que cuando un cajero escanea un producto y ve <code>12.10 €</code>, ese es el precio final que paga el cliente.</p>
+
+<div class="success">
+<strong>✅ Ejemplo concreto (IVA 15%):</strong><br>
+Un producto con precio <strong>11.50 €</strong> (IVA incluido al 15%):<br>
+Base Imponible = 11.50 / 1.15 = <strong>10.00 €</strong><br>
+IVA = 11.50 - 10.00 = <strong>1.50 €</strong><br>
+Total = <strong>11.50 €</strong> (el cliente paga exactamente lo que ve)
+</div>
+
+<h3>1.2. Flujo del IVA en el TPV</h3>
+<ol>
+  <li><strong>Producto</strong>: Cada producto tiene su propio % de IVA (campo <code>porcentaje_iva</code>)</li>
+  <li><strong>Ticket</strong>: Cuando se añade un producto, el frontend guarda el precio y el % de IVA</li>
+  <li><strong>Cálculo</strong>: Se extrae el IVA del precio: <code>IVA = precio - (precio / (1 + tasa_iva))</code></li>
+  <li><strong>Descuento</strong>: Se aplica proporcionalmente a cada línea antes de extraer el IVA</li>
+  <li><strong>Total</strong>: Es la suma de precios menos descuento (el IVA ya está incluido en los precios)</li>
+</ol>
+
+<div class="note">
+<strong>📌 Fórmula clave:</strong><br>
+<code>IVA = precioConIVA - (precioConIVA / (1 + porcentajeIVA / 100))</code><br><br>
+<strong>NO se hace:</strong> <code>IVA = precioBase × porcentajeIVA / 100</code> (eso sumaría IVA a un precio que ya lo incluye)
+</div>
+
+<!-- ============================================ -->
+<h2>2. Configuración del IVA</h2>
+<!-- ============================================ -->
+
+<h3>2.1. IVA General (Default)</h3>
+<p>En <strong>Configuraciones → Impuestos & IVA</strong> puedes definir el IVA general del sistema:</p>
+<ul>
+  <li><strong>Campo numérico libre</strong>: Puedes escribir cualquier valor (15, 10, 0, 7, 20, etc.)</li>
+  <li><strong>Valor por defecto</strong>: 15% (configurado para Nicaragua)</li>
+  <li><strong>Se guarda en</strong>: <code>ConfiguracionFiscal.iva_general</code> y <code>ConfiguracionTPV.iva_por_defecto</code></li>
+</ul>
+
+<h3>2.2. IVA por Producto</h3>
+<p>Cada producto tiene su propio IVA. Puedes cambiarlo:</p>
+<ul>
+  <li><strong>Al crear/editar</strong>: Campo numérico donde escribes el % (ej: 15, 10, 0)</li>
+  <li><strong>En lote</strong>: Usando el checkbox "Sincronizar e Imponer IVA Global" en Configuraciones</li>
+  <li><strong>Masivamente</strong>: Desde el admin de Django (lista de productos editable)</li>
+</ul>
+
+<h3>2.3. Sincronización Masiva</h3>
+<div class="success">
+<strong>⚡ Superpoder:</strong> En Configuraciones → Impuestos & IVA, marca "Sincronizar e Imponer IVA Global" y todos los productos se actualizarán al nuevo porcentaje.
+</div>
+
+<!-- ============================================ -->
+<h2 class="page-break">3. Estructura de Datos</h2>
+<!-- ============================================ -->
+
+<h3>3.1. Modelo Producto</h3>
+<table>
+  <tr><th>Campo</th><th>Tipo</th><th>Descripción</th></tr>
+  <tr><td><code>precio</code></td><td>Decimal</td><td>Precio de venta al público <strong>IVA incluido</strong></td></tr>
+  <tr><td><code>porcentaje_iva</code></td><td>Decimal (0-100)</td><td>% de IVA del producto (ej: 15.00)</td></tr>
+  <tr><td><code>descuento</code></td><td>Decimal (0-100)</td><td>% de descuento sobre el precio final</td></tr>
+  <tr><td><code>stock</code></td><td>Integer</td><td>Unidades disponibles en inventario</td></tr>
+  <tr><td><code>categoria</code></td><td>FK</td><td>Categoría del producto (agrupación fiscal opcional)</td></tr>
+</table>
+
+<h3>3.2. Modelo Venta</h3>
+<table>
+  <tr><th>Campo</th><th>Tipo</th><th>Descripción</th></tr>
+  <tr><td><code>subtotal</code></td><td>Decimal</td><td>Suma de precios de todas las líneas (IVA incl.)</td></tr>
+  <tr><td><code>descuento</code></td><td>Decimal</td><td>Descuento total aplicado en €</td></tr>
+  <tr><td><code>iva</code></td><td>Decimal</td><td>Total de IVA extraído (NO sumado al total)</td></tr>
+  <tr><td><code>total</code></td><td>Decimal</td><td>= subtotal - descuento (el IVA ya está incluido en subtotal)</td></tr>
+  <tr><td><code>recibido</code></td><td>Decimal</td><td>Dinero entregado por el cliente</td></tr>
+  <tr><td><code>cambio</code></td><td>Decimal</td><td>= recibido - total (nunca negativo)</td></tr>
+</table>
+
+<h3>3.3. Modelo DetalleVenta</h3>
+<table>
+  <tr><th>Campo</th><th>Descripción</th></tr>
+  <tr><td><code>producto</code></td><td>FK al producto vendido</td></tr>
+  <tr><td><code>cantidad</code></td><td>Unidades vendidas</td></tr>
+  <tr><td><code>precio_unitario</code></td><td>Precio en el momento de la venta</td></tr>
+  <tr><td><code>total</code></td><td>= precio_unitario × cantidad</td></tr>
+</table>
+
+<div class="note">
+<strong>📌 Nota:</strong> El IVA no se almacena en DetalleVenta. Se obtiene del <code>Producto.porcentaje_iva</code> al consultar. Si cambias el IVA de un producto, los tickets históricos mostrarán el IVA nuevo (no el de la fecha de venta).
+</div>
+
+<!-- ============================================ -->
+<h2>4. Flujo de una Venta</h2>
+<!-- ============================================ -->
+
+<h3>4.1. Paso a paso</h3>
+<ol>
+  <li><strong>Apertura de caja</strong>: El cajero abre la caja con un PIN y fondo inicial</li>
+  <li><strong>Selección de productos</strong>: Busca y añade productos al ticket</li>
+  <li><strong>Validación de stock</strong>: No permite añadir más unidades de las disponibles</li>
+  <li><strong>Descuento</strong>: Opcional, se aplica proporcionalmente a todas las líneas</li>
+  <li><strong>Método de pago</strong>: Efectivo, tarjeta, bizum, pago mixto</li>
+  <li><strong>Guardar venta</strong>: El backend recalcula todo desde la BD, no confía en el frontend</li>
+  <li><strong>Stock</strong>: Se descuenta del inventario</li>
+  <li><strong>Cashflow</strong>: Se registra el movimiento contable</li>
+  <li><strong>Ticket</strong>: Se muestra el resumen con desglose de IVA</li>
+</ol>
+
+<h3>4.2. Seguridad del Cálculo</h3>
+<div class="success">
+<strong>✅ El backend siempre recalcula:</strong><br>
+El frontend envía <code>[{id, precio, cantidad}]</code>. El backend:<br>
+1. Vuelve a buscar cada producto de la BD<br>
+2. Usa el <code>porcentaje_iva</code> real de la BD<br>
+3. Recalcula IVA, descuento y total<br>
+4. Verifica stock suficiente<br>
+5. Verifica que recibido ≥ total<br>
+Si algo no cuadra, la venta se rechaza.
+</div>
+
+<!-- ============================================ -->
+<h2 class="page-break">5. Cálculos Detallados</h2>
+<!-- ============================================ -->
+
+<h3>5.1. Ejemplo con IVA 15% (Nicaragua)</h3>
+<table>
+  <tr><th>Producto</th><th>Precio</th><th>Cant.</th><th>Total</th><th>IVA</th><th>Base</th></tr>
+  <tr><td>Arroz 1kg</td><td>11.50</td><td>2</td><td>23.00</td><td>3.00</td><td>20.00</td></tr>
+  <tr><td>Aceite 1L</td><td>34.50</td><td>1</td><td>34.50</td><td>4.50</td><td>30.00</td></tr>
+  <tr><td>Leche 1L</td><td>10.00</td><td>3</td><td>30.00</td><td>3.91</td><td>26.09</td></tr>
+  <tr style="font-weight: bold;"><td colspan="3">Subtotal</td><td>87.50</td><td>11.41</td><td>76.09</td></tr>
+  <tr><td colspan="3">Descuento (5%)</td><td colspan="3">-4.38</td></tr>
+  <tr style="font-weight: bold; background: #f0fdf4;"><td colspan="3">TOTAL</td><td colspan="3">83.12 €</td></tr>
+</table>
+
+<p><strong>Cálculo de cada línea:</strong></p>
+<ul>
+  <li>Arroz: IVA = 23.00 - (23.00 / 1.15) = 23.00 - 20.00 = <strong>3.00</strong></li>
+  <li>Aceite: IVA = 34.50 - (34.50 / 1.15) = 34.50 - 30.00 = <strong>4.50</strong></li>
+  <li>Leche: IVA = 30.00 - (30.00 / 1.15) = 30.00 - 26.09 = <strong>3.91</strong></li>
+  <li>Descuento proporcional: tasa = 4.38 / 87.50 = 0.05 (5%)</li>
+  <li>Total = 87.50 - 4.38 = <strong>83.12 €</strong></li>
+</ul>
+
+<h3>5.2. Ejemplo con IVA 0% (Exento)</h3>
+<table>
+  <tr><th>Producto</th><th>Precio</th><th>Cant.</th><th>Total</th><th>IVA</th><th>Base</th></tr>
+  <tr><td>Pan (0% IVA)</td><td>5.00</td><td>2</td><td>10.00</td><td>0.00</td><td>10.00</td></tr>
+  <tr><td>Arroz (15% IVA)</td><td>11.50</td><td>1</td><td>11.50</td><td>1.50</td><td>10.00</td></tr>
+  <tr style="font-weight: bold;"><td colspan="3">Total</td><td colspan="3">21.50 €</td></tr>
+</table>
+
+<div class="note">
+<strong>📌 Regla:</strong> IVA 0% → el precio es todo base imponible, no se extrae IVA.
+</div>
+
+<!-- ============================================ -->
+<h2>6. Configuración Recomendada para Nicaragua</h2>
+<!-- ============================================ -->
+
+<ul>
+  <li><strong>IVA General</strong>: 15% (estándar Nicaragua)</li>
+  <li><strong>IVA 0%</strong>: Para productos exentos (canasta básica)</li>
+  <li><strong>IVA 7%</strong>: Si se requiere para algún producto específico</li>
+  <li><strong>Símbolo monetario</strong>: Configurable en Configuraciones TPV</li>
+  <li><strong>PIN de apertura</strong>: 4 dígitos, configurable</li>
+</ul>
+
+<!-- ============================================ -->
+<h2>7. Reportes y Arqueo</h2>
+<!-- ============================================ -->
+
+<h3>7.1. Desglose de IVA en Tickets</h3>
+<p>El ticket muestra el IVA agrupado por %:</p>
+<pre>
+  IMP.   %   BASE     CUOTA
+  IVA   15%  10.00    1.50
+  IVA   0%    5.00    0.00
+</pre>
+
+<h3>7.2. Arqueo de Caja</h3>
+<p>Al cerrar la caja (arqueo), el sistema calcula:</p>
+<ul>
+  <li><strong>Total ventas</strong>: Suma de totales de ventas del período</li>
+  <li><strong>Desglose de IVA</strong>: Porcentaje y monto por cada tasa de IVA</li>
+  <li><strong>Efectivo esperado</strong>: Fondo inicial + ventas en efectivo - cambios</li>
+  <li><strong>Cierre automático</strong>: La apertura de caja se cierra al hacer arqueo</li>
+</ul>
+
+<!-- ============================================ -->
+<h2>8. Resumen de Correcciones Aplicadas</h2>
+<!-- ============================================ -->
+
+<table>
+  <tr><th>#</th><th>Problema</th><th>Solución</th></tr>
+  <tr>
+    <td>1</td>
+    <td>IVA duplicado (se cobraba de más)</td>
+    <td>Ahora se extrae del precio, no se suma</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td>Stock no validado (podía quedar negativo)</td>
+    <td>Se valida stock antes de añadir al ticket y al guardar venta</td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td>Cambio negativo (recibido menor que total)</td>
+    <td>Validación server-side, cambio mínimo 0</td>
+  </tr>
+  <tr>
+    <td>4</td>
+    <td>IVA limitado a opciones fijas</td>
+    <td>Ahora cualquier % de 0 a 100</td>
+  </tr>
+  <tr>
+    <td>5</td>
+    <td>Error de sintaxis en PRODUCT_STOCKS</td>
+    <td>Corregido espacio entre <code>{{</code></td>
+  </tr>
+  <tr>
+    <td>6</td>
+    <td>Cashflow ignoraba errores</td>
+    <td>Ahora devuelve error si falla contabilidad</td>
+  </tr>
+  <tr>
+    <td>7</td>
+    <td>Cierre de caja de otro usuario</td>
+    <td>Filtrado por usuario actual</td>
+  </tr>
+</table>
+
+<div class="footer">
+  KUDEA — Sistema de Punto de Venta | Documentación generada el {% now "d/m/Y H:i" %}
+</div>
+
+</body>
+</html>

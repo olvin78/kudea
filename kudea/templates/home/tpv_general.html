@@ -97,11 +97,13 @@
     border: none !important;
     transition: all 0.2s ease-in-out !important;
   }
+
   #mixtoConfirmBtn:hover:not(:disabled) {
     background-color: var(--kudea-medium) !important;
     transform: translateY(-2px);
     box-shadow: 0 10px 15px -3px rgba(29, 53, 87, 0.2);
   }
+
   #mixtoConfirmBtn:disabled {
     background-color: #cbd5e1 !important;
     color: #94a3b8 !important;
@@ -118,6 +120,7 @@
     box-shadow: 0 10px 15px -3px rgba(5, 150, 105, 0.3) !important;
     transition: all 0.2s ease-in-out !important;
   }
+
   #confirmarPagoBtn:hover {
     background-color: #047857 !important;
     transform: translateY(-2px) !important;
@@ -132,6 +135,23 @@
     font-size: 0.85rem;
     border-bottom-right-radius: 1rem;
     width: fit-content;
+  }
+
+  .badge-sin-stock {
+    background-color: #fee2e2 !important;
+    color: #991b1b !important;
+    border: 1px solid #fca5a5 !important;
+  }
+
+  .producto-card-custom.sin-stock {
+    border-color: #fca5a5 !important;
+    background: linear-gradient(135deg, #fef2f2 0%, #ffffff 100%) !important;
+    opacity: 0.85;
+  }
+  .producto-card-custom.sin-stock:hover {
+    opacity: 1;
+    border-color: #f87171 !important;
+    box-shadow: 0 0 0 3px rgba(239,68,68,0.15);
   }
 
   /* El Ticket (Recibo) */
@@ -259,7 +279,8 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(15, 23, 42, 0.55); /* Slate 900 translucent */
+    background: rgba(15, 23, 42, 0.55);
+    /* Slate 900 translucent */
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     display: flex;
@@ -286,6 +307,7 @@
       opacity: 0;
       transform: scale(0.92);
     }
+
     to {
       opacity: 1;
       transform: scale(1);
@@ -348,6 +370,7 @@
     background-color: #f1f5f9 !important;
     color: #475569 !important;
   }
+
   .caja-cerrada-buttons .btn-cancelar:hover {
     background-color: #e2e8f0 !important;
     color: #334155 !important;
@@ -358,6 +381,7 @@
     color: white !important;
     box-shadow: 0 10px 15px -3px rgba(5, 150, 105, 0.25) !important;
   }
+
   .caja-cerrada-buttons .btn-abrir:hover {
     background-color: #047857 !important;
     transform: translateY(-2px);
@@ -374,7 +398,8 @@
       <i class="fas fa-lock"></i>
     </div>
     <h2>¿Quieres abrir la caja con un usuario?</h2>
-    <p>Por motivos de seguridad y control de arqueos, te recomendamos iniciar una sesión de caja antes de poder realizar ventas en el TPV.</p>
+    <p>Por motivos de seguridad y control de arqueos, te recomendamos iniciar una sesión de caja antes de poder realizar
+      ventas en el TPV.</p>
     <div class="caja-cerrada-buttons">
       <button onclick="cerrarRecordatorioCaja()" class="btn btn-cancelar">Cancelar</button>
       <a href="/cash/apertura/" class="btn btn-abrir">Abrir Caja</a>
@@ -396,17 +421,18 @@
   <!-- BARRA DE HERRAMIENTAS -->
   <div class="glass-card p-4 mb-6 d-flex flex-wrap align-items-center justify-content-between gap-4">
     <div class="d-flex align-items-center gap-3">
-      <div class="w-10 h-10 bg-primary-blue rounded-2xl flex items-center justify-center text-white shadow-lg shadow-primary-blue/20">
+      <div
+        class="w-10 h-10 bg-primary-blue rounded-2xl flex items-center justify-center text-white shadow-lg shadow-primary-blue/20">
         <i data-lucide="layout-grid" class="w-6 h-6"></i>
       </div>
-      <h4 class="m-0 font-bold text-dark-blue">TPV <span class="font-light text-slate-400">| Caja</span></h4>
+      <h4 class="m-0 font-bold text-dark-blue">TPV <span class="font-light text-slate-400">| {{ caja_nombre }}</span></h4>
     </div>
     <div class="d-flex flex-wrap gap-2 align-items-center">
       <!-- Balance de Caja Widget -->
       <div class="d-flex align-items-center px-4 py-2 rounded-2xl bg-slate-50 border border-slate-100 mr-2">
         <div class="mr-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
           Balance Total</div>
-        <div class="text-lg font-bold text-dark-blue">€{{ balance_caja|floatformat:2|default:"0.00" }}</div>
+        <div class="text-lg font-bold text-dark-blue">{{ moneda }}{{ balance_caja|floatformat:2|default:"0.00" }}</div>
       </div>
 
       <a href="{% url 'home_app:lista_productos' %}" class="btn toolbar-btn px-4 py-2.5">
@@ -424,6 +450,11 @@
       <button class="btn toolbar-btn px-4 py-2.5" onclick="TPV.toggleLayout()">
         <i class="fas fa-exchange-alt mr-2"></i>Vista
       </button>
+      {% if caja_abierta %}
+      <button type="button" class="btn toolbar-btn px-4 py-2.5 text-amber-600 border-amber-200 hover:bg-amber-50" data-bs-toggle="modal" data-bs-target="#pauseCajaModal">
+        <i class="fas fa-pause mr-2"></i>Pausar
+      </button>
+      {% endif %}
     </div>
   </div>
 
@@ -432,14 +463,14 @@
 
     <!-- PANEL DE PRODUCTOS -->
     <div class="col-lg-8" id="productos-section">
-      <div class="glass-card p-6 h-100">
-        <div class="d-flex justify-content-between align-items-center mb-6">
+      <div class="glass-card p-6">
+        <div class="d-flex justify-content-between align-items-center mb-4">
           <h5 class="font-bold m-0 text-dark-blue"><i class="fas fa-th-large mr-2 text-primary-blue"></i>Catálogo</h5>
-          <div class="badge bg-blue-50 text-blue-700 px-4 py-2 rounded-2xl font-bold border border-blue-100">{{ productos|length }} Artículos</div>
+          <div class="badge bg-blue-50 text-blue-700 px-3 py-1.5 rounded-2xl font-bold border border-blue-100" style="font-size:0.7rem;">{{ productos|length }} Artículos</div>
         </div>
 
         <!-- Filtros de Categoría -->
-        <div class="d-flex flex-wrap gap-2 mb-6">
+        <div class="d-flex flex-wrap gap-2 mb-4">
           <button type="button" class="btn btn-sm btn-filter active" data-cat="all"
             onclick="TPV.filterByCategory('all', this)">
             <i class="fas fa-th mr-1"></i> Todos
@@ -452,31 +483,32 @@
           {% endfor %}
         </div>
 
-        <div class="row g-3" id="productos-grid"
-          style="max-height: 65vh; overflow-y: auto; overflow-x: hidden; padding-right: 5px;">
+        <div class="row g-2 row-cols-2 row-cols-md-4 row-cols-xl-5" id="productos-grid"
+          style="max-height: calc(100vh - 150px); overflow-y: auto; overflow-x: hidden;">
           {% for p in productos %}
-          <div class="col-6 col-md-4 col-lg-3 product-item" data-categoria="{{ p.categoria.id|default:'none' }}">
-            <div class="producto-card-custom"
+          <div class="product-item" data-categoria="{{ p.categoria.id|default:'none' }}">
+            <div class="producto-card-custom{% if p.stock == 0 %} sin-stock{% endif %}"
               onclick="TPV.addToTicket({{ p.id }}, '{{ p.nombre|escapejs }}', {{ p.precio|stringformat:'f' }}, {{ p.porcentaje_iva|default:21|stringformat:'f' }}, {{ p.stock }})">
               <div class="product-price-tag text-center">
-                {{ p.precio }} €
+                {{ p.precio }} {{ moneda }}
               </div>
-              <div class="p-4 text-center d-flex flex-column h-100 justify-content-between">
+              <div class="p-3 text-center d-flex flex-column h-100 justify-content-between">
                 <div>
                   {% if p.imagen %}
-                  <img src="{{ p.imagen.url }}" class="img-fluid rounded-2xl mb-4 mx-auto d-block" style="height:100px; object-fit:contain;">
+                  <img src="{{ p.imagen.url }}" class="img-fluid rounded-2xl mb-3 mx-auto d-block"
+                    style="height:90px; object-fit:contain;">
                   {% else %}
-                  <div class="rounded-full d-flex align-items-center justify-content-center mb-4 mx-auto"
-                    style="height:100px; width:100px; background: #f8fafc;">
+                  <div class="rounded-full d-flex align-items-center justify-content-center mb-3 mx-auto"
+                    style="height:90px; width:90px; background: #f8fafc;">
                     <i class="fas fa-shopping-bag text-slate-300 fa-2x"></i>
                   </div>
                   {% endif %}
-                  <h6 class="font-bold mb-1 text-dark-blue">{{ p.nombre }}</h6>
-                  <small class="text-slate-400 font-medium d-block mb-3">{{ p.categoria.nombre|default:"General" }}</small>
+                  <h6 class="font-bold mb-1 text-dark-blue" style="font-size:0.85rem;">{{ p.nombre }}</h6>
+                  <small class="text-slate-400 font-medium d-block mb-2" style="font-size:0.7rem;">{{ p.categoria.nombre|default:"General" }}</small>
                 </div>
                 <div class="mt-auto">
                   <span
-                    class="badge rounded-2xl px-3 py-1.5 {% if p.stock > 10 %}bg-green-50 text-green-600 border border-green-100{% elif p.stock > 0 %}bg-amber-50 text-amber-600 border border-amber-100{% else %}bg-red-50 text-red-650 border border-red-100{% endif %} w-100 font-bold">
+                    class="badge rounded-2xl px-2.5 py-1 {% if p.stock > 10 %}bg-green-50 text-green-600 border border-green-100{% elif p.stock > 0 %}bg-amber-50 text-amber-600 border border-amber-100{% else %}badge-sin-stock{% endif %} w-100 font-bold" style="font-size:0.65rem;">
                     {% if p.stock > 0 %}{{ p.stock }} stock{% else %}Sin Stock{% endif %}
                   </span>
                 </div>
@@ -498,7 +530,8 @@
         </h5>
 
         <!-- Alerta de Error Dinámica e Inline (No bloqueante) -->
-        <div id="ticket-error-alert" class="p-3 mb-4 bg-red-50 text-red-700 border border-red-150 rounded-2xl text-center text-xs font-bold transition-all duration-300 d-none">
+        <div id="ticket-error-alert"
+          class="p-3 mb-4 bg-red-50 text-red-700 border border-red-150 rounded-2xl text-center text-xs font-bold transition-all duration-300 d-none">
           <i class="fas fa-exclamation-circle mr-1.5 animate-pulse text-red-500"></i>
           <span id="ticket-error-message"></span>
         </div>
@@ -508,9 +541,12 @@
           <table class="table table-ticket table-borderless table-hover mb-0">
             <thead>
               <tr class="border-bottom border-slate-50">
-                <th width="45%" class="text-slate-400 font-bold uppercase tracking-widest text-[10px] pb-3">Artículo</th>
-                <th width="15%" class="text-center text-slate-400 font-bold uppercase tracking-widest text-[10px] pb-3">Cant</th>
-                <th width="25%" class="text-end text-slate-400 font-bold uppercase tracking-widest text-[10px] pb-3">Total</th>
+                <th width="45%" class="text-slate-400 font-bold uppercase tracking-widest text-[10px] pb-3">Artículo
+                </th>
+                <th width="15%" class="text-center text-slate-400 font-bold uppercase tracking-widest text-[10px] pb-3">
+                  Cant</th>
+                <th width="25%" class="text-end text-slate-400 font-bold uppercase tracking-widest text-[10px] pb-3">
+                  Total</th>
                 <th width="15%"></th>
               </tr>
             </thead>
@@ -518,6 +554,11 @@
               <!-- Elementos inyectados por JS -->
             </tbody>
           </table>
+        </div>
+        <div class="flex justify-end mb-2">
+          <button type="button" id="btn-vaciar-ticket" style="display:none" class="btn btn-sm text-slate-400 hover:text-red-500 font-bold text-[10px] uppercase tracking-wider border-0 bg-transparent cursor-pointer" onclick="TPV.requestClearTicket()">
+            <i class="fas fa-trash-alt mr-1"></i> Vaciar ticket
+          </button>
         </div>
 
         <!-- Totales -->
@@ -553,7 +594,7 @@
             <div class="col-4"><button class="btn numpad-btn w-100 py-3" onclick="TPV.addNumber('0')">0</button></div>
             <div class="col-4"><button class="btn numpad-btn w-100 py-3" onclick="TPV.addNumber('.')">•</button></div>
             <div class="col-4"><button class="btn numpad-btn btn-danger w-100 py-3" onclick="TPV.clearAmount()"><i
-                   class="fas fa-backspace"></i></button></div>
+                  class="fas fa-backspace"></i></button></div>
           </div>
         </div>
 
@@ -575,8 +616,9 @@
           {% endfor %}
         </div>
 
-        <button class="btn w-100 py-4 rounded-3xl font-bold text-xl shadow-lg shadow-blue-700/20 text-white transition-all hover:bg-blue-800 active:scale-[0.98]" onclick="TPV.showConfirm()"
-          style="background: var(--kudea-medium);">
+        <button
+          class="btn w-100 py-4 rounded-3xl font-bold text-xl shadow-lg shadow-blue-700/20 text-white transition-all hover:bg-blue-800 active:scale-[0.98]"
+          onclick="TPV.showConfirm()" style="background: var(--kudea-medium);">
           <i class="fas fa-check-circle mr-2"></i> Cobrar Ticket
         </button>
 
@@ -595,15 +637,40 @@
     <div class="modal-content rounded-[2rem] p-4">
       <div class="modal-body text-center">
         <div class="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center text-red-500 mx-auto mb-4">
-            <i class="fas fa-trash-alt fa-2x"></i>
+          <i class="fas fa-trash-alt fa-2x"></i>
         </div>
         <h5 class="font-bold text-dark-blue">¿Eliminar producto?</h5>
-        <p class="text-slate-400 text-sm mb-6">Vas a quitar este artículo del ticket. Esta acción no se puede deshacer.</p>
-        <p class="font-bold text-red-500 mb-6 text-lg" id="remove-product-name"></p>
+        <p class="text-slate-400 text-sm mb-2" id="remove-product-name"></p>
+        <p class="text-slate-400 text-xs mb-5" id="remove-product-qty"></p>
+        <div class="d-flex gap-2 justify-content-center">
+          <button type="button" class="btn btn-secondary font-bold rounded-2xl px-3 py-2 border-0"
+            style="flex:1;background:#f1f5f9;color:#475569" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn font-bold rounded-2xl px-3 py-2 border-0"
+            style="flex:1;background:#f59e0b;color:white" onclick="TPV.confirmRemoveOne()">Eliminar 1</button>
+          <button type="button" class="btn font-bold rounded-2xl px-3 py-2 border-0 shadow"
+            style="flex:1;background:#ef4444;color:white" onclick="TPV.confirmRemove()">Todos</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Vaciar Ticket -->
+<div class="modal fade" id="confirmClearTicketModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content rounded-[2rem] p-4">
+      <div class="modal-body text-center">
+        <div class="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center text-red-500 mx-auto mb-4">
+          <i class="fas fa-trash-alt fa-2x"></i>
+        </div>
+        <h5 class="font-bold text-dark-blue">¿Vaciar ticket?</h5>
+        <p class="text-slate-400 text-sm mb-6">Se eliminarán todos los productos del ticket. Esta acción no se puede deshacer.</p>
         <div class="d-flex gap-3 justify-content-center">
           <button type="button" class="btn bg-slate-50 text-slate-500 font-bold rounded-2xl px-4 py-2 w-100 border-0"
             data-bs-dismiss="modal">Cancelar</button>
-          <button type="button" class="btn bg-red-500 text-white font-bold rounded-2xl px-4 py-2 w-100 shadow-lg shadow-red-500/20 border-0" onclick="TPV.confirmRemove()">Eliminar</button>
+          <button type="button"
+            class="btn bg-red-500 text-white font-bold rounded-2xl px-4 py-2 w-100 shadow-lg shadow-red-500/20 border-0"
+            onclick="TPV.confirmClearTicket()">Vaciar</button>
         </div>
       </div>
     </div>
@@ -622,13 +689,16 @@
         <p class="text-slate-400 text-sm mb-6">Introduce el importe a descontar (en €) sobre el total del ticket.</p>
         <div class="input-group mb-6">
           <span class="input-group-text bg-slate-50 border-transparent rounded-l-2xl text-dark-blue font-bold">€</span>
-          <input type="number" id="descuentoInput" class="form-control bg-slate-50 border-transparent rounded-r-2xl py-3 text-center font-bold text-xl outline-none focus:ring-0"
+          <input type="number" id="descuentoInput"
+            class="form-control bg-slate-50 border-transparent rounded-r-2xl py-3 text-center font-bold text-xl outline-none focus:ring-0"
             placeholder="0.00" step="0.01" min="0">
         </div>
         <div class="d-flex gap-3 justify-content-center">
           <button type="button" class="btn bg-slate-50 text-slate-500 font-bold rounded-2xl px-4 py-2 w-100 border-0"
             onclick="document.getElementById('descuentoInput').value=''">Limpiar</button>
-          <button type="button" class="btn bg-primary-blue text-white font-bold rounded-2xl px-4 py-2 w-100 shadow-lg shadow-primary-blue/20 border-0" onclick="TPV.applyDiscount()">Aplicar</button>
+          <button type="button"
+            class="btn bg-primary-blue text-white font-bold rounded-2xl px-4 py-2 w-100 shadow-lg shadow-primary-blue/20 border-0"
+            onclick="TPV.applyDiscount()">Aplicar</button>
         </div>
       </div>
     </div>
@@ -645,36 +715,67 @@
       </div>
       <div class="modal-body p-8">
         <div class="bg-slate-50 p-6 rounded-3xl mb-6 border border-slate-100">
-          <p class="d-flex justify-content-between mb-3"><span class="text-slate-400 font-bold text-xs uppercase tracking-wider">Método de pago:</span><strong
+          <p class="d-flex justify-content-between mb-3"><span
+              class="text-slate-400 font-bold text-xs uppercase tracking-wider">Método de pago:</span><strong
               id="conf-metodo" class="text-dark-blue">—</strong></p>
-          <p class="d-flex justify-content-between mb-3"><span class="text-slate-400 font-bold text-xs uppercase tracking-wider">Subtotal Bruto:</span><strong
+          <p class="d-flex justify-content-between mb-3"><span
+              class="text-slate-400 font-bold text-xs uppercase tracking-wider">Subtotal Bruto:</span><strong
               id="conf-subtotal" class="text-dark-blue">0,00 €</strong></p>
-          <p class="d-flex justify-content-between mb-3 text-red-500 font-bold" id="conf-descuento-row" style="display:none;"><span
-              class="text-slate-400 font-bold text-xs uppercase tracking-wider">Descuento aplicado:</span><strong id="conf-descuento">0,00 €</strong></p>
-          <p class="d-flex justify-content-between mb-3 border-bottom border-slate-200 pb-3"><span class="text-slate-400 font-bold text-xs uppercase tracking-wider">Subtotal
+          <p class="d-flex justify-content-between mb-3 text-red-500 font-bold" id="conf-descuento-row"
+            style="display:none;"><span class="text-slate-400 font-bold text-xs uppercase tracking-wider">Descuento
+              aplicado:</span><strong id="conf-descuento">0,00 €</strong></p>
+          <p class="d-flex justify-content-between mb-3 border-bottom border-slate-200 pb-3"><span
+              class="text-slate-400 font-bold text-xs uppercase tracking-wider">Subtotal
               Neto:</span><strong id="conf-subtotal-neto" class="text-dark-blue">0,00 €</strong></p>
           <div id="conf-iva-breakdown" class="space-y-1 mb-4">
             <!-- Desglose de IVA en modal -->
           </div>
           <div class="border-t-2 border-dashed border-slate-200 pt-4 mt-4">
-            <p class="d-flex justify-content-between mb-0 align-items-center"><span class="font-bold text-dark-blue text-xs uppercase tracking-widest opacity-60">Total a
+            <p class="d-flex justify-content-between mb-0 align-items-center"><span
+                class="font-bold text-dark-blue text-xs uppercase tracking-widest opacity-60">Total a
                 Pagar:</span><strong id="conf-total" class="text-3xl font-bold text-primary-blue">0,00 €</strong></p>
           </div>
         </div>
 
         <div class="d-flex justify-content-between mb-2 px-3">
-          <span class="text-slate-400 font-bold text-xs uppercase tracking-wider">Importe entregado:</span><strong id="conf-recibido" class="text-dark-blue font-bold">0,00 €</strong>
+          <span class="text-slate-400 font-bold text-xs uppercase tracking-wider">Importe entregado:</span><strong
+            id="conf-recibido" class="text-dark-blue font-bold">0,00 €</strong>
         </div>
         <div class="d-flex justify-content-between px-3">
-          <span class="font-bold text-xs uppercase tracking-widest text-green-600">A Devolver (Cambio):</span><strong id="conf-cambio"
-            class="text-2xl font-bold text-green-600">0,00 €</strong>
+          <span class="font-bold text-xs uppercase tracking-widest text-green-600">A Devolver (Cambio):</span><strong
+            id="conf-cambio" class="text-2xl font-bold text-green-600">0,00 €</strong>
         </div>
       </div>
       <div class="modal-footer border-0 pt-0 justify-content-center pb-8 px-8">
-        <button class="btn bg-slate-50 text-slate-500 font-bold rounded-2xl px-6 py-3 border-0" data-bs-dismiss="modal">Cancelar</button>
-        <button class="btn bg-green-600 text-white font-bold rounded-2xl px-10 py-3 shadow-lg shadow-green-600/20 border-0 ml-4" id="confirmarPagoBtn">
+        <button class="btn bg-slate-50 text-slate-500 font-bold rounded-2xl px-6 py-3 border-0"
+          data-bs-dismiss="modal">Cancelar</button>
+        <button
+          class="btn bg-green-600 text-white font-bold rounded-2xl px-10 py-3 shadow-lg shadow-green-600/20 border-0 ml-4"
+          id="confirmarPagoBtn">
           <i class="fas fa-print mr-2"></i> Emitir Ticket
         </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================== -->
+<!-- MODAL PAUSAR CAJA -->
+<!-- ============================================== -->
+<div class="modal fade" id="pauseCajaModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content rounded-[2rem] border-0 shadow-2xl overflow-hidden">
+      <div class="text-center px-6 pt-6 pb-4">
+        <div class="w-14 h-14 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center text-2xl mx-auto mb-3"><i class="fas fa-pause-circle"></i></div>
+        <h3 class="text-lg font-bold text-slate-800 mb-1">¿Pausar caja?</h3>
+        <p class="text-xs text-slate-500 leading-relaxed">Podrás reanudarla después desde Apertura de Caja. La caja queda reservada para ti.</p>
+      </div>
+      <div class="px-6 pb-6 flex gap-3">
+        <button class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-2.5 rounded-xl text-sm border-0 cursor-pointer transition-all" data-bs-dismiss="modal">Cancelar</button>
+        <form method="POST" action="{% url 'cash_app:pausar_caja' %}" style="flex:1">
+          {% csrf_token %}
+          <button type="submit" class="w-100 bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 rounded-xl text-sm border-0 cursor-pointer transition-all"><i class="fas fa-pause mr-1"></i> Pausar</button>
+        </form>
       </div>
     </div>
   </div>
@@ -687,7 +788,8 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content rounded-[2.5rem] border-0 overflow-hidden shadow-2xl">
       <div class="modal-header bg-slate-900 text-white px-8 py-6 border-0">
-        <h5 class="modal-title font-black text-lg"><i class="fas fa-coins mr-2 text-amber-500"></i> Distribución de Pago Mixto</h5>
+        <h5 class="modal-title font-black text-lg"><i class="fas fa-coins mr-2 text-amber-500"></i> Distribución de Pago
+          Mixto</h5>
         <button type="button" class="btn-close btn-close-white" onclick="TPV.cancelPagoMixto()"></button>
       </div>
       <div class="modal-body p-8">
@@ -695,7 +797,7 @@
           <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Total a Cobrar</span>
           <h2 id="mixto-total-cobrar" class="text-3xl font-black text-slate-800 mt-1">0.00 €</h2>
         </div>
-        
+
         <div class="space-y-4 mb-6">
           <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex items-center justify-between gap-4">
             <div class="flex items-center gap-3">
@@ -708,7 +810,9 @@
               </div>
             </div>
             <div style="max-width: 140px;">
-              <input type="number" step="0.01" id="mixto-val-efectivo" class="form-control text-end font-bold rounded-xl bg-white border border-slate-200 py-2.5 px-3 focus:border-slate-800" placeholder="0.00" oninput="TPV.updateMixtoTotal()">
+              <input type="number" step="0.01" id="mixto-val-efectivo"
+                class="form-control text-end font-bold rounded-xl bg-white border border-slate-200 py-2.5 px-3 focus:border-slate-800"
+                placeholder="0.00" oninput="TPV.updateMixtoTotal()">
             </div>
           </div>
 
@@ -723,7 +827,9 @@
               </div>
             </div>
             <div style="max-width: 140px;">
-              <input type="number" step="0.01" id="mixto-val-tarjeta" class="form-control text-end font-bold rounded-xl bg-white border border-slate-200 py-2.5 px-3 focus:border-slate-800" placeholder="0.00" oninput="TPV.updateMixtoTotal()">
+              <input type="number" step="0.01" id="mixto-val-tarjeta"
+                class="form-control text-end font-bold rounded-xl bg-white border border-slate-200 py-2.5 px-3 focus:border-slate-800"
+                placeholder="0.00" oninput="TPV.updateMixtoTotal()">
             </div>
           </div>
 
@@ -738,7 +844,9 @@
               </div>
             </div>
             <div style="max-width: 140px;">
-              <input type="number" step="0.01" id="mixto-val-bizum" class="form-control text-end font-bold rounded-xl bg-white border border-slate-200 py-2.5 px-3 focus:border-slate-800" placeholder="0.00" oninput="TPV.updateMixtoTotal()">
+              <input type="number" step="0.01" id="mixto-val-bizum"
+                class="form-control text-end font-bold rounded-xl bg-white border border-slate-200 py-2.5 px-3 focus:border-slate-800"
+                placeholder="0.00" oninput="TPV.updateMixtoTotal()">
             </div>
           </div>
         </div>
@@ -748,14 +856,19 @@
           <strong id="mixto-total-ingresado" class="font-black text-slate-800">0.00 €</strong>
         </div>
 
-        <div id="mixto-status-box" class="p-3 rounded-xl text-center text-xs font-bold bg-red-50 text-red-700 border border-red-100 flex items-center justify-center gap-2">
+        <div id="mixto-status-box"
+          class="p-3 rounded-xl text-center text-xs font-bold bg-red-50 text-red-700 border border-red-100 flex items-center justify-center gap-2">
           <i class="fas fa-exclamation-circle animate-pulse"></i>
           <span id="mixto-status-text">Faltan por cubrir 0.00 €</span>
         </div>
       </div>
       <div class="modal-footer border-0 pt-0 justify-content-center pb-8 px-8 gap-3">
-        <button type="button" class="btn bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl px-6 py-3 border-0" onclick="TPV.cancelPagoMixto()">Cancelar</button>
-        <button type="button" class="btn bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl px-8 py-3 shadow-lg disabled:opacity-40" id="mixtoConfirmBtn" onclick="TPV.confirmPagoMixto()" disabled>
+        <button type="button"
+          class="btn bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl px-6 py-3 border-0"
+          onclick="TPV.cancelPagoMixto()">Cancelar</button>
+        <button type="button"
+          class="btn bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl px-8 py-3 shadow-lg disabled:opacity-40"
+          id="mixtoConfirmBtn" onclick="TPV.confirmPagoMixto()" disabled>
           <i class="fas fa-check mr-2"></i> Confirmar Cobro
         </button>
       </div>
@@ -787,7 +900,7 @@
   // Diccionario global de stocks renderizado desde Django
   const PRODUCT_STOCKS = {
     {% for p in productos %}
-      "{{ p.id }}": {{ p.stock|default:0 }},
+    "{{ p.id }}": {{ p.stock|default:0 }},
     {% endfor %}
   };
 
@@ -798,7 +911,7 @@
     descuento: 0,
     layoutInvertido: false,
 
-    fmt(n) { return (n || 0).toFixed(2) + " €"; },
+    fmt(n) { return (n || 0).toFixed(2) + " {{ moneda }}"; },
     getSubtotalBruto() { return this.ticket.reduce((s, i) => s + i.precio * i.cantidad, 0); },
     getSubtotalNeto() { return Math.max(0, this.getSubtotalBruto() - this.descuento); },
     getIVA() {
@@ -808,10 +921,12 @@
       return this.ticket.reduce((sum, item) => {
         const itemBruto = item.precio * item.cantidad;
         const itemNeto = itemBruto * (1 - tasaDescuento);
-        return sum + (itemNeto * ((item.iva || 21) / 100));
+        const ivaRate = (item.iva || 21) / 100;
+        const base = itemNeto / (1 + ivaRate);
+        return sum + (itemNeto - base);
       }, 0);
     },
-    getTotal() { return this.getSubtotalNeto() + this.getIVA(); },
+    getTotal() { return this.getSubtotalNeto(); },
 
     saveTicket() {
       localStorage.setItem("kudea_tpv_ticket", JSON.stringify(this.ticket));
@@ -848,19 +963,35 @@
       if (this.errorTimeout) clearTimeout(this.errorTimeout);
       this.errorTimeout = setTimeout(() => {
         alertEl.classList.add("d-none");
-      }, 4000);
+      }, 6000);
+
+      // Si el usuario pasa el ratón, no se oculta
+      alertEl.onmouseenter = () => {
+        if (this.errorTimeout) clearTimeout(this.errorTimeout);
+      };
+      alertEl.onmouseleave = () => {
+        if (this.errorTimeout) clearTimeout(this.errorTimeout);
+        this.errorTimeout = setTimeout(() => {
+          alertEl.classList.add("d-none");
+        }, 6000);
+      };
     },
 
-    addToTicket(id, nombre, precio, iva) {
+    addToTicket(id, nombre, precio, iva, stock) {
       precio = parseFloat(precio);
       iva = parseFloat(iva || 21);
-      const stock = PRODUCT_STOCKS[id] || 0;
+      stock = parseInt(stock) || 0;
 
       const i = this.ticket.findIndex(x => x.id === id);
       const currentQty = i >= 0 ? this.ticket[i].cantidad : 0;
 
       if (currentQty >= stock) {
-        this.showTicketError(`⚠️ Stock insuficiente para ${nombre} (Resaltado en rojo en el ticket)`);
+        if (stock === 0) {
+          this.showTicketError(`⚠️ ${nombre} — Sin stock, pero puedes venderlo igual`);
+        } else {
+          this.showTicketError(`⚠️ Stock insuficiente — solo quedan ${stock} de ${nombre}`);
+        }
+        // Se permite vender igual aunque no haya stock
       }
 
       if (i >= 0) this.ticket[i].cantidad++;
@@ -873,13 +1004,15 @@
       const bruto = this.getSubtotalBruto();
       const tasaDescuento = bruto > 0 ? (this.descuento / bruto) : 0;
       const breakdown = {};
-      
+
       this.ticket.forEach(item => {
         const rate = item.iva || 21;
         const itemBruto = item.precio * item.cantidad;
         const itemNeto = itemBruto * (1 - tasaDescuento);
-        const ivaAmount = itemNeto * (rate / 100);
-        
+        const ivaRate = rate / 100;
+        const base = itemNeto / (1 + ivaRate);
+        const ivaAmount = itemNeto - base;
+
         if (!breakdown[rate]) breakdown[rate] = 0;
         breakdown[rate] += ivaAmount;
       });
@@ -904,7 +1037,8 @@
             ${nameWarning}
           </td>
           <td class="text-center py-3">
-            <span class="badge ${isOut ? 'bg-red-100 text-red-700' : 'bg-slate-50 text-slate-600'} border-0 rounded-lg px-2 py-1 font-bold">${item.cantidad}</span>
+            <div class="font-bold ${isOut ? 'text-red-600' : 'text-dark-blue'}">${item.cantidad}</div>
+            <div class="text-slate-400" style="font-size:0.7rem;font-weight:600;">@ ${item.precio.toFixed(2)}</div>
           </td>
           <td class="text-end py-3 font-bold ${isOut ? 'text-red-600' : 'text-dark-blue'}">${(item.precio * item.cantidad).toFixed(2)} €</td>
           <td class="text-end py-3">
@@ -915,9 +1049,19 @@
         </tr>`;
       });
 
+      if (this.ticket.length === 0) {
+        tbody.innerHTML = `
+        <tr>
+          <td colspan="4" class="text-center py-5" style="border:0;">
+            <div style="width:56px;height:56px;background:#f1f5f9;border-radius:16px;display:inline-flex;align-items:center;justify-content:center;color:#94a3b8;font-size:1.5rem;margin-bottom:12px;"><i class="fas fa-cart-plus"></i></div>
+            <p style="color:#94a3b8;font-weight:700;font-size:0.875rem;margin:0;">Agrega tus productos aquí</p>
+          </td>
+        </tr>`;
+      }
+
       const subtotalBruto = this.getSubtotalBruto();
       const subtotalNeto = this.getSubtotalNeto();
-      
+
       document.getElementById("subtotal-ticket").textContent = this.fmt(subtotalBruto);
 
       if (this.descuento > 0) {
@@ -931,7 +1075,7 @@
       const ivaContainer = document.getElementById("iva-breakdown-container");
       ivaContainer.innerHTML = "";
       const breakdown = this.getIVABreakdown();
-      
+
       Object.keys(breakdown).forEach(rate => {
         const amount = breakdown[rate];
         if (amount > 0 || Object.keys(breakdown).length === 1) {
@@ -945,6 +1089,10 @@
       });
 
       document.getElementById("total-ticket").textContent = this.fmt(this.getTotal());
+      const vaciarBtn = document.getElementById("btn-vaciar-ticket");
+      if (vaciarBtn) {
+        vaciarBtn.style.display = this.ticket.length > 0 ? '' : 'none';
+      }
     },
 
     requestRemove(id) {
@@ -952,6 +1100,7 @@
       const item = this.ticket.find(x => x.id === id);
       if (item) {
         document.getElementById("remove-product-name").textContent = item.nombre;
+        document.getElementById("remove-product-qty").textContent = `Tienes ${item.cantidad} unidad${item.cantidad > 1 ? 'es' : ''}`;
       }
       const myModal = new bootstrap.Modal(document.getElementById('confirmRemoveModal'));
       myModal.show();
@@ -965,6 +1114,40 @@
       this.saveTicket();
       this.updateTicket();
       const modalEl = document.getElementById("confirmRemoveModal");
+      const modal = bootstrap.Modal.getInstance(modalEl);
+      modal.hide();
+    },
+
+    confirmRemoveOne() {
+      if (!this.productoAEliminar) return;
+      const item = this.ticket.find(x => x.id === this.productoAEliminar);
+      if (item) {
+        item.cantidad--;
+        if (item.cantidad <= 0) {
+          this.ticket = this.ticket.filter(x => x.id !== this.productoAEliminar);
+        }
+      }
+      if (this.getTotal() <= 0) this.descuento = 0;
+      this.productoAEliminar = null;
+      this.saveTicket();
+      this.updateTicket();
+      const modalEl = document.getElementById("confirmRemoveModal");
+      const modal = bootstrap.Modal.getInstance(modalEl);
+      modal.hide();
+    },
+
+    requestClearTicket() {
+      if (this.ticket.length === 0) return;
+      const myModal = new bootstrap.Modal(document.getElementById('confirmClearTicketModal'));
+      myModal.show();
+    },
+
+    confirmClearTicket() {
+      this.ticket = [];
+      this.descuento = 0;
+      this.saveTicket();
+      this.updateTicket();
+      const modalEl = document.getElementById("confirmClearTicketModal");
       const modal = bootstrap.Modal.getInstance(modalEl);
       modal.hide();
     },
@@ -990,7 +1173,7 @@
       const maxDiscount = this.getSubtotalBruto();
       if (descValue > maxDiscount && maxDiscount > 0) {
         this.showTicketError("⚠️ El descuento no puede ser superior al subtotal.");
-        
+
         const modalEl = document.getElementById("discountModal");
         const modal = bootstrap.Modal.getInstance(modalEl);
         if (modal) modal.hide();
@@ -1000,7 +1183,7 @@
       this.descuento = descValue;
       this.saveTicket();
       this.updateTicket();
-      
+
       const modalEl = document.getElementById("discountModal");
       const modal = bootstrap.Modal.getInstance(modalEl);
       modal.hide();
@@ -1058,15 +1241,15 @@
       const valEfectivo = parseFloat(document.getElementById("mixto-val-efectivo").value) || 0;
       const valTarjeta = parseFloat(document.getElementById("mixto-val-tarjeta").value) || 0;
       const valBizum = parseFloat(document.getElementById("mixto-val-bizum").value) || 0;
-      
+
       const ingresado = parseFloat((valEfectivo + valTarjeta + valBizum).toFixed(2));
       document.getElementById("mixto-total-ingresado").textContent = this.fmt(ingresado);
-      
+
       const diff = parseFloat((totalTicket - ingresado).toFixed(2));
       const statusBox = document.getElementById("mixto-status-box");
       const statusText = document.getElementById("mixto-status-text");
       const confirmBtn = document.getElementById("mixtoConfirmBtn");
-      
+
       if (diff > 0) {
         statusBox.className = "p-3 rounded-xl text-center text-xs font-bold bg-amber-50 text-amber-700 border border-amber-100 flex items-center justify-center gap-2";
         statusText.textContent = `Faltan por cubrir ${diff.toFixed(2)} €`;
@@ -1087,20 +1270,20 @@
       const valEfectivo = parseFloat(document.getElementById("mixto-val-efectivo").value) || 0;
       const valTarjeta = parseFloat(document.getElementById("mixto-val-tarjeta").value) || 0;
       const valBizum = parseFloat(document.getElementById("mixto-val-bizum").value) || 0;
-      
+
       this.desgloseMixto = {
         efectivo: valEfectivo,
         tarjeta: valTarjeta,
         bizum: valBizum
       };
-      
+
       const totalIngresado = valEfectivo + valTarjeta + valBizum;
       document.getElementById("importe").value = totalIngresado.toFixed(2);
-      
+
       const modalEl = document.getElementById("pagoMixtoModal");
       const modal = bootstrap.Modal.getInstance(modalEl);
       if (modal) modal.hide();
-      
+
       this.showConfirm();
     },
 
@@ -1173,7 +1356,7 @@
       } else {
         document.getElementById("conf-metodo").textContent = this.metodoPagoSeleccionado.nombre;
       }
-      
+
       document.getElementById("conf-subtotal").textContent = this.fmt(this.getSubtotalBruto());
       document.getElementById("conf-subtotal-neto").textContent = this.fmt(this.getSubtotalNeto());
 
@@ -1233,7 +1416,7 @@
         if (result.success) {
           this.clearStorage();
           // Abrir automáticamente el ticket tipo supermercado (80mm) en una pestaña nueva
-          window.open(`/venta-detalle/${result.venta_id}/?format=ticket`, '_blank');
+          window.open(`/home/venta/${result.venta_id}/?format=ticket`, '_blank');
           location.reload();
         } else {
           // Cerrar modal de cobro si da error para que el cajero vea la alerta inline en el ticket
