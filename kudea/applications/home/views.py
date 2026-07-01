@@ -49,6 +49,13 @@ def _format_ticket_amount(amount):
     return f"{Decimal(amount):.2f}"
 
 
+def _get_effective_currency(symbol):
+    normalized = (symbol or "").strip()
+    if normalized in {"", "€", "ARS"}:
+        return "C$"
+    return normalized
+
+
 def _sanitize_ticket_text(value):
     normalized = unicodedata.normalize("NFKD", str(value or ""))
     ascii_text = normalized.encode("ascii", "ignore").decode("ascii")
@@ -230,7 +237,7 @@ class TpvGeneralView(LoginRequiredMixin, TemplateView):
         context["balance_caja"] = fondo + ventas_hoy
         context["caja_abierta"] = apertura is not None
         context['current_user'] = self.request.user
-        context['moneda'] = tpv_config.moneda if tpv_config else 'C$'
+        context['moneda'] = _get_effective_currency(tpv_config.moneda if tpv_config else 'C$')
         context['caja_nombre'] = apertura.caja.nombre if apertura and apertura.caja else 'Principal'
         return context
 
@@ -425,7 +432,7 @@ class CrearProductoView(LoginRequiredMixin, CreateView):
         }
         from applications.home.models import ConfiguracionTPV
         cfg = ConfiguracionTPV.objects.first()
-        context['moneda'] = cfg.moneda if cfg else 'C$'
+        context['moneda'] = _get_effective_currency(cfg.moneda if cfg else 'C$')
         return context
 
     def form_valid(self, form):
@@ -581,14 +588,14 @@ class VentaDetalleView(LoginRequiredMixin, TemplateView):
 
         # Determinar moneda a mostrar
         tpv_cfg = ConfiguracionTPV.objects.first()
-        # Prioridad: parámetro ?currency, luego ?moneda, luego configuración, luego fallback a €
+        # Prioridad: parámetro ?currency, luego ?moneda, luego configuración, luego fallback a C$
         moneda_param = self.request.GET.get('currency') or self.request.GET.get('moneda')
         if moneda_param:
-            moneda = moneda_param
+            moneda = _get_effective_currency(moneda_param)
         elif tpv_cfg and tpv_cfg.moneda:
-            moneda = tpv_cfg.moneda
+            moneda = _get_effective_currency(tpv_cfg.moneda)
         else:
-            moneda = '€'
+            moneda = 'C$'
 
         context.update({
             'venta': venta,
@@ -643,7 +650,7 @@ def imprimir_ticket_pos(request, pk):
             desglose_mixto = None
 
     tpv_config = ConfiguracionTPV.objects.first()
-    moneda = tpv_config.moneda if tpv_config and tpv_config.moneda else ""
+    moneda = _get_effective_currency(tpv_config.moneda if tpv_config and tpv_config.moneda else "C$")
     nombre_tienda = tpv_config.nombre_tienda if tpv_config and tpv_config.nombre_tienda else "LA TIENDA DE DAYESKA"
 
     ticket_text = _build_pos_ticket_text(

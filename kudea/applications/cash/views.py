@@ -203,7 +203,8 @@ class AperturaCajaView(LoginRequiredMixin, View):
     def _get_moneda(self):
         from applications.home.models import ConfiguracionTPV
         cfg = ConfiguracionTPV.objects.first()
-        return cfg.moneda if cfg else "C$"
+        moneda = (cfg.moneda if cfg else "C$") or "C$"
+        return "C$" if moneda in {"", "€", "ARS"} else moneda
 
     def get(self, request, *args, **kwargs):
         apertura = self._apertura_hoy(request.user)

@@ -33,7 +33,7 @@ class ConfiguracionesView(LoginRequiredMixin, View):
             config_tpv = ConfiguracionTPV.objects.create(
                 nombre_tienda="Kudea Shop", 
                 iva_por_defecto=21.00, 
-                moneda="€", 
+                moneda="C$", 
                 imprimir_tickets=True, 
                 mostrar_stock=True
             )

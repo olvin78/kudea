@@ -103,7 +103,7 @@ class ConfiguracionTPV(models.Model):
         default=15,
         validators=[MinValueValidator(0)]
     )
-    moneda = models.CharField(max_length=10, default="€")
+    moneda = models.CharField(max_length=10, default="C$")
     imprimir_tickets = models.BooleanField(default=True)
     mostrar_stock = models.BooleanField(default=True)
     pin_apertura = models.CharField(max_length=4, default="1234", verbose_name="PIN de apertura de caja")
