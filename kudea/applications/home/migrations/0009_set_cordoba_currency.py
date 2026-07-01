@@ -9,7 +9,7 @@ def set_cordoba_currency(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('home', '0008_alter_configuraciontpv_moneda'),
+        ('home', '0007_alter_configuraciontpv_iva_por_defecto'),
     ]
 
     operations = [
