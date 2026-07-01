@@ -1,0 +1,29 @@
+# .dockerignore
+# Archivos y carpetas que el contenedor NO debe copiar adentro
+
+# Entorno virtual local (es de Ubuntu/Linux local, no compatible con el SO del contenedor que es Debian)
+../env/
+env/
+venv/
+
+# Base de datos SQLite y copias
+db.sqlite3
+db-copia-*.sqlite3
+db2.sqlite3
+media/
+../media/
+*_backup_*/
+backups/
+
+# Archivos compilados de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Configuración del IDE
+.idea/
+.vscode/
+
+# Archivos propios de Mac/Windows
+.DS_Store
+Thumbs.db
