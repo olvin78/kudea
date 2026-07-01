@@ -2,8 +2,10 @@
 # Django imports
 # ============================
 import os
+import subprocess
+import unicodedata
 
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.conf import settings
 from django.http import JsonResponse, HttpResponse
 from django.views.generic import TemplateView, CreateView, ListView, View
@@ -15,8 +17,8 @@ from django.template.loader import render_to_string
 from django.core.paginator import Paginator
 from django.db.models import Q, Sum, Count, F
 from django.views.decorators.http import require_POST
-from django.views.decorators.csrf import csrf_protect
-from django.utils.timezone import localdate
+from django.views.decorators.csrf import csrf_protect, csrf_exempt
+from django.utils.timezone import localdate, localtime
 
 import json
 from datetime import datetime, timedelta, date
@@ -38,6 +40,93 @@ from applications.product.forms import ProductoForm
 from applications.cashflow.models import Cuenta, Movimiento
 from applications.cashflow.services import register_movement
 from applications.cash.models import AperturaCaja
+
+
+POS_PRINTER_NAME = os.environ.get("KUDEA_POS_PRINTER", "POS-80")
+
+
+def _format_ticket_amount(amount):
+    return f"{Decimal(amount):.2f}"
+
+
+def _sanitize_ticket_text(value):
+    normalized = unicodedata.normalize("NFKD", str(value or ""))
+    ascii_text = normalized.encode("ascii", "ignore").decode("ascii")
+    return ascii_text.replace("\r", " ").replace("\n", " ").strip()
+
+
+def _build_pos_ticket_text(venta, detalles, iva_breakdown, total_real, cambio_real, desglose_mixto, moneda, nombre_tienda):
+    line_width = 32
+    moneda = _sanitize_ticket_text(moneda)
+    nombre_tienda = _sanitize_ticket_text(nombre_tienda)
+    lines = [
+        "BIENVENIDOS A",
+        nombre_tienda.upper(),
+        "COMERCIO DE ABASTECIMIENTOS",
+        "-" * line_width,
+        f"TICKET: {_sanitize_ticket_text(venta.codigo)}",
+        f"FECHA: {localtime(venta.creado_en).strftime('%d/%m/%y %H:%M')}",
+        "-" * line_width,
+    ]
+
+    for detalle in detalles:
+        nombre = _sanitize_ticket_text(detalle.producto.nombre)[:18]
+        total = _format_ticket_amount(detalle.total)
+        qty_price = f"{detalle.cantidad} x {_format_ticket_amount(detalle.precio_unitario)}{moneda}"
+        lines.append(nombre)
+        lines.append(f"{qty_price:<20}{total:>10}{moneda}")
+
+    lines.extend([
+        "-" * line_width,
+        f"TOTAL:{_format_ticket_amount(total_real):>21}{moneda}",
+    ])
+
+    if venta.descuento > 0:
+        lines.append(f"AHORRO:{_format_ticket_amount(venta.descuento):>20}{moneda}")
+
+    if desglose_mixto:
+        lines.append("PAGO MIXTO")
+        for medio, importe in desglose_mixto.items():
+            importe_fmt = _format_ticket_amount(importe)
+            lines.append(f"{_sanitize_ticket_text(medio).upper()[:18]:<18}{importe_fmt:>13}{moneda}")
+    else:
+        lines.append(f"PAGO: {_sanitize_ticket_text(venta.metodo_pago.nombre)}")
+
+    if cambio_real > 0:
+        lines.append(f"CAMBIO:{_format_ticket_amount(cambio_real):>20}{moneda}")
+
+    if iva_breakdown:
+        lines.append("-" * line_width)
+        lines.append("IVA")
+        for rate, data in iva_breakdown.items():
+            base = _format_ticket_amount(data['base'])
+            cuota = _format_ticket_amount(data['cuota'])
+            lines.append(f"{int(rate)}% B:{base} C:{cuota}")
+
+    lines.extend([
+        "-" * line_width,
+        "SANTA ELISA, BOACO, NIC",
+        "GRACIAS POR SU VISITA",
+        "CONSERVE SU TICKET",
+        "",
+        "",
+        "",
+    ])
+    return "\n".join(lines)
+
+
+def _send_ticket_to_printer(content, printer_name=POS_PRINTER_NAME):
+    completed = subprocess.run(
+        ["lp", "-d", printer_name],
+        input="\r\n".join(_sanitize_ticket_text(line) for line in content.splitlines()) + "\r\n",
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if completed.returncode != 0:
+        error = (completed.stderr or completed.stdout or "Error al imprimir").strip()
+        raise RuntimeError(error)
+    return (completed.stdout or "").strip()
 
 
 def _parse_sale_items(items):
@@ -490,6 +579,17 @@ class VentaDetalleView(LoginRequiredMixin, TemplateView):
             except Exception:
                 pass
 
+        # Determinar moneda a mostrar
+        tpv_cfg = ConfiguracionTPV.objects.first()
+        # Prioridad: parámetro ?currency, luego ?moneda, luego configuración, luego fallback a €
+        moneda_param = self.request.GET.get('currency') or self.request.GET.get('moneda')
+        if moneda_param:
+            moneda = moneda_param
+        elif tpv_cfg and tpv_cfg.moneda:
+            moneda = tpv_cfg.moneda
+        else:
+            moneda = '€'
+
         context.update({
             'venta': venta,
             'detalles': detalles,
@@ -498,7 +598,9 @@ class VentaDetalleView(LoginRequiredMixin, TemplateView):
             'subtotal_real': total_items - float(venta.iva or 0), # Aproximado para la base
             'cambio_real': cambio_real,
             'desglose_mixto': desglose_mixto,
-            'config': ConfiguracionFiscal.objects.first()
+            'config': ConfiguracionFiscal.objects.first(),
+            'tpv_config': tpv_cfg,
+            'moneda': moneda,
         })
         return context
 
@@ -509,6 +611,58 @@ class VentaDetalleView(LoginRequiredMixin, TemplateView):
         elif fmt == 'reverso':
             return ['home/venta_ticket_reverso.html']
         return [self.template_name]
+
+
+@require_POST
+@csrf_exempt
+def imprimir_ticket_pos(request, pk):
+    if not request.user.is_authenticated:
+        return JsonResponse({"success": False, "error": "Debes iniciar sesión."}, status=401)
+
+    venta = get_object_or_404(Venta.objects.select_related('metodo_pago'), pk=pk)
+    detalles = list(venta.detalles.select_related('producto').all())
+
+    iva_breakdown = {}
+    total_items = 0
+    for detalle in detalles:
+        rate = float(detalle.producto.porcentaje_iva or 21)
+        item_total = float(detalle.total)
+        total_items += item_total
+        base = item_total / (1 + (rate / 100))
+        cuota = item_total - base
+        if rate not in iva_breakdown:
+            iva_breakdown[rate] = {'base': 0, 'cuota': 0}
+        iva_breakdown[rate]['base'] += base
+        iva_breakdown[rate]['cuota'] += cuota
+
+    desglose_mixto = None
+    if venta.metodo_pago.nombre == "Pago Mixto" and venta.notas:
+        try:
+            desglose_mixto = json.loads(venta.notas)
+        except Exception:
+            desglose_mixto = None
+
+    tpv_config = ConfiguracionTPV.objects.first()
+    moneda = tpv_config.moneda if tpv_config and tpv_config.moneda else ""
+    nombre_tienda = tpv_config.nombre_tienda if tpv_config and tpv_config.nombre_tienda else "LA TIENDA DE DAYESKA"
+
+    ticket_text = _build_pos_ticket_text(
+        venta=venta,
+        detalles=detalles,
+        iva_breakdown=iva_breakdown,
+        total_real=venta.total,
+        cambio_real=venta.cambio or Decimal("0"),
+        desglose_mixto=desglose_mixto,
+        moneda=moneda,
+        nombre_tienda=nombre_tienda,
+    )
+
+    try:
+        job_info = _send_ticket_to_printer(ticket_text)
+    except RuntimeError as exc:
+        return JsonResponse({"success": False, "error": str(exc)}, status=500)
+
+    return JsonResponse({"success": True, "job": job_info})
 
 
 # ============================================================

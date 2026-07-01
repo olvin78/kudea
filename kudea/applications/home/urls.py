@@ -41,6 +41,7 @@ urlpatterns = [
 
     # Detalle de venta
     path('home/venta/<int:pk>/', views.VentaDetalleView.as_view(), name='venta_detalle'),
+    path('home/venta/<int:pk>/imprimir-pos/', views.imprimir_ticket_pos, name='imprimir_ticket_pos'),
 
 
     # ===========================

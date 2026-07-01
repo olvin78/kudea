@@ -181,7 +181,7 @@ SOCIALACCOUNT_PROVIDERS = {
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'Europe/Madrid'
+TIME_ZONE = 'America/Managua'
 
 USE_I18N = True
 
