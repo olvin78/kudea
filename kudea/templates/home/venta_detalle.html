@@ -297,19 +297,19 @@
                 {% if desglose_mixto.efectivo > 0 %}
                 <div style="display:flex; justify-content:space-between; width:100%;">
                   <span style="color:#64748b;">- Efectivo:</span>
-                  <span style="color:#1d3557; font-weight:600;">{{ desglose_mixto.efectivo|floatformat:2 }} €</span>
+                  <span style="color:#1d3557; font-weight:600;">{{ desglose_mixto.efectivo|floatformat:2 }} {{ moneda }}</span>
                 </div>
                 {% endif %}
                 {% if desglose_mixto.tarjeta > 0 %}
                 <div style="display:flex; justify-content:space-between; width:100%;">
                   <span style="color:#64748b;">- Tarjeta:</span>
-                  <span style="color:#1d3557; font-weight:600;">{{ desglose_mixto.tarjeta|floatformat:2 }} €</span>
+                  <span style="color:#1d3557; font-weight:600;">{{ desglose_mixto.tarjeta|floatformat:2 }} {{ moneda }}</span>
                 </div>
                 {% endif %}
                 {% if desglose_mixto.bizum > 0 %}
                 <div style="display:flex; justify-content:space-between; width:100%;">
                   <span style="color:#64748b;">- Bizum:</span>
-                  <span style="color:#1d3557; font-weight:600;">{{ desglose_mixto.bizum|floatformat:2 }} €</span>
+                  <span style="color:#1d3557; font-weight:600;">{{ desglose_mixto.bizum|floatformat:2 }} {{ moneda }}</span>
                 </div>
                 {% endif %}
               </div>
@@ -353,32 +353,32 @@
         <div class="summary-table">
           <div class="summary-row">
             <span>Base Imponible</span>
-            <span>{{ venta.subtotal|floatformat:2 }} €</span>
+            <span>{{ venta.subtotal|floatformat:2 }} {{ moneda }}</span>
           </div>
           {% if venta.descuento %}
           <div class="summary-row discount">
             <span>Descuento Aplicado</span>
-            <span>-{{ venta.descuento|floatformat:2 }} €</span>
+            <span>-{{ venta.descuento|floatformat:2 }} {{ moneda }}</span>
           </div>
           {% endif %}
           <div class="summary-row">
             <span>Cuota IVA Total</span>
-            <span>{{ venta.iva|floatformat:2 }} €</span>
+            <span>{{ venta.iva|floatformat:2 }} {{ moneda }}</span>
           </div>
           <div class="summary-row total">
             <span>TOTAL TICKET</span>
-            <span>{{ venta.total|floatformat:2 }} €</span>
+            <span>{{ venta.total|floatformat:2 }} {{ moneda }}</span>
           </div>
 
           {% if venta.recibido %}
           <div style="margin-top:20px; padding-top:15px; border-top:1px dashed #e2e8f0;">
             <div class="summary-row" style="font-size:0.8rem; color:var(--text-light)">
               <span>Efectivo entregado</span>
-              <span>{{ venta.recibido|floatformat:2 }} €</span>
+              <span>{{ venta.recibido|floatformat:2 }} {{ moneda }}</span>
             </div>
             <div class="summary-row" style="font-size:0.85rem; font-weight:700; color:#059669">
               <span>Cambio devuelto</span>
-              <span>{{ venta.cambio|floatformat:2 }} €</span>
+              <span>{{ venta.cambio|floatformat:2 }} {{ moneda }}</span>
             </div>
           </div>
           {% endif %}
