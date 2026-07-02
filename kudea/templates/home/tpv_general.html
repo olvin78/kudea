@@ -565,24 +565,24 @@
         <div class="ticket-totals">
           <div class="flex justify-between items-center mb-2">
             <span class="text-slate-400 font-bold text-xs uppercase tracking-wider">Subtotal:</span>
-            <span id="subtotal-ticket" class="font-bold text-dark-blue">0,00 €</span>
+            <span id="subtotal-ticket" class="font-bold text-dark-blue">0,00 {{ moneda }}</span>
           </div>
           <div class="flex justify-between items-center mb-2 text-red-500" id="descuento-container">
             <span class="font-bold text-xs uppercase tracking-wider">Descuento:</span>
-            <span id="descuento-ticket" class="font-bold">0,00 €</span>
+            <span id="descuento-ticket" class="font-bold">0,00 {{ moneda }}</span>
           </div>
           <div id="iva-breakdown-container" class="space-y-1 mb-4">
             <!-- Los desgloses de IVA se inyectarán aquí por JS -->
           </div>
           <div class="total-row grand-total d-flex justify-content-between align-items-center">
             <span class="uppercase tracking-widest text-sm opacity-80">Total Cobrar:</span>
-            <span id="total-ticket">0,00 €</span>
+            <span id="total-ticket">0,00 {{ moneda }}</span>
           </div>
         </div>
 
         <!-- Entrada de dinero (Calculadora) -->
         <div class="mt-6">
-          <input id="importe" type="text" class="form-control importe-input mb-4 shadow-sm" placeholder="0.00 €"
+          <input id="importe" type="text" class="form-control importe-input mb-4 shadow-sm" placeholder="0.00 {{ moneda }}"
             readonly>
 
           <div class="row g-3 mb-4">
@@ -686,9 +686,9 @@
         <button class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body text-center">
-        <p class="text-slate-400 text-sm mb-6">Introduce el importe a descontar (en €) sobre el total del ticket.</p>
+        <p class="text-slate-400 text-sm mb-6">Introduce el importe a descontar (en {{ moneda }}) sobre el total del ticket.</p>
         <div class="input-group mb-6">
-          <span class="input-group-text bg-slate-50 border-transparent rounded-l-2xl text-dark-blue font-bold">€</span>
+          <span class="input-group-text bg-slate-50 border-transparent rounded-l-2xl text-dark-blue font-bold">{{ moneda }}</span>
           <input type="number" id="descuentoInput"
             class="form-control bg-slate-50 border-transparent rounded-r-2xl py-3 text-center font-bold text-xl outline-none focus:ring-0"
             placeholder="0.00" step="0.01" min="0">
@@ -720,30 +720,30 @@
               id="conf-metodo" class="text-dark-blue">—</strong></p>
           <p class="d-flex justify-content-between mb-3"><span
               class="text-slate-400 font-bold text-xs uppercase tracking-wider">Subtotal Bruto:</span><strong
-              id="conf-subtotal" class="text-dark-blue">0,00 €</strong></p>
+              id="conf-subtotal" class="text-dark-blue">0,00 {{ moneda }}</strong></p>
           <p class="d-flex justify-content-between mb-3 text-red-500 font-bold" id="conf-descuento-row"
             style="display:none;"><span class="text-slate-400 font-bold text-xs uppercase tracking-wider">Descuento
-              aplicado:</span><strong id="conf-descuento">0,00 €</strong></p>
+              aplicado:</span><strong id="conf-descuento">0,00 {{ moneda }}</strong></p>
           <p class="d-flex justify-content-between mb-3 border-bottom border-slate-200 pb-3"><span
               class="text-slate-400 font-bold text-xs uppercase tracking-wider">Subtotal
-              Neto:</span><strong id="conf-subtotal-neto" class="text-dark-blue">0,00 €</strong></p>
+              Neto:</span><strong id="conf-subtotal-neto" class="text-dark-blue">0,00 {{ moneda }}</strong></p>
           <div id="conf-iva-breakdown" class="space-y-1 mb-4">
             <!-- Desglose de IVA en modal -->
           </div>
           <div class="border-t-2 border-dashed border-slate-200 pt-4 mt-4">
             <p class="d-flex justify-content-between mb-0 align-items-center"><span
                 class="font-bold text-dark-blue text-xs uppercase tracking-widest opacity-60">Total a
-                Pagar:</span><strong id="conf-total" class="text-3xl font-bold text-primary-blue">0,00 €</strong></p>
+                Pagar:</span><strong id="conf-total" class="text-3xl font-bold text-primary-blue">0,00 {{ moneda }}</strong></p>
           </div>
         </div>
 
         <div class="d-flex justify-content-between mb-2 px-3">
           <span class="text-slate-400 font-bold text-xs uppercase tracking-wider">Importe entregado:</span><strong
-            id="conf-recibido" class="text-dark-blue font-bold">0,00 €</strong>
+            id="conf-recibido" class="text-dark-blue font-bold">0,00 {{ moneda }}</strong>
         </div>
         <div class="d-flex justify-content-between px-3">
           <span class="font-bold text-xs uppercase tracking-widest text-green-600">A Devolver (Cambio):</span><strong
-            id="conf-cambio" class="text-2xl font-bold text-green-600">0,00 €</strong>
+            id="conf-cambio" class="text-2xl font-bold text-green-600">0,00 {{ moneda }}</strong>
         </div>
       </div>
       <div class="modal-footer border-0 pt-0 justify-content-center pb-8 px-8">
@@ -795,7 +795,7 @@
       <div class="modal-body p-8">
         <div class="text-center mb-6">
           <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Total a Cobrar</span>
-          <h2 id="mixto-total-cobrar" class="text-3xl font-black text-slate-800 mt-1">0.00 €</h2>
+          <h2 id="mixto-total-cobrar" class="text-3xl font-black text-slate-800 mt-1">0.00 {{ moneda }}</h2>
         </div>
 
         <div class="space-y-4 mb-6">
@@ -853,13 +853,13 @@
 
         <div class="bg-slate-100 rounded-2xl p-4 flex justify-between items-center text-sm mb-4">
           <span class="font-bold text-slate-500">Total Ingresado:</span>
-          <strong id="mixto-total-ingresado" class="font-black text-slate-800">0.00 €</strong>
+          <strong id="mixto-total-ingresado" class="font-black text-slate-800">0.00 {{ moneda }}</strong>
         </div>
 
         <div id="mixto-status-box"
           class="p-3 rounded-xl text-center text-xs font-bold bg-red-50 text-red-700 border border-red-100 flex items-center justify-center gap-2">
           <i class="fas fa-exclamation-circle animate-pulse"></i>
-          <span id="mixto-status-text">Faltan por cubrir 0.00 €</span>
+          <span id="mixto-status-text">Faltan por cubrir 0.00 {{ moneda }}</span>
         </div>
       </div>
       <div class="modal-footer border-0 pt-0 justify-content-center pb-8 px-8 gap-3">
@@ -1040,7 +1040,7 @@
             <div class="font-bold ${isOut ? 'text-red-600' : 'text-dark-blue'}">${item.cantidad}</div>
             <div class="text-slate-400" style="font-size:0.7rem;font-weight:600;">@ ${item.precio.toFixed(2)}</div>
           </td>
-          <td class="text-end py-3 font-bold ${isOut ? 'text-red-600' : 'text-dark-blue'}">${(item.precio * item.cantidad).toFixed(2)} €</td>
+          <td class="text-end py-3 font-bold ${isOut ? 'text-red-600' : 'text-dark-blue'}">${(item.precio * item.cantidad).toFixed(2)} {{ moneda }}</td>
           <td class="text-end py-3">
             <button class="btn btn-sm text-red-400 border-0 hover:bg-red-50 rounded-lg" onclick="TPV.requestRemove(${item.id})">
               <i class="fas fa-trash-alt"></i>
@@ -1252,12 +1252,12 @@
 
       if (diff > 0) {
         statusBox.className = "p-3 rounded-xl text-center text-xs font-bold bg-amber-50 text-amber-700 border border-amber-100 flex items-center justify-center gap-2";
-        statusText.textContent = `Faltan por cubrir ${diff.toFixed(2)} €`;
+        statusText.textContent = `Faltan por cubrir ${diff.toFixed(2)} {{ moneda }}`;
         confirmBtn.disabled = true;
       } else if (diff < 0) {
         const cambio = Math.abs(diff);
         statusBox.className = "p-3 rounded-xl text-center text-xs font-bold bg-green-50 text-green-700 border border-green-100 flex items-center justify-center gap-2";
-        statusText.textContent = `¡Listo! Cambio a devolver en efectivo: ${cambio.toFixed(2)} €`;
+        statusText.textContent = `¡Listo! Cambio a devolver en efectivo: ${cambio.toFixed(2)} {{ moneda }}`;
         confirmBtn.disabled = false;
       } else {
         statusBox.className = "p-3 rounded-xl text-center text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center gap-2";
@@ -1356,7 +1356,7 @@
         : 0;
 
       if (this.metodoPagoSeleccionado.nombre === "Pago Mixto") {
-        document.getElementById("conf-metodo").innerHTML = `<span class="bg-amber-100 text-amber-800 font-bold px-2.5 py-1 rounded-lg text-xs"><i class="fas fa-coins me-1"></i> Mixto: Efe ${this.desgloseMixto.efectivo}€, Tar ${this.desgloseMixto.tarjeta}€</span>`;
+        document.getElementById("conf-metodo").innerHTML = `<span class="bg-amber-100 text-amber-800 font-bold px-2.5 py-1 rounded-lg text-xs"><i class="fas fa-coins me-1"></i> Mixto: Efe ${this.desgloseMixto.efectivo}{{ moneda }}, Tar ${this.desgloseMixto.tarjeta}{{ moneda }}</span>`;
       } else {
         document.getElementById("conf-metodo").textContent = this.metodoPagoSeleccionado.nombre;
       }
