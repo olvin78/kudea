@@ -171,9 +171,9 @@ class CashflowListView(ListView):
             total_ventas=Sum('venta__total')
         ).filter(total_ventas__gt=0).order_by('-total_ventas')[:5]
 
-        # --- CAJAS ABIERTAS ACTUALMENTE ---
+        # --- CAJAS ABIERTAS O PAUSADAS ACTUALMENTE ---
         from applications.cash.models import AperturaCaja
-        cajas_abiertas = AperturaCaja.objects.filter(estado='abierta').select_related('usuario')
+        cajas_abiertas = AperturaCaja.objects.filter(estado__in=['abierta', 'pausada']).select_related('usuario')
 
         context.update({
             "entradas_total": entradas,
@@ -250,6 +250,34 @@ def crear_movimiento_ajax(request):
 # ============================================================
 # DETALLE DE MOVIMIENTO (AJAX) - PARA EL MODAL
 # ============================================================
+
+@require_POST
+@csrf_protect
+@login_required
+def force_close_register_ajax(request):
+    if not request.user.is_superuser:
+        return JsonResponse({'success': False, 'error': 'No tienes permisos de administrador.'}, status=403)
+        
+    try:
+        from applications.cash.models import AperturaCaja
+        import json
+        from django.utils import timezone
+        
+        data = json.loads(request.body.decode('utf-8'))
+        caja_id = data.get('caja_id')
+        
+        apertura = AperturaCaja.objects.get(id=caja_id)
+        if apertura.estado == 'cerrada':
+            return JsonResponse({'success': False, 'error': 'La caja ya está cerrada.'})
+            
+        apertura.estado = 'cerrada'
+        apertura.hora_cierre = timezone.now()
+        apertura.save()
+        
+        return JsonResponse({'success': True, 'message': f'La caja de {apertura.usuario.username} ha sido cerrada forzosamente.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
 
 def detalle_movimiento_api(request, movimiento_id):
     """

@@ -353,7 +353,7 @@
         <div class="summary-table">
           <div class="summary-row">
             <span>Base Imponible</span>
-            <span>{{ venta.subtotal|floatformat:2 }} {{ moneda }}</span>
+            <span>{{ venta.base_imponible|floatformat:2 }} {{ moneda }}</span>
           </div>
           {% if venta.descuento %}
           <div class="summary-row discount">

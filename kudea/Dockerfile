@@ -12,6 +12,7 @@ WORKDIR /app
 # Instalamos dependencias del sistema operativo (necesarias para compilar librerías de Python si hace falta)
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
+        cups-client \
         gcc \
         libpq-dev \
         libpango-1.0-0 \

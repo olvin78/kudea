@@ -1,27 +1,49 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <title>Ticket {{ venta.codigo }} | KUDEA POS</title>
     <style>
-        @page { margin: 0; }
+        @page {
+            margin: 0;
+
+                {
+                % if page_height_mm %
+            }
+
+            size: 80mm {
+                    {
+                    page_height_mm
+                }
+            }
+
+            mm;
+
+                {
+                % endif %
+            }
+        }
+
         body {
             font-family: 'Courier New', Courier, monospace;
             font-size: 13px;
-            line-height: 1.3;
+            line-height: 1.2;
             background: #f1f5f9;
             margin: 0;
-            padding: 80px 20px 20px 20px; /* Espacio para la barra superior */
+            padding: 80px 20px 20px 20px;
             display: flex;
             justify-content: center;
             gap: 40px;
+            color: black;
         }
 
-        /* Barra de Herramientas Superior */
         .toolbar {
             position: fixed;
-            top: 0; left: 0; right: 0;
+            top: 0;
+            left: 0;
+            right: 0;
             height: 60px;
             background: #1D3557;
             display: flex;
@@ -29,7 +51,7 @@
             justify-content: space-between;
             padding: 0 30px;
             z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
             color: white;
         }
 
@@ -47,10 +69,25 @@
             align-items: center;
             gap: 8px;
         }
-        .btn-back { background: rgba(255,255,255,0.1); color: white; }
-        .btn-back:hover { background: rgba(255,255,255,0.2); }
-        .btn-print { background: #457B9D; color: white; }
-        .btn-print:hover { background: #A8DADC; color: #1D3557; }
+
+        .btn-back {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-print {
+            background: #457B9D;
+            color: white;
+        }
+
+        .btn-print:hover {
+            background: #A8DADC;
+            color: #1D3557;
+        }
 
         .print-help {
             font-family: sans-serif;
@@ -60,55 +97,116 @@
             line-height: 1.3;
         }
 
-        /* Contenedor del Ticket */
         .ticket-paper {
             width: 80mm;
             background: white;
-            color: black;
-            padding: 8mm 4mm;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            padding: 6mm 4mm;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
             text-transform: uppercase;
             flex-shrink: 0;
-            min-height: 120mm; /* Altura mínima para que el patrón luzca */
+            transform: scale(1.3);
+            transform-origin: top center;
+            margin-top: 20px;
+            /* Compensa un poco el escalado */
         }
 
-        .text-center { text-align: center; }
-        .text-right { text-align: right; }
-        .font-bold { font-weight: bold; }
-        .header { margin-bottom: 15px; }
-        .header h1 { font-size: 18px; margin: 0; letter-spacing: 2px; }
-        .divider { 
-            margin: 20px 0; 
-            border-top: 1px dashed black; 
-            border-bottom: 1px dashed black; 
-            height: 2px; 
+        .text-center {
+            text-align: center;
         }
-        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-        th { border-bottom: 1px dashed black; padding: 5px 0; font-size: 11px; }
-        td { padding: 2px 0; }
-        .item-row td:first-child { width: 70%; }
-        .item-row td:last-child { width: 30%; text-align: right; }
-        .totals-section { margin: 15px 0; }
-        .total-big { font-size: 20px; font-weight: bold; display: flex; justify-content: space-between; border-top: 2px solid black; padding-top: 5px; }
-        .tax-table { font-size: 11px; margin-top: 20px; }
-        .legal-info { font-size: 10px; margin-top: 15px; line-height: 1.1; }
-        svg#barcode { width: 100%; max-height: 60px; }
 
-        /* ── CONFIGURACIÓN DE IMPRESIÓN ── */
+        .text-right {
+            text-align: right;
+        }
+
+        .font-bold {
+            font-weight: bold;
+        }
+
+        .header {
+            margin-bottom: 15px;
+        }
+
+        .header p {
+            margin: 2px 0;
+        }
+
+        .header h1 {
+            font-size: 16px;
+            margin: 4px 0;
+            letter-spacing: 1px;
+            font-weight: bold;
+        }
+
+        .divider-single {
+            margin: 5px 0;
+            font-size: 13px;
+            text-align: center;
+            overflow: hidden;
+            white-space: nowrap;
+            letter-spacing: 2px;
+        }
+
+        .divider-single::before {
+            content: "--------------------------------------------------------------------------";
+        }
+
+        .item-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 2px;
+        }
+
+        .dot-leader {
+            flex-grow: 1;
+            border-bottom: 2px dotted #000;
+            margin: 0 5px;
+            position: relative;
+            top: -4px;
+        }
+
+        .tax-table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+            margin: 5px 0;
+            font-size: 13px;
+        }
+
+        .tax-table th {
+            padding: 2px 0;
+            border: none;
+            font-weight: normal;
+        }
+
+        .tax-table td {
+            padding: 2px 0;
+        }
+
         @media print {
-            body { background: white !important; padding: 0 !important; display: block !important; }
-            .no-print, .toolbar { display: none !important; }
-            .ticket-paper { 
-                box-shadow: none !important; 
-                margin: 0 !important; 
-                width: 100% !important; 
+            body {
+                background: white !important;
+                padding: 0 !important;
+                display: block !important;
+            }
+
+            .no-print,
+            .toolbar {
+                display: none !important;
+            }
+
+            .ticket-paper {
+                box-shadow: none !important;
+                margin: 0 !important;
+                width: 74mm !important;
                 max-width: 80mm !important;
-                padding: 8mm 2mm !important;
-                min-height: auto !important;
+                padding: 4mm 8mm 4mm 0 !important;
+                transform: scale(1) !important;
             }
         }
     </style>
 </head>
+
 <body>
 
     <div class="toolbar no-print">
@@ -130,133 +228,131 @@
     <!-- ── ANVERSO ── -->
     <div class="ticket-paper">
         <div class="header text-center">
-            <p>*** BIENVENIDOS A ***</p>
+            <p>** BIENVENIDO **</p>
             <h1>LA TIENDA DE DAYESKA</h1>
             <p>COMERCIO DE ABASTECIMIENTOS</p>
+            <p>SANTA ELISA, BOACO, NIC</p>
         </div>
 
-        <div class="divider"></div>
+        <div class="ticket-body">
+            <div style="margin: 20px 0 15px 0;">
+                Nº Ticket: {{ venta.codigo }}
+            </div>
 
-        <table>
-            <tbody>
+            <div class="items-list">
                 {% for d in detalles %}
-                <tr class="item-row">
-                    <td>{{ d.producto.nombre|truncatechars:18 }}{% if venta.descuento > 0 %}*{% endif %}</td>
-                    <td style="white-space: nowrap; text-align: right;">
-                        {{ d.total|floatformat:2 }}{{ moneda }}
-                        <span style="font-size: 10px; opacity: 0.6; font-weight: normal; margin-left: 2px;">({{ d.producto.porcentaje_iva|floatformat:0 }}%)</span>
-                    </td>
-                </tr>
+                <div class="item-flex">
+                    <span style="white-space: nowrap;">{{ d.cantidad }} {{ d.producto.nombre|truncatechars:18 }}{% if venta.descuento > 0 %}*{% endif %}</span>
+                    <span class="dot-leader"></span>
+                    <span style="white-space: nowrap;">{{ d.total|floatformat:2 }}</span>
+                </div>
                 {% endfor %}
-            </tbody>
-        </table>
-
-        {% if venta.descuento > 0 %}
-        <div style="font-size: 10px; font-style: italic; text-align: left; margin: 5px 0 10px 0;">
-            * ARTICULOS CON DESCUENTO APLICADO
-        </div>
-        {% endif %}
-
-        <div class="totals-section">
-            <div style="display: flex; justify-content: space-between;">
-                <span>{{ moneda }} *</span>
-                <span>TOT</span>
             </div>
-            <div class="total-big">
-                <span>TOTAL</span>
-                <span>{{ total_real|floatformat:2 }}{{ moneda }}</span>
+
+            <div class="divider-single"></div>
+
+            <div class="item-flex" style="font-size: 15px; font-weight: bold;">
+                <span>TOTAL:</span>
+                <span class="dot-leader"></span>
+                <span>{{ total_real|floatformat:2 }} {{ moneda }}</span>
             </div>
-        </div>
 
-        {% if venta.descuento > 0 %}
-        <div class="text-center font-bold" style="background: #eee; padding: 5px; margin: 10px 0;">
-            *** SU AHORRO: {{ venta.descuento|floatformat:2 }}{{ moneda }} ***
-        </div>
-        {% endif %}
+            <div class="divider-single"></div>
 
-        <div class="payment-info">
+            {% if venta.descuento > 0 %}
+            <div
+                style="text-align: center; overflow: hidden; white-space: nowrap; letter-spacing: 2px; margin-top: 5px;">
+                **************************************************************************</div>
+            <div class="item-flex" style="font-weight: bold;">
+                <span>* DESCUENTO:</span>
+                <span class="dot-leader" style="visibility: hidden;"></span>
+                <span>{{ venta.descuento|floatformat:2 }} *</span>
+            </div>
+            <div
+                style="text-align: center; overflow: hidden; white-space: nowrap; letter-spacing: 2px; margin-bottom: 5px;">
+                **************************************************************************</div>
+            {% endif %}
+
             {% if desglose_mixto %}
-            <div style="font-size: 11px; margin-bottom: 5px; font-weight: bold; border-top: 1px dashed black; padding-top: 5px;">
-                *** PAGO MIXTO DETALLE ***
+            <div style="margin-top: 5px;">
+                {% if desglose_mixto.efectivo > 0 %}
+                <div class="item-flex">
+                    <span>EFECTIVO:</span>
+                    <span class="dot-leader"></span>
+                    <span>{{ desglose_mixto.efectivo|floatformat:2 }}</span>
+                </div>
+                {% endif %}
+                {% if desglose_mixto.tarjeta > 0 %}
+                <div class="item-flex">
+                    <span>TARJETA:</span>
+                    <span class="dot-leader"></span>
+                    <span>{{ desglose_mixto.tarjeta|floatformat:2 }}</span>
+                </div>
+                {% endif %}
+                {% if desglose_mixto.bizum > 0 %}
+                <div class="item-flex">
+                    <span>BIZUM:</span>
+                    <span class="dot-leader"></span>
+                    <span>{{ desglose_mixto.bizum|floatformat:2 }}</span>
+                </div>
+                {% endif %}
             </div>
-            {% if desglose_mixto.efectivo > 0 %}
-            <div style="display: flex; justify-content: space-between; font-size: 11px;">
-                <span>- EFECTIVO:</span>
-                <span>{{ desglose_mixto.efectivo|floatformat:2 }}{{ moneda }}</span>
-            </div>
-            {% endif %}
-            {% if desglose_mixto.tarjeta > 0 %}
-            <div style="display: flex; justify-content: space-between; font-size: 11px;">
-                <span>- TARJETA:</span>
-                <span>{{ desglose_mixto.tarjeta|floatformat:2 }}{{ moneda }}</span>
-            </div>
-            {% endif %}
-            {% if desglose_mixto.bizum > 0 %}
-            <div style="display: flex; justify-content: space-between; font-size: 11px;">
-                <span>- BIZUM:</span>
-                <span>{{ desglose_mixto.bizum|floatformat:2 }}{{ moneda }}</span>
-            </div>
-            {% endif %}
             {% else %}
-            <div style="display: flex; justify-content: space-between;">
-                <span>{{ venta.metodo_pago.nombre }}</span>
-                <span>{{ total_real|floatformat:2 }}{{ moneda }}</span>
+            <div class="item-flex" style="margin-top: 5px;">
+                <span>PAGADO ({{ venta.metodo_pago.nombre|upper }}):</span>
+                <span class="dot-leader"></span>
+                <span>{{ total_real|floatformat:2 }}</span>
             </div>
             {% endif %}
 
-            {% if cambio_real > 0 %}
-            <div style="display: flex; justify-content: space-between; font-size: 11px; margin-top: 5px; border-top: 1px dashed black; padding-top: 3px;">
-                <span>CAMBIO ENTREGADO</span>
-                <span>{{ cambio_real|floatformat:2 }}{{ moneda }}</span>
+            <div class="item-flex">
+                <span>CAMBIO:</span>
+                <span class="dot-leader"></span>
+                <span>{{ cambio_real|floatformat:2|default:"0.00" }}</span>
             </div>
+
+            <div class="item-flex" style="margin-top: 5px;">
+                <span>PRECIOS</span>
+                <span class="dot-leader"></span>
+                <span>CON IVA INCLUIDO</span>
+            </div>
+            <div class="item-flex">
+                <span>FECHA:</span>
+                <span class="dot-leader"></span>
+                <span>{{ venta.creado_en|date:"d M Y H:i:s" }}</span>
+            </div>
+
+            {% if iva_breakdown %}
+            <div class="divider-single"></div>
+            <table class="tax-table">
+                <thead>
+                    <tr>
+                        <th style="width: 20%; text-align: left; border-bottom: 1px dashed black; padding-bottom: 5px;">IMP.</th>
+                        <th style="width: 20%; text-align: center; border-bottom: 1px dashed black; padding-bottom: 5px;">%</th>
+                        <th style="width: 30%; text-align: right; border-bottom: 1px dashed black; padding-bottom: 5px;">BASE</th>
+                        <th style="width: 30%; text-align: right; border-bottom: 1px dashed black; padding-bottom: 5px;">CUOTA</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rate, data in iva_breakdown.items %}
+                    <tr>
+                        <td style="text-align: left;">IVA</td>
+                        <td style="text-align: center;">{{ rate|floatformat:0 }}%</td>
+                        <td style="text-align: right;">{{ data.base|floatformat:2 }}</td>
+                        <td style="text-align: right;">{{ data.cuota|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
             {% endif %}
+        </div> <!-- Fin ticket-body -->
+
+        <div class="text-center" style="margin-top: 25px;">
+            <p>Gracias por su visita</p>
         </div>
 
-        <div style="margin-top: 15px; font-size: 11px;">
-            NUM. TOTAL ART. VENDIDOS = {{ detalles.count }}
-        </div>
-
-        <div class="divider"></div>
-
-        <table class="tax-table">
-            <thead>
-                <tr>
-                    <th class="text-left">IMP.</th>
-                    <th class="text-right">%</th>
-                    <th class="text-right">BASE</th>
-                    <th class="text-right">CUOTA</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for rate, data in iva_breakdown.items %}
-                <tr>
-                    <td class="text-left">IVA</td>
-                    <td class="text-right">{{ rate|floatformat:0 }}%</td>
-                    <td class="text-right">{{ data.base|floatformat:2 }}{{ moneda }}</td>
-                    <td class="text-right">{{ data.cuota|floatformat:2 }}{{ moneda }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-        <div class="divider"></div>
-
-        <div class="legal-info text-center">
-            <p>PARA EL CLIENTE</p>
-            <p>ESTABLECIMIENTO: LA TIENDA DE DAYESKA</p>
-            <p>DIRECCION: SANTA ELISA, BOACO, NIC</p>
-            <p>COMERCIO DE ABASTECIMIENTOS</p>
-            <p>FECHA - HORA: {{ venta.creado_en|date:"d/m/y - H:i" }}</p>
-            <p>TICKET: {{ venta.codigo }}</p>
-        </div>
-
-        <div class="text-center" style="margin: 20px 0;">
-            <svg id="barcode"></svg>
-        </div>
-
-        <div class="text-center" style="margin-top: 15px;">
-            <p>GRACIAS POR SU VISITA</p>
-            <p>CONSERVE SU TICKET</p>
+        <div class="text-center" style="margin: 25px 0;">
+            <svg id="barcode" style="width: 100%; max-height: 70px;"></svg>
         </div>
     </div>
 
@@ -306,10 +402,11 @@
 
         JsBarcode("#barcode", "{{ venta.codigo }}", {
             format: "CODE128",
-            width: 1.5,
-            height: 40,
+            lineColor: "#000",
+            width: 2.5,
+            height: 60,
             displayValue: true,
-            fontSize: 10,
+            fontSize: 16,
             margin: 0
         });
 
@@ -318,4 +415,5 @@
     </script>
 
 </body>
+
 </html>

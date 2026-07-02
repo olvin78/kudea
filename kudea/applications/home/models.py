@@ -71,6 +71,10 @@ class Venta(models.Model):
     def __str__(self):
         return f"Venta #{self.codigo} - {self.total}€"
 
+    @property
+    def base_imponible(self):
+        return self.total - self.iva
+
     def save(self, *args, **kwargs):
         if not self.codigo:
             last_venta = Venta.objects.order_by('-id').first()

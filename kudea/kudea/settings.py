@@ -105,7 +105,8 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'applications.home.context_processors.modulos_activos',
-                'applications.home.context_processors.comunicaciones_context',
+                'applications.home.context_processors.moneda_context',
+
             ],
         },
     },

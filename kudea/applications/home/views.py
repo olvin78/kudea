@@ -43,6 +43,11 @@ from applications.cash.models import AperturaCaja
 
 
 POS_PRINTER_NAME = os.environ.get("KUDEA_POS_PRINTER", "POS-80")
+ESC_INIT = "\x1b@"
+ESC_ALIGN_LEFT = "\x1ba\x00"
+ESC_ALIGN_CENTER = "\x1ba\x01"
+ESC_BOLD_ON = "\x1bE\x01"
+ESC_BOLD_OFF = "\x1bE\x00"
 
 
 def _format_ticket_amount(amount):
@@ -51,8 +56,9 @@ def _format_ticket_amount(amount):
 
 def _get_effective_currency(symbol):
     normalized = (symbol or "").strip()
-    if normalized in {"", "€", "ARS"}:
+    if not normalized:
         return "C$"
+    # Return the symbol as is (e.g., "ARS", "$", "€")
     return normalized
 
 
@@ -62,78 +68,153 @@ def _sanitize_ticket_text(value):
     return ascii_text.replace("\r", " ").replace("\n", " ").strip()
 
 
+def _center_ticket_text(value, line_width):
+    return _sanitize_ticket_text(value)[:line_width].center(line_width)
+
+
+def _ticket_bytes_line(value=""):
+    return (_sanitize_ticket_text(value) + "\n").encode("latin-1", errors="ignore")
+
+
+def _ticket_raw_line(value=""):
+    return (value + "\n").encode("latin-1", errors="ignore")
+
+
+def _get_ticket_store_name(tpv_config):
+    raw_name = (tpv_config.nombre_tienda if tpv_config and tpv_config.nombre_tienda else "").strip()
+    if raw_name.lower() in {"", "mi tienda", "kudea shop"}:
+        return "LA TIENDA DE DAYESKA"
+    return raw_name
+
+
 def _build_pos_ticket_text(venta, detalles, iva_breakdown, total_real, cambio_real, desglose_mixto, moneda, nombre_tienda):
-    line_width = 32
+    line_width = 48
     moneda = _sanitize_ticket_text(moneda)
     nombre_tienda = _sanitize_ticket_text(nombre_tienda)
-    lines = [
-        "BIENVENIDOS A",
-        nombre_tienda.upper(),
-        "COMERCIO DE ABASTECIMIENTOS",
-        "-" * line_width,
-        f"TICKET: {_sanitize_ticket_text(venta.codigo)}",
-        f"FECHA: {localtime(venta.creado_en).strftime('%d/%m/%y %H:%M')}",
-        "-" * line_width,
-    ]
+    payload = bytearray()
+    payload.extend(ESC_INIT.encode("latin-1"))
+    payload.extend(ESC_ALIGN_CENTER.encode("latin-1"))
+    payload.extend(_ticket_bytes_line("** BIENVENIDO **"))
+    payload.extend(ESC_BOLD_ON.encode("latin-1"))
+    payload.extend(_ticket_bytes_line(nombre_tienda.upper()))
+    payload.extend(ESC_BOLD_OFF.encode("latin-1"))
+    payload.extend(_ticket_bytes_line("COMERCIO DE ABASTECIMIENTOS"))
+    payload.extend(_ticket_bytes_line("SANTA ELISA, BOACO, NIC"))
+    payload.extend(_ticket_bytes_line(""))
+    payload.extend(_ticket_bytes_line(""))
+    payload.extend(ESC_ALIGN_LEFT.encode("latin-1"))
+    payload.extend(_ticket_bytes_line(f"Nº Ticket: {_sanitize_ticket_text(venta.codigo)}"))
+    payload.extend(_ticket_bytes_line(""))
+    payload.extend(_ticket_bytes_line(""))
 
     for detalle in detalles:
-        nombre = _sanitize_ticket_text(detalle.producto.nombre)[:18]
+        nombre = f"{detalle.cantidad} {_sanitize_ticket_text(detalle.producto.nombre)}"[:32]
         total = _format_ticket_amount(detalle.total)
-        qty_price = f"{detalle.cantidad} x {_format_ticket_amount(detalle.precio_unitario)}{moneda}"
-        lines.append(nombre)
-        lines.append(f"{qty_price:<20}{total:>10}{moneda}")
+        # Pad with dots
+        padding_length = line_width - len(nombre) - len(total) - 2
+        padding = "." * padding_length if padding_length > 0 else " "
+        payload.extend(_ticket_bytes_line(f"{nombre} {padding} {total}"))
 
-    lines.extend([
-        "-" * line_width,
-        f"TOTAL:{_format_ticket_amount(total_real):>21}{moneda}",
-    ])
+    payload.extend(_ticket_bytes_line("-" * line_width))
+    
+    total_lbl = "TOTAL:"
+    total_val = f"{_format_ticket_amount(total_real)} {moneda}"
+    padding_length = line_width - len(total_lbl) - len(total_val) - 2
+    padding = "." * padding_length if padding_length > 0 else " "
+    payload.extend(ESC_BOLD_ON.encode("latin-1"))
+    payload.extend(_ticket_bytes_line(f"{total_lbl} {padding} {total_val}"))
+    payload.extend(ESC_BOLD_OFF.encode("latin-1"))
+    
+    payload.extend(_ticket_bytes_line("-" * line_width))
 
     if venta.descuento > 0:
-        lines.append(f"AHORRO:{_format_ticket_amount(venta.descuento):>20}{moneda}")
+        desc_lbl = "DESCUENTO:"
+        desc_val = _format_ticket_amount(venta.descuento)
+        inner_width = line_width - 4
+        padding = " " * (inner_width - len(desc_lbl) - len(desc_val))
+        
+        payload.extend(_ticket_bytes_line("*" * line_width))
+        payload.extend(_ticket_bytes_line(f"* {desc_lbl}{padding}{desc_val} *"))
+        payload.extend(_ticket_bytes_line("*" * line_width))
 
     if desglose_mixto:
-        lines.append("PAGO MIXTO")
         for medio, importe in desglose_mixto.items():
-            importe_fmt = _format_ticket_amount(importe)
-            lines.append(f"{_sanitize_ticket_text(medio).upper()[:18]:<18}{importe_fmt:>13}{moneda}")
+            if Decimal(str(importe or 0)) > 0:
+                m_lbl = f"{_sanitize_ticket_text(medio).upper()}:"
+                m_val = _format_ticket_amount(importe)
+                padding_len = line_width - len(m_lbl) - len(m_val) - 2
+                padding = "." * padding_len if padding_len > 0 else " "
+                payload.extend(_ticket_bytes_line(f"{m_lbl} {padding} {m_val}"))
     else:
-        lines.append(f"PAGO: {_sanitize_ticket_text(venta.metodo_pago.nombre)}")
+        p_lbl = f"PAGADO ({_sanitize_ticket_text(venta.metodo_pago.nombre).upper()}):"
+        p_val = _format_ticket_amount(total_real)
+        padding_len = line_width - len(p_lbl) - len(p_val) - 2
+        padding = "." * padding_len if padding_len > 0 else " "
+        payload.extend(_ticket_bytes_line(f"{p_lbl} {padding} {p_val}"))
 
-    if cambio_real > 0:
-        lines.append(f"CAMBIO:{_format_ticket_amount(cambio_real):>20}{moneda}")
+    c_lbl = "CAMBIO:"
+    c_val = _format_ticket_amount(cambio_real) if cambio_real > 0 else "0.00"
+    padding_len = line_width - len(c_lbl) - len(c_val) - 2
+    padding = "." * padding_len if padding_len > 0 else " "
+    payload.extend(_ticket_bytes_line(f"{c_lbl} {padding} {c_val}"))
+
+    payload.extend(_ticket_bytes_line(""))
+    
+    p_lbl = "PRECIOS"
+    p_val = "IVA INCLUIDO"
+    padding_len = line_width - len(p_lbl) - len(p_val) - 2
+    padding = "." * padding_len if padding_len > 0 else " "
+    payload.extend(_ticket_bytes_line(f"{p_lbl} {padding} {p_val}"))
+
+    f_lbl = "FECHA:"
+    f_val = localtime(venta.creado_en).strftime('%d %b %Y %H:%M:%S')
+    padding_len = line_width - len(f_lbl) - len(f_val) - 2
+    padding = "." * padding_len if padding_len > 0 else " "
+    payload.extend(_ticket_bytes_line(f"{f_lbl} {padding} {f_val}"))
 
     if iva_breakdown:
-        lines.append("-" * line_width)
-        lines.append("IVA")
+        payload.extend(_ticket_bytes_line("-" * line_width))
+        # Format: IMP (8), % (10), BASE (14), CUOTA (16) -> Total 48 chars
+        header_line = f"{'IMP.':<8}{'%':^10}{'BASE':>14}{'CUOTA':>16}"
+        payload.extend(_ticket_bytes_line(header_line))
+        payload.extend(_ticket_bytes_line("-" * line_width))
         for rate, data in iva_breakdown.items():
-            base = _format_ticket_amount(data['base'])
-            cuota = _format_ticket_amount(data['cuota'])
-            lines.append(f"{int(rate)}% B:{base} C:{cuota}")
+            base_str = _format_ticket_amount(data['base'])
+            cuota_str = _format_ticket_amount(data['cuota'])
+            rate_str = f"{int(rate)}%"
+            row_line = f"{'IVA':<8}{rate_str:^10}{base_str:>14}{cuota_str:>16}"
+            payload.extend(_ticket_bytes_line(row_line))
 
-    lines.extend([
-        "-" * line_width,
-        "SANTA ELISA, BOACO, NIC",
-        "GRACIAS POR SU VISITA",
-        "CONSERVE SU TICKET",
-        "",
-        "",
-        "",
-    ])
-    return "\n".join(lines)
+    payload.extend(_ticket_bytes_line(""))
+    payload.extend(ESC_ALIGN_CENTER.encode("latin-1"))
+    payload.extend(_ticket_bytes_line("Gracias por su visita"))
+    payload.extend(_ticket_bytes_line(""))
+
+    payload.extend(b"\x1dH\x02")
+    payload.extend(b"\x1dw\x03") # Barcode width (3 is larger)
+    payload.extend(b"\x1dh\x60") # Barcode height (96 dots)
+    payload.extend(b"\x1dk\x04" + _sanitize_ticket_text(venta.codigo).encode("ascii", errors="ignore") + b"\x00")
+    
+    payload.extend(b"\n\n\n\n\n\n\n\n") # ~3cm de espacio
+    payload.extend(b"\x1d\x56\x01") # Comando ESC/POS para Corte de Papel
+    return bytes(payload)
 
 
 def _send_ticket_to_printer(content, printer_name=POS_PRINTER_NAME):
-    completed = subprocess.run(
-        ["lp", "-d", printer_name],
-        input="\r\n".join(_sanitize_ticket_text(line) for line in content.splitlines()) + "\r\n",
-        text=True,
-        capture_output=True,
-        check=False,
-    )
+    try:
+        completed = subprocess.run(
+            ["lp", "-d", printer_name],
+            input=content,
+            capture_output=True,
+            check=False,
+        )
+    except FileNotFoundError as exc:
+        raise RuntimeError("No se encontro el comando de impresion 'lp'. Instala y configura CUPS en el servidor.") from exc
+
     if completed.returncode != 0:
-        error = (completed.stderr or completed.stdout or "Error al imprimir").strip()
+        error = (completed.stderr or completed.stdout or b"Error al imprimir").decode("utf-8", errors="ignore").strip()
         raise RuntimeError(error)
-    return (completed.stdout or "").strip()
+    return (completed.stdout or b"").decode("utf-8", errors="ignore").strip()
 
 
 def _parse_sale_items(items):
@@ -147,8 +228,7 @@ def _parse_sale_items(items):
             raise ValueError("La cantidad debe ser mayor que cero")
 
         producto = Producto.objects.select_for_update().get(pk=product_id)
-        if producto.stock < cantidad:
-            raise ValueError(f"Stock insuficiente para {producto.nombre} (disponible: {producto.stock}, solicitado: {cantidad})")
+        # Se permite vender aunque haya stock insuficiente (el stock quedará en negativo)
 
         unit_price = Decimal(str(raw_item.get("precio", producto.precio)))
         parsed_items.append({
@@ -567,11 +647,12 @@ class VentaDetalleView(LoginRequiredMixin, TemplateView):
             base = item_total / (1 + (rate / 100))
             cuota = item_total - base
             
-            if rate not in iva_breakdown:
-                iva_breakdown[rate] = {'base': 0, 'cuota': 0}
-            
-            iva_breakdown[rate]['base'] += base
-            iva_breakdown[rate]['cuota'] += cuota
+            if base > 0 or cuota > 0:
+                if rate not in iva_breakdown:
+                    iva_breakdown[rate] = {'base': 0, 'cuota': 0}
+                
+                iva_breakdown[rate]['base'] += base
+                iva_breakdown[rate]['cuota'] += cuota
 
         # Usar los totales y cambios exactos registrados en la base de datos
         total_final = float(venta.total)
@@ -620,8 +701,8 @@ class VentaDetalleView(LoginRequiredMixin, TemplateView):
         return [self.template_name]
 
 
-@require_POST
 @csrf_exempt
+@require_POST
 def imprimir_ticket_pos(request, pk):
     if not request.user.is_authenticated:
         return JsonResponse({"success": False, "error": "Debes iniciar sesión."}, status=401)
@@ -637,10 +718,11 @@ def imprimir_ticket_pos(request, pk):
         total_items += item_total
         base = item_total / (1 + (rate / 100))
         cuota = item_total - base
-        if rate not in iva_breakdown:
-            iva_breakdown[rate] = {'base': 0, 'cuota': 0}
-        iva_breakdown[rate]['base'] += base
-        iva_breakdown[rate]['cuota'] += cuota
+        if base > 0 or cuota > 0:
+            if rate not in iva_breakdown:
+                iva_breakdown[rate] = {'base': 0, 'cuota': 0}
+            iva_breakdown[rate]['base'] += base
+            iva_breakdown[rate]['cuota'] += cuota
 
     desglose_mixto = None
     if venta.metodo_pago.nombre == "Pago Mixto" and venta.notas:
@@ -651,7 +733,7 @@ def imprimir_ticket_pos(request, pk):
 
     tpv_config = ConfiguracionTPV.objects.first()
     moneda = _get_effective_currency(tpv_config.moneda if tpv_config and tpv_config.moneda else "C$")
-    nombre_tienda = tpv_config.nombre_tienda if tpv_config and tpv_config.nombre_tienda else "LA TIENDA DE DAYESKA"
+    nombre_tienda = _get_ticket_store_name(tpv_config)
 
     ticket_text = _build_pos_ticket_text(
         venta=venta,
@@ -668,8 +750,10 @@ def imprimir_ticket_pos(request, pk):
         job_info = _send_ticket_to_printer(ticket_text)
     except RuntimeError as exc:
         return JsonResponse({"success": False, "error": str(exc)}, status=500)
+    except Exception as exc:
+        return JsonResponse({"success": False, "error": f"Error interno al imprimir: {exc}"}, status=500)
 
-    return JsonResponse({"success": True, "job": job_info})
+    return JsonResponse({"success": True})
 
 
 # ============================================================
@@ -1166,10 +1250,20 @@ def obtener_datos_arqueo_completo(inicio, fin, tipo, usuario, fondo_manual=None)
         )
         .order_by("-producto__porcentaje_iva")
     )
+    iva_desglose_final = []
     for iva in iva_desglose:
-        iva["porcentaje"] = float(iva["producto__porcentaje_iva"])
-        iva["base"] = float(iva["base_total"] or 0)
-        iva["cuota"] = float(iva["iva_total"] or 0)
+        base = float(iva["base_total"] or 0)
+        cuota = float(iva["iva_total"] or 0)
+        if base > 0 or cuota > 0:
+            iva["porcentaje"] = float(iva["producto__porcentaje_iva"])
+            iva["base"] = base
+            iva["cuota"] = cuota
+            iva_desglose_final.append(iva)
+    iva_desglose = iva_desglose_final
+
+    from applications.home.models import ConfiguracionTPV
+    tpv_cfg = ConfiguracionTPV.objects.first()
+    moneda = _get_effective_currency(tpv_cfg.moneda) if tpv_cfg and tpv_cfg.moneda else 'C$'
 
     return {
         "tipo": tipo.title(),
@@ -1197,6 +1291,7 @@ def obtener_datos_arqueo_completo(inicio, fin, tipo, usuario, fondo_manual=None)
         "total_efectivo_neto": total_efectivo_neto,
         "total_esperado": total_esperado,
         "iva_desglose": iva_desglose,
+        "moneda": moneda,
     }
 
 def obtener_resumen_ventas(inicio, fin):
@@ -1275,30 +1370,35 @@ def registrar_cierre_desde_rango(request, tipo, fecha_inicio, fecha_fin):
     total_efectivo_neto = total_recibido - total_cambio
     total_esperado = fondo_inicial + total_efectivo_neto
 
-    cierre, created = CierreCaja.objects.update_or_create(
+    # Buscar la sesión de caja activa (o pausada) de este usuario
+    apertura_activa = AperturaCaja.objects.filter(usuario=request.user, estado__in=['abierta', 'pausada']).first()
+
+    # Control estricto de duplicidad: si es un cierre diario y la caja ya está cerrada, abortar
+    if tipo == 'diario' and not apertura_activa:
+        messages.error(request, "Error de contabilidad: No se puede generar el arqueo porque tu sesión de caja ya fue cerrada o no existe.")
+        return None
+
+    cierre = CierreCaja.objects.create(
         tipo=tipo,
         fecha_inicio=fecha_inicio,
         fecha_fin=fecha_fin,
-        defaults={
-            'fecha': hoy,
-            'usuario': request.user,
-            'caja': apertura_activa.caja if apertura_activa and apertura_activa.caja else (apertura.caja if apertura and apertura.caja else None),
-            'fondo_inicial': fondo_inicial,
-            'efectivo_esperado': total_esperado,
-            'efectivo_retirado': total_efectivo_neto,
-            'total_ventas': total_bruto,
-        }
+        fecha=hoy,
+        usuario=request.user,
+        caja=apertura_activa.caja if apertura_activa and apertura_activa.caja else (apertura.caja if apertura and apertura.caja else None),
+        fondo_inicial=fondo_inicial,
+        efectivo_esperado=total_esperado,
+        efectivo_retirado=total_efectivo_neto,
+        total_ventas=total_bruto,
     )
     
-    # Cerrar la sesión de caja (AperturaCaja)
-    apertura_activa = AperturaCaja.objects.filter(usuario=request.user, estado='abierta').first()
+    # Cerrar la sesión de caja (AperturaCaja) si está abierta o pausada
     if apertura_activa:
         apertura_activa.estado = 'cerrada'
         apertura_activa.hora_cierre = timezone.now()
         apertura_activa.save()
-        messages.success(request, f"Cierre de caja ({tipo.capitalize()}) registrado y sesión cerrada con éxito.")
+        messages.success(request, f"Cierre de caja registrado (ID: #{cierre.id}) y sesión cerrada con éxito.")
     else:
-        messages.success(request, f"Cierre de caja ({tipo.capitalize()}) registrado con éxito.")
+        messages.success(request, f"Reporte de cierre ({tipo.capitalize()}) generado con éxito (ID: #{cierre.id}).")
     
     return cierre
 

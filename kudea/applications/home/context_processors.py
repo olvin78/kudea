@@ -19,3 +19,9 @@ def comunicaciones_context(request):
             'unread_comms': unread_comms
         }
     return {}
+
+def moneda_context(request):
+    """Inject the configured currency (e.g., ARS) into every template as {{ moneda }}."""
+    from .models import ConfiguracionTPV
+    cfg = ConfiguracionTPV.objects.first()
+    return {'moneda': cfg.moneda if cfg else 'ARS'}

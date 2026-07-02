@@ -1335,8 +1335,12 @@
         if (!this.metodoPagoSeleccionado.aceptaCambio) {
           recibido = total;
         } else {
-          if (!inputImporteVal || recibido <= 0) {
-            this.showTicketError("⚠️ Debe ingresar una cantidad para continuar.");
+          // Si es efectivo y no puso nada, asumimos el importe exacto
+          if (!inputImporteVal) {
+            recibido = total;
+          }
+          if (recibido <= 0) {
+            this.showTicketError("⚠️ Debe ingresar una cantidad válida para continuar.");
             return;
           }
           if (recibido < total) {

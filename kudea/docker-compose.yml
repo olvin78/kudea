@@ -13,7 +13,9 @@ services:
     # Todo lo que toques en tu PC o en la base de datos se guarda en ambos sitios.
     volumes:
       - .:/app
+      - /run/cups/cups.sock:/run/cups/cups.sock
     # Variables de entorno adicionales si las necesitas en un futuro
     environment:
       - DEBUG=1
+      - CUPS_SERVER=/run/cups/cups.sock
       # Puedes poner aquí claves de bases de datos externas más adelante
