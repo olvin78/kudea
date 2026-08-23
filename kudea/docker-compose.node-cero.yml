@@ -1,0 +1,22 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: >-
+      sh -c "python manage.py makemigrations --noinput
+      && python manage.py migrate --noinput
+      && python manage.py collectstatic --noinput
+      && gunicorn kudea.wsgi:application --bind 0.0.0.0:8000"
+    environment:
+      - DJANGO_SETTINGS_MODULE=kudea.settings
+      - DJANGO_DEBUG=False
+      - DJANGO_ALLOWED_HOSTS=kudea.olvinduarte.com,www.kudea.olvinduarte.com,127.0.0.1,localhost,192.168.1.51
+      - DJANGO_CSRF_TRUSTED=https://kudea.olvinduarte.com,https://www.kudea.olvinduarte.com
+    ports:
+      - "127.0.0.1:8005:8000"
+    volumes:
+      - ./db.sqlite3:/app/db.sqlite3
+      - ./media:/app/media
+      - ./staticfiles:/app/staticfiles
+    restart: unless-stopped
