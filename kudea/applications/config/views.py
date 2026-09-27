@@ -119,6 +119,21 @@ class ConfiguracionesView(LoginRequiredMixin, View):
                     messages.warning(request, f"La categoría '{cat_nombre}' ya existe en el sistema.")
             return redirect('configuraciones')
 
+        # ── Valores previos: para poder decir en la notificación QUÉ cambió ──
+        def _vals(obj, *campos):
+            return tuple(getattr(obj, c, None) for c in campos) if obj else None
+
+        _campos_tpv = ('nombre_tienda', 'moneda', 'imprimir_tickets', 'mostrar_stock', 'pin_apertura', 'iva_por_defecto')
+        _campos_fiscal = ('iva_general', 'fondo_caja_defecto')
+        prev = {
+            'tpv': _vals(config_tpv, *_campos_tpv),
+            'fiscal': _vals(config_fiscal, *_campos_fiscal),
+            'modulos': {m.id: m.activo for m in Modulo.objects.all()},
+            'metodos': {m.id: (m.activo, m.acepta_cambio) for m in MetodoPago.objects.all()},
+            'categorias': {c.id: c.porcentaje_iva for c in Categoria.objects.all()},
+            'empleados': {e.id: (e.es_administrador, e.puede_realizar_salidas, e.puede_cambiar_subtotales, e.esta_de_baja) for e in Empleado.objects.all()},
+        }
+
         # 2. Guardar Configuración General & TPV
         if config_tpv:
             config_tpv.nombre_tienda = request.POST.get('nombre_tienda', config_tpv.nombre_tienda)
@@ -223,11 +238,65 @@ class ConfiguracionesView(LoginRequiredMixin, View):
             except ValueError:
                 pass
 
-        if acciones_lote:
-            mensaje_completo = "Configuraciones globales actualizadas con éxito. Acciones en lote: " + " | ".join(acciones_lote)
-            messages.success(request, mensaje_completo)
+        # ── Resumen de lo que REALMENTE ha cambiado ──
+        if config_tpv:
+            config_tpv.refresh_from_db()
+        if config_fiscal:
+            config_fiscal.refresh_from_db()
+
+        cambios = []
+
+        def _fmt(v):
+            if isinstance(v, bool):
+                return 'ON' if v else 'OFF'
+            return str(v)
+
+        if config_tpv and prev['tpv']:
+            etiquetas = ['Nombre de tienda', 'Moneda', 'Auto-imprimir tickets', 'Mostrar stock', 'PIN de apertura', 'IVA por defecto']
+            for etiqueta, antes, ahora in zip(etiquetas, prev['tpv'], _vals(config_tpv, *_campos_tpv)):
+                if antes != ahora:
+                    cambios.append(f"{etiqueta}: {_fmt(antes)} → {_fmt(ahora)}")
+
+        if config_fiscal and prev['fiscal']:
+            etiquetas = ['IVA general', 'Fondo de caja por defecto']
+            for etiqueta, antes, ahora in zip(etiquetas, prev['fiscal'], _vals(config_fiscal, *_campos_fiscal)):
+                if antes != ahora:
+                    cambios.append(f"{etiqueta}: {_fmt(antes)} → {_fmt(ahora)}")
+
+        for m in Modulo.objects.all():
+            antes = prev['modulos'].get(m.id)
+            if antes is not None and antes != m.activo:
+                cambios.append(f"Módulo '{m.nombre}': {_fmt(m.activo)}")
+
+        for mp in MetodoPago.objects.all():
+            antes = prev['metodos'].get(mp.id)
+            if antes is not None and antes != (mp.activo, mp.acepta_cambio):
+                estado = _fmt(mp.activo) + (', admite cambio' if mp.acepta_cambio else '')
+                cambios.append(f"Método '{mp.nombre}': {estado}")
+
+        for cat in Categoria.objects.all():
+            antes = prev['categorias'].get(cat.id)
+            if antes is not None and antes != cat.porcentaje_iva:
+                cambios.append(f"IVA de '{cat.nombre}': {antes}% → {cat.porcentaje_iva}%")
+
+        for emp in Empleado.objects.all():
+            antes = prev['empleados'].get(emp.id)
+            if antes is not None and antes != (emp.es_administrador, emp.puede_realizar_salidas, emp.puede_cambiar_subtotales, emp.esta_de_baja):
+                permisos = [n for n, v in zip(
+                    ('administrador', 'salidas', 'subtotales'),
+                    (emp.es_administrador, emp.puede_realizar_salidas, emp.puede_cambiar_subtotales),
+                ) if v]
+                cambios.append(f"Permisos de {emp.nombre}: {', '.join(permisos) if permisos else 'ninguno'}")
+
+        if cambios:
+            resumen = "Guardado → " + "; ".join(cambios)
         else:
-            messages.success(request, "Configuraciones globales actualizadas con éxito.")
+            resumen = "Ajustes guardados (ningún valor cambió)."
+
+        if acciones_lote:
+            resumen += " · Lote: " + " | ".join(acciones_lote)
+
+        messages.success(request, resumen)
 
         return redirect('configuraciones')
 

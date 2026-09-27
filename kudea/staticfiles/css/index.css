@@ -1,0 +1,246 @@
+:root {
+  --kudea-dark: #1D3557;
+  --kudea-medium: #457B9D;
+  --kudea-light: #A8DADC;
+  --kudea-accent: #F1FAEE;
+  --kudea-danger: #E63946;
+  --kudea-success: #2A9D8F;
+}
+
+/* Estructura principal */
+.tpv-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f8f9fa;
+}
+
+.tpv-navbar {
+  background-color: white;
+  padding: 0.75rem 1.5rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 1000;
+}
+
+.tpv-brand {
+  display: flex;
+  align-items: center;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--kudea-dark);
+}
+
+.tpv-brand i {
+  margin-right: 10px;
+  font-size: 1.5rem;
+}
+
+.tpv-menu {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Estilos generales */
+.tpv-title {
+  color: var(--kudea-dark);
+  font-weight: 600;
+}
+
+.btn-kudea {
+  background-color: var(--kudea-medium);
+  color: white;
+  border: none;
+  transition: all 0.3s;
+}
+
+.btn-kudea:hover {
+  background-color: var(--kudea-dark);
+  color: white;
+}
+
+.btn-outline-kudea {
+  border: 2px solid var(--kudea-medium);
+  color: var(--kudea-medium);
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.btn-outline-kudea:hover {
+  background-color: var(--kudea-medium);
+  color: white;
+}
+
+.badge-kudea {
+  background-color: var(--kudea-dark);
+}
+
+/* Campos de entrada */
+#importe {
+  font-size: 2rem;
+  background-color: var(--kudea-accent);
+  border: 2px solid var(--kudea-medium);
+  height: 60px;
+}
+
+.search-box {
+  position: relative;
+}
+
+.search-box i {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  color: var(--kudea-medium);
+}
+
+.search-box input {
+  padding-left: 40px;
+  border: 2px solid var(--kudea-light);
+}
+
+.search-box input:focus {
+  border-color: var(--kudea-medium);
+  box-shadow: 0 0 0 0.25rem rgba(69, 123, 157, 0.25);
+}
+
+/* Tarjetas de productos */
+.product-card {
+  transition: all 0.2s;
+  cursor: pointer;
+  border: 1px solid var(--kudea-light);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.product-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+  border-color: var(--kudea-medium);
+}
+
+/* Métodos de pago */
+.payment-method {
+  border: 2px dashed var(--kudea-light);
+  transition: all 0.3s;
+  border-radius: 10px;
+  cursor: pointer;
+  padding: 15px 5px;
+}
+
+.payment-method:hover {
+  background-color: var(--kudea-accent);
+  border: 2px solid var(--kudea-medium);
+}
+
+.payment-method.active {
+  background-color: var(--kudea-light);
+  border: 2px solid var(--kudea-medium);
+}
+
+.payment-method i {
+  color: var(--kudea-medium);
+}
+
+/* Tablas */
+.table thead th {
+  background-color: var(--kudea-accent);
+  color: var(--kudea-dark);
+  border-bottom: 2px solid var(--kudea-light);
+}
+
+/* Items del ticket */
+.ticket-item:hover {
+  background-color: var(--kudea-accent);
+}
+
+.delete-item {
+  color: var(--kudea-danger);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.ticket-item:hover .delete-item {
+  opacity: 1;
+}
+
+/* Controles de cantidad */
+.quantity-btn {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--kudea-medium);
+  background-color: white;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.quantity-btn:hover {
+  background-color: var(--kudea-accent);
+}
+
+.quantity-input {
+  width: 40px;
+  text-align: center;
+  border: 1px solid var(--kudea-medium);
+  border-radius: 4px;
+  margin: 0 5px;
+  padding: 5px;
+}
+
+/* Menú de navegación simplificado */
+.nav-tabs .nav-link {
+  color: var(--kudea-dark);
+  border: none;
+  padding: 10px 15px;
+  position: relative;
+}
+
+.nav-tabs .nav-link.active {
+  color: var(--kudea-medium);
+  font-weight: 600;
+  background: none;
+}
+
+.nav-tabs .nav-link.active:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: var(--kudea-medium);
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .tpv-menu {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  
+  .tpv-menu button {
+    margin-bottom: 5px;
+  }
+}
+
+@media (max-width: 768px) {
+  .tpv-navbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .tpv-menu {
+    width: 100%;
+    margin-top: 10px;
+    justify-content: space-between;
+  }
+}
+
+

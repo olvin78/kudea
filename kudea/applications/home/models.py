@@ -51,6 +51,12 @@ class Venta(models.Model):
 
     codigo = models.CharField(max_length=20, unique=True)
     usuario = models.ForeignKey(User, on_delete=models.PROTECT)
+    # Cliente de la venta (obligatorio si el pago es a FIADO)
+    cliente = models.ForeignKey(
+        'customer.Cliente', on_delete=models.PROTECT,
+        null=True, blank=True, related_name='ventas',
+        verbose_name="Cliente",
+    )
     metodo_pago = models.ForeignKey(MetodoPago, on_delete=models.PROTECT)
     subtotal = models.DecimalField(max_digits=10, decimal_places=2)
     iva = models.DecimalField(max_digits=10, decimal_places=2)
@@ -74,6 +80,21 @@ class Venta(models.Model):
     @property
     def base_imponible(self):
         return self.total - self.iva
+
+    # --------------------------------------------------------
+    # FIADO: lo que el cliente ya HA PAGADO de este ticket
+    # --------------------------------------------------------
+    @property
+    def pagado_fiado(self):
+        return sum(p.cantidad for p in self.pagos_fiado.all())
+
+    # --------------------------------------------------------
+    # FIADO: lo que queda por cobrar de ESTE ticket
+    # (total menos los pagos a cuenta que ha hecho el cliente)
+    # --------------------------------------------------------
+    @property
+    def pendiente_fiado(self):
+        return (self.total or 0) - self.pagado_fiado
 
     def save(self, *args, **kwargs):
         if not self.codigo:

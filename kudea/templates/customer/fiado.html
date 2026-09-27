@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fiado · Cuentas por cobrar — KUDEA</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { background: #f1f5f9; font-family: Inter, system-ui, sans-serif; }
+    .f-wrap { max-width: 1100px; margin: 0 auto; padding: 28px 20px 60px; }
+    .f-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 6px 24px rgba(15,23,42,.05); }
+    .f-title { font-weight: 800; color: #0f172a; font-size: 1.4rem; }
+    .f-eyebrow { font-size: .7rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #64748b; }
+    .f-total { font-size: 2.4rem; font-weight: 800; color: #b45309; }
+    .f-btn { border: 1px solid #e2e8f0; background: #fff; color: #0f172a; border-radius: 8px; font-size: .78rem;
+             font-weight: 600; padding: 7px 14px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+    .f-btn:hover { background: #f8fafc; }
+    .f-btn.pay { background: #059669; border-color: #059669; color: #fff; }
+    .f-btn.pay:hover { background: #047857; }
+    table thead th { font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; color: #64748b; font-weight: 800;
+                     background: #f8fafc; padding: 12px 16px; border-bottom: 1px solid #e2e8f0; }
+    table tbody td { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; font-size: .85rem; vertical-align: middle; }
+    .chip { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .68rem; font-weight: 800; }
+    .chip.amber { background: #fef3c7; color: #92400e; }
+    .chip.green { background: #d1fae5; color: #065f46; }
+    .code { font-weight: 800; color: #1d3557; }
+    .muted { color: #94a3b8; font-size: .75rem; }
+    .f-input { border: 1px solid #cbd5e1; border-radius: 8px; font-size: .82rem; padding: 6px 8px; }
+    .f-input-lg { width: 100%; border: 1px solid #cbd5e1; border-radius: 10px; padding: 11px 14px; font-size: .95rem; background: #fff; }
+    .f-input-lg:focus { outline: none; border-color: #1d3557; box-shadow: 0 0 0 3px rgba(29,53,87,.12); }
+    .f-label { font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: #64748b; display: block; margin-bottom: 6px; }
+    .f-err { color: #dc2626; font-size: .78rem; margin-top: 4px; }
+    .f-btn.primary { background: #1d3557; border-color: #1d3557; color: #fff; }
+    .f-btn.primary:hover { background: #16294a; }
+    .f-btn:disabled { opacity: .6; }
+    @media print { .no-print { display: none !important; } body { background: #fff; } .f-card { box-shadow: none; } }
+  </style>
+</head>
+<body>
+<div class="f-wrap">
+
+  <!-- Cabecera -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 no-print">
+    <div>
+      <div class="f-eyebrow">Cuenta corriente de cliente</div>
+      <div class="f-title">Fiado · Cuentas por cobrar</div>
+    </div>
+    <div class="d-flex gap-2">
+      <button type="button" class="f-btn" style="background:#1d3557;border-color:#1d3557;color:#fff;"
+              data-bs-toggle="modal" data-bs-target="#modalNuevoCliente">
+        <i class="fas fa-user-plus"></i> Nuevo cliente
+      </button>
+      <a href="{% url 'home_app:home' %}" class="f-btn"><i class="fas fa-chevron-left"></i> Inicio</a>
+      <button onclick="window.print()" class="f-btn"><i class="fas fa-print"></i> Imprimir listado</button>
+    </div>
+  </div>
+
+  <!-- Avisos -->
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %} py-2 no-print">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Avisos del popup (AJAX) -->
+  <div id="avisoFiado" class="no-print"></div>
+
+  <!-- Total por cobrar -->
+  <div class="f-card p-4 mb-4">
+    <div class="row align-items-center">
+      <div class="col">
+        <div class="f-eyebrow">Total pendiente de cobro</div>
+        <div class="f-total">{{ total_por_cobrar|floatformat:2 }} {{ moneda }}</div>
+        <div class="muted">{{ ventas|length }} ticket{{ ventas|length|pluralize }} en curso</div>
+      </div>
+      <div class="col-auto text-end muted">
+        <i class="fas fa-info-circle me-1"></i>
+        El dinero <b>no entra en caja</b> hasta que el cliente paga.<br>
+        Al cobrar, se genera el recibo y la caja sube.
+      </div>
+    </div>
+  </div>
+
+  <!-- Buscador -->
+  <div class="f-card p-3 mb-4 no-print">
+    <form method="get" class="d-flex gap-2 flex-wrap align-items-center">
+      <div class="input-group" style="max-width:420px;flex:1 1 260px;">
+        <span class="input-group-text bg-light"><i class="fas fa-search text-muted"></i></span>
+        <input type="text" name="q" value="{{ request.GET.q }}" class="form-control"
+               placeholder="Buscar por cliente, teléfono, DNI o código" style="border-left:0;">
+      </div>
+      <button type="submit" class="f-btn pay"><i class="fas fa-filter"></i> Filtrar</button>
+      <a href="{% url 'fiado_lista' %}" class="f-btn"><i class="fas fa-times"></i> Limpiar</a>
+      {% if q %}
+        <span class="muted">Filtrando por «{{ q }}» · {{ ventas|length }} resultado{{ ventas|length|pluralize }}</span>
+      {% endif %}
+    </form>
+  </div>
+
+  <!-- ================= RESUMEN POR CLIENTE ================= -->
+  {% if deudores %}
+  <div class="f-card overflow-hidden mb-4">
+    <div class="p-4 pb-3">
+      <div class="f-eyebrow">Clientes con deuda</div>
+      <div class="fw-bold" style="font-size:1.05rem;">
+        {{ deudores|length }} cliente{{ deudores|length|pluralize }} a cobrar
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table mb-0 align-middle">
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>Teléfono</th>
+            <th class="text-end">Tickets</th>
+            <th class="text-end">Debe</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in deudores %}
+          <tr>
+            <td>
+              <b>{{ d.cliente.nombre }}</b>
+              {% if d.cliente.dni %}<span class="muted"> · DNI {{ d.cliente.dni }}</span>{% endif %}
+            </td>
+            <td>{{ d.cliente.telefono|default:"—" }}</td>
+            <td class="text-end">{{ d.tickets }}</td>
+            <td class="text-end fw-bold" style="color:#b45309;">{{ d.deuda|floatformat:2 }} {{ moneda }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Lista de tickets pendientes -->
+  <div class="f-card overflow-hidden">
+    {% if not ventas %}
+      <div class="p-5 text-center">
+        {% if q %}
+          <div style="font-size:2rem;">🔍</div>
+          <div class="fw-bold mt-2">Sin resultados para «{{ q }}»</div>
+          <div class="muted">Prueba con otro nombre, teléfono, DNI o código de ticket.</div>
+          <a href="{% url 'fiado_lista' %}" class="f-btn mt-3">Limpiar búsqueda</a>
+        {% else %}
+          <div style="font-size:2rem;">✅</div>
+          <div class="fw-bold mt-2">Nadie te debe dinero</div>
+          <div class="muted">No hay tickets de fiado pendientes de cobro.</div>
+          <button type="button" class="f-btn mt-3" style="background:#1d3557;border-color:#1d3557;color:#fff;"
+                  data-bs-toggle="modal" data-bs-target="#modalNuevoCliente">
+            <i class="fas fa-user-plus"></i> Nuevo cliente
+          </button>
+        {% endif %}
+      </div>
+    {% else %}
+      <div class="table-responsive">
+        <table class="table mb-0 align-middle">
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>Ticket</th>
+              <th>Fecha</th>
+              <th class="text-end">Total</th>
+              <th class="text-end">Pagado</th>
+              <th class="text-end">Pendiente</th>
+              <th class="no-print">Cobrar</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for v in ventas %}
+              <tr>
+                <td>
+                  <b>{{ v.cliente.nombre|default:"Sin cliente" }}</b>
+                  {% if v.cliente.telefono %}<div class="muted"><i class="fas fa-phone me-1"></i>{{ v.cliente.telefono }}</div>{% endif %}
+                </td>
+                <td class="code">{{ v.codigo }}</td>
+                <td>{{ v.creado_en|date:"d/m/Y H:i" }}</td>
+                <td class="text-end">{{ v.total|floatformat:2 }}</td>
+                <td class="text-end text-success">{{ v.pagado_fiado|floatformat:2 }}</td>
+                <td class="text-end fw-bold" style="color:#b45309;">{{ v.pendiente_fiado|floatformat:2 }} {{ moneda }}</td>
+                <td class="no-print">
+                  <form method="post" action="{% url 'fiado_cobrar' v.id %}" class="d-flex gap-1">
+                    {% csrf_token %}
+                    <input class="f-input" style="width:100px" type="number" step="0.01" min="0.01"
+                           max="{{ v.pendiente_fiado }}" name="cantidad" value="{{ v.pendiente_fiado }}">
+                    <select class="f-input" name="metodo_pago" style="width:110px">
+                      {% for m in metodos_pago %}<option value="{{ m.id }}">{{ m.nombre }}</option>{% endfor %}
+                    </select>
+                    <button type="submit" class="f-btn pay"><i class="fas fa-check"></i> Cobrar</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="muted mt-3 no-print">
+    <i class="fas fa-lightbulb me-1"></i>
+    Para <b>vender a fiado</b>: en el TPV, elige el método de pago <b>Fiado</b> y selecciona el cliente (o créalo en el momento).
+  </div>
+
+</div>
+
+<!-- ============ POPUP: NUEVO CLIENTE ============ -->
+<div class="modal fade" id="modalNuevoCliente" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border:none;border-radius:16px;overflow:hidden;">
+      <div class="modal-header" style="background:#1d3557;color:#fff;">
+        <div>
+          <div class="f-eyebrow" style="color:#cbd5e1;">Fiado · Cuentas por cobrar</div>
+          <div class="fw-bold" style="font-size:1.1rem;">Nuevo cliente</div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div id="ncErrores" class="alert alert-danger py-2" style="display:none;"></div>
+        <form id="formNuevoCliente" method="post" action="{% url 'fiado_cliente_nuevo' %}" novalidate>
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="f-label">Nombre y apellido *</label>
+            {{ form.nombre }}
+            <div class="f-err" data-campo="nombre"></div>
+          </div>
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <label class="f-label">DNI</label>
+              {{ form.dni }}
+              <div class="f-err" data-campo="dni"></div>
+            </div>
+            <div class="col-sm-6">
+              <label class="f-label">Teléfono</label>
+              {{ form.telefono }}
+              <div class="f-err" data-campo="telefono"></div>
+            </div>
+          </div>
+          <div class="mt-3">
+            <label class="f-label">Correo electrónico</label>
+            {{ form.correo }}
+            <div class="f-err" data-campo="correo"></div>
+          </div>
+        </form>
+        <div class="muted mt-3">
+          <i class="fas fa-info-circle me-1"></i>
+          Sólo el nombre es obligatorio. Después podrás venderle a fiado desde el TPV.
+        </div>
+      </div>
+      <div class="modal-footer pt-0">
+        <button type="button" class="f-btn" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" form="formNuevoCliente" id="btnGuardarCliente" class="f-btn primary">
+          <i class="fas fa-check"></i> Guardar cliente
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+(function () {
+  const form = document.getElementById('formNuevoCliente');
+  const btn = document.getElementById('btnGuardarCliente');
+  const box = document.getElementById('ncErrores');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    box.style.display = 'none';
+    box.textContent = '';
+    form.querySelectorAll('.f-err').forEach(el => el.textContent = '');
+    btn.disabled = true;
+    try {
+      const resp = await fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (resp.ok && data.ok) {
+        const el = document.getElementById('modalNuevoCliente');
+        (bootstrap.Modal.getInstance(el) || bootstrap.Modal.getOrCreateInstance(el)).hide();
+        form.reset();
+        const aviso = document.getElementById('avisoFiado');
+        if (aviso) {
+          const div = document.createElement('div');
+          div.className = 'alert alert-success py-2';
+          div.textContent = 'Cliente «' + data.nombre + '» creado. Ya puedes venderle a fiado.';
+          aviso.innerHTML = '';
+          aviso.appendChild(div);
+        }
+        return;
+      }
+      const msgs = [];
+      const errores = data.errors || {};
+      Object.keys(errores).forEach(campo => {
+        const caja = form.querySelector('.f-err[data-campo="' + campo + '"]');
+        errores[campo].forEach(item => {
+          const msg = item.message || String(item);
+          msgs.push(msg);
+          if (caja) caja.textContent = msg;
+        });
+      });
+      box.textContent = msgs.length ? msgs.join(' · ') : 'Revisa los datos del formulario.';
+      box.style.display = 'block';
+    } catch (err) {
+      box.textContent = 'Error de conexión. Inténtalo de nuevo.';
+      box.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  document.getElementById('modalNuevoCliente').addEventListener('hidden.bs.modal', () => {
+    box.style.display = 'none';
+    form.querySelectorAll('.f-err').forEach(el => el.textContent = '');
+  });
+})();
+</script>
+</body>
+</html>

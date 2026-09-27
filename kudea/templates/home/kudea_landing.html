@@ -42,6 +42,10 @@
         }
 
         /* Utilidades Generales */
+        a {
+            text-decoration: none;
+        }
+
         .text-kudea-dark {
             color: var(--kudea-dark);
         }
@@ -91,10 +95,14 @@
         /* Navbar Glassmorphism */
         .navbar {
             background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
             box-shadow: 0 2px 20px rgba(0, 0, 0, 0.05);
             padding: 15px 0;
             transition: all 0.3s ease;
+        }
+
+        .navbar.is-scrolled {
+            padding: 10px 0;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
         }
 
         .navbar-brand {
@@ -142,10 +150,10 @@
             position: absolute;
             top: -10%;
             right: -5%;
-            width: 600px;
-            height: 600px;
+            width: 440px;
+            height: 440px;
             background: var(--kudea-light);
-            filter: blur(80px);
+            filter: blur(50px);
             border-radius: 50%;
             opacity: 0.4;
             z-index: 0;
@@ -156,10 +164,10 @@
             position: absolute;
             bottom: -10%;
             left: -10%;
-            width: 400px;
-            height: 400px;
+            width: 300px;
+            height: 300px;
             background: var(--kudea-accent);
-            filter: blur(60px);
+            filter: blur(42px);
             border-radius: 50%;
             opacity: 0.6;
             z-index: 0;
@@ -200,48 +208,93 @@
             min-height: 400px;
         }
 
-        /* Experiencia "Acceso Rápido" (Solo si está logueado) */
+        /* Accesos rápidos: fila sutil, sin tarjeta contenedora */
         .quick-actions {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            padding: 30px;
-            margin-top: -60px;
+            margin-top: 34px;
             position: relative;
             z-index: 10;
         }
 
-        .quick-action-btn {
+        .qa-head {
             display: flex;
-            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            padding: 20px 10px;
-            border-radius: 12px;
-            background: var(--kudea-accent);
-            color: var(--kudea-dark);
-            text-decoration: none;
-            transition: all 0.3s ease;
-            height: 100%;
-            border: 1px solid rgba(69, 123, 157, 0.1);
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
         }
 
-        .quick-action-btn:hover {
-            background: white;
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(69, 123, 157, 0.15);
-            border-color: var(--kudea-medium);
-        }
-
-        .quick-action-btn i {
-            font-size: 1.8rem;
+        .qa-head h5 {
+            font-size: 0.82rem;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
             color: var(--kudea-medium);
-            margin-bottom: 12px;
+            margin: 0;
         }
 
-        .quick-action-btn span {
-            font-weight: 500;
+        .qa-head h5 i {
+            color: var(--kudea-medium);
+            margin-right: 8px;
+        }
+
+        .qa-more {
+            font-size: 0.86rem;
+            font-weight: 700;
+            color: var(--kudea-dark);
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            transition: color 0.25s ease, gap 0.25s ease;
+        }
+
+        .qa-more i {
+            font-size: 0.75rem;
+            transition: transform 0.25s ease;
+        }
+
+        .qa-more:hover {
+            color: var(--kudea-medium);
+            gap: 11px;
+        }
+
+        .qa-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .qa-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding: 11px 18px;
+            background: white;
+            border: 1px solid rgba(29, 53, 87, 0.1);
+            border-radius: 999px;
+            color: var(--kudea-dark);
+            font-weight: 600;
+            font-size: 0.92rem;
+            text-decoration: none;
+            box-shadow: 0 4px 14px rgba(29, 53, 87, 0.06);
+            transition: all 0.25s ease;
+        }
+
+        .qa-pill i {
+            color: var(--kudea-medium);
             font-size: 0.95rem;
+            transition: color 0.25s ease;
+        }
+
+        .qa-pill:hover {
+            transform: translateY(-3px);
+            border-color: rgba(69, 123, 157, 0.45);
+            box-shadow: 0 12px 24px rgba(29, 53, 87, 0.14);
+            color: var(--kudea-medium);
+        }
+
+        .qa-pill:hover i {
+            color: var(--kudea-dark);
         }
 
         /* Features Section */
@@ -271,47 +324,128 @@
             color: var(--kudea-dark);
         }
 
-        .feature-card {
+        /* Módulos: lista editorial con numeración (sin tarjetas pesadas) */
+        .mod-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .mod-item {
+            position: relative;
+            padding: 34px 30px 30px;
             background: white;
-            padding: 40px 30px;
-            border-radius: 16px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.03);
-            border: 1px solid rgba(0, 0, 0, 0.04);
-            height: 100%;
-            transition: all 0.3s ease;
+            border: 1px solid rgba(29, 53, 87, 0.1);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.35s ease;
         }
 
-        .feature-card:hover {
-            box-shadow: 0 15px 30px rgba(29, 53, 87, 0.08);
-            transform: translateY(-8px);
+        .mod-item:hover {
+            transform: translateY(-6px);
+            border-color: rgba(69, 123, 157, 0.4);
+            box-shadow: 0 26px 45px -28px rgba(29, 53, 87, 0.6);
         }
 
-        .feature-icon-wrapper {
-            width: 60px;
-            height: 60px;
-            background: var(--kudea-accent);
-            border-radius: 12px;
+        .mod-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--kudea-medium), var(--kudea-light));
+            transition: width 0.45s ease;
+        }
+
+        .mod-item:hover::before {
+            width: 100%;
+        }
+
+        .mod-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .mod-ico {
+            width: 54px;
+            height: 54px;
+            border-radius: 17px;
+            background: linear-gradient(140deg, var(--kudea-accent), rgba(168, 218, 220, 0.8));
+            border: 1px solid rgba(69, 123, 157, 0.14);
+            color: var(--kudea-dark);
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 25px;
+            font-size: 1.3rem;
+            transition: all 0.35s ease;
         }
 
-        .feature-icon-wrapper i {
-            font-size: 1.5rem;
+        .mod-item:hover .mod-ico {
+            transform: translateY(-3px) rotate(-4deg);
+            background: linear-gradient(140deg, var(--kudea-light), rgba(69, 123, 157, 0.4));
+            box-shadow: 0 14px 26px -14px rgba(29, 53, 87, 0.7);
+        }
+
+        .mod-num {
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0.2em;
+            color: rgba(29, 53, 87, 0.25);
+        }
+
+        .mod-item h4 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--kudea-dark);
+            letter-spacing: -0.2px;
+            margin-bottom: 12px;
+        }
+
+        .mod-item p {
+            color: var(--text-muted);
+            line-height: 1.75;
+            font-size: 0.97rem;
+            margin-bottom: 18px;
+        }
+
+        .mod-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 0.76rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
             color: var(--kudea-medium);
         }
 
-        .feature-card h4 {
-            font-weight: 600;
-            color: var(--kudea-dark);
-            margin-bottom: 15px;
+        .mod-tag i {
+            font-size: 0.62rem;
         }
 
-        .feature-card p {
+        .mod-cta {
+            margin-top: 60px;
+            text-align: center;
             color: var(--text-muted);
-            line-height: 1.6;
-            margin-bottom: 0;
+            font-size: 0.97rem;
+        }
+
+        .mod-cta a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            color: var(--kudea-dark);
+            margin-left: 6px;
+            transition: color 0.25s ease, gap 0.25s ease;
+        }
+
+        .mod-cta a:hover {
+            color: var(--kudea-medium);
+            gap: 12px;
         }
 
         /* Image Text Section (Naturaleza & Tecnología) */
@@ -393,6 +527,434 @@
             margin-bottom: 20px;
         }
 
+        /* Scroll suave + anclas que no quedan tapadas por la barra fija */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        section[id],
+        div[id] {
+            scroll-margin-top: 95px;
+        }
+
+        /* Sección "KUDEA en acción" (demo en 3 pasos) */
+        .tour {
+            padding: 100px 0;
+            background: linear-gradient(160deg, #eaf4f9 0%, #e1f0f7 55%, #eef8fb 100%);
+            border-top: 1px solid rgba(69, 123, 157, 0.08);
+            border-bottom: 1px solid rgba(69, 123, 157, 0.08);
+        }
+
+        .tour-grid {
+            position: relative;
+        }
+
+        .tour-grid::before {
+            content: '';
+            position: absolute;
+            top: 46px;
+            left: 8%;
+            right: 8%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--kudea-light), transparent);
+            display: none;
+        }
+
+        .tour-step {
+            background: white;
+            border: 1px solid rgba(29, 53, 87, 0.06);
+            border-radius: 20px;
+            padding: 38px 30px;
+            height: 100%;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(29, 53, 87, 0.06);
+            transition: all 0.35s ease;
+        }
+
+        .tour-step:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 22px 45px rgba(29, 53, 87, 0.14);
+        }
+
+        .step-num {
+            position: absolute;
+            top: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--kudea-dark);
+            color: white;
+            font-weight: 700;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 16px rgba(29, 53, 87, 0.35);
+        }
+
+        .tour-step .step-icon {
+            width: 74px;
+            height: 74px;
+            margin: 10px auto 22px;
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(140deg, rgba(168, 218, 220, 0.55), rgba(69, 123, 157, 0.15));
+            font-size: 1.7rem;
+            color: var(--kudea-dark);
+        }
+
+        .tour-step h4 {
+            font-weight: 700;
+            color: var(--kudea-dark);
+            margin-bottom: 12px;
+        }
+
+        .tour-step p {
+            color: var(--text-muted);
+            line-height: 1.65;
+            margin-bottom: 0;
+            font-size: 0.95rem;
+        }
+
+        /* Sección Beneficios */
+        .benefits {
+            padding: 100px 0;
+            background: white;
+        }
+
+        .benefit-card {
+            background: white;
+            border: 1px solid rgba(29, 53, 87, 0.1);
+            border-radius: 20px;
+            padding: 34px 30px;
+            height: 100%;
+            transition: all 0.35s ease;
+        }
+
+        .benefit-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(69, 123, 157, 0.4);
+            box-shadow: 0 26px 45px -28px rgba(29, 53, 87, 0.6);
+        }
+
+        .benefit-card .b-ico {
+            width: 54px;
+            height: 54px;
+            border-radius: 16px;
+            background: linear-gradient(140deg, var(--kudea-dark), var(--kudea-medium));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            margin-bottom: 22px;
+            box-shadow: 0 14px 26px -16px rgba(29, 53, 87, 0.95);
+            transition: all 0.35s ease;
+        }
+
+        .benefit-card:hover .b-ico {
+            transform: translateY(-3px) rotate(-5deg);
+        }
+
+        .benefit-card h5 {
+            font-weight: 800;
+            font-size: 1.1rem;
+            letter-spacing: -0.2px;
+            color: var(--kudea-dark);
+            margin-bottom: 8px;
+        }
+
+        .benefit-card .b-lead {
+            display: block;
+            font-weight: 700;
+            font-size: 0.92rem;
+            color: var(--kudea-medium);
+            margin-bottom: 14px;
+        }
+
+        .benefit-card p {
+            color: var(--text-muted);
+            line-height: 1.7;
+            margin-bottom: 0;
+            font-size: 0.95rem;
+        }
+
+        .benefit-card .b-list {
+            list-style: none;
+            padding: 18px 0 0;
+            margin: 18px 0 0;
+            border-top: 1px dashed rgba(29, 53, 87, 0.14);
+        }
+
+        .benefit-card .b-list li {
+            position: relative;
+            padding-left: 22px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .benefit-card .b-list li:last-child {
+            margin-bottom: 0;
+        }
+
+        .benefit-card .b-list li::before {
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            left: 0;
+            top: 3px;
+            font-size: 0.72rem;
+            color: var(--kudea-medium);
+        }
+
+        .control-band {
+            margin-top: 70px;
+            background: linear-gradient(135deg, var(--kudea-dark) 0%, #22456d 55%, var(--kudea-medium) 130%);
+            border-radius: 26px;
+            padding: 55px 45px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 30px 60px -30px rgba(29, 53, 87, 0.85);
+        }
+
+        .control-band::before,
+        .control-band::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            pointer-events: none;
+        }
+
+        .control-band::before {
+            width: 320px;
+            height: 320px;
+            right: -110px;
+            top: -140px;
+        }
+
+        .control-band::after {
+            width: 200px;
+            height: 200px;
+            right: -20px;
+            bottom: -110px;
+        }
+
+        .control-band .cb-copy {
+            position: relative;
+            z-index: 1;
+        }
+
+        .control-band h3 {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin-bottom: 16px;
+        }
+
+        .control-band .cb-copy p {
+            color: rgba(255, 255, 255, 0.78);
+            line-height: 1.7;
+            margin-bottom: 26px;
+        }
+
+        .btn-light {
+            background: white;
+            color: var(--kudea-dark);
+            display: inline-block;
+        }
+
+        .btn-light:hover {
+            background: var(--kudea-light);
+            color: var(--kudea-dark);
+        }
+
+        .cmp-table {
+            position: relative;
+            z-index: 1;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .cmp-head {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+        }
+
+        .cmp-head span {
+            padding: 15px 22px;
+        }
+
+        .cmp-head .h-bad {
+            color: rgba(255, 255, 255, 0.55);
+            background: rgba(0, 0, 0, 0.18);
+        }
+
+        .cmp-head .h-good {
+            color: var(--kudea-dark);
+            background: var(--kudea-light);
+        }
+
+        .cmp-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .cmp-row > div {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 16px 22px;
+            font-size: 0.93rem;
+            line-height: 1.45;
+            transition: background 0.3s ease;
+        }
+
+        .cmp-row > div i {
+            flex: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.62rem;
+        }
+
+        .cmp-bad {
+            color: rgba(255, 255, 255, 0.55);
+            background: rgba(0, 0, 0, 0.16);
+        }
+
+        .cmp-bad i {
+            background: rgba(230, 57, 70, 0.35);
+            color: #ffb3b9;
+        }
+
+        .cmp-good {
+            color: white;
+            font-weight: 600;
+        }
+
+        .cmp-good i {
+            background: rgba(168, 218, 220, 0.3);
+            color: var(--kudea-light);
+        }
+
+        .cmp-row:hover .cmp-good {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .cmp-tag {
+            display: none;
+            width: 100%;
+            font-style: normal;
+            font-size: 0.66rem;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            opacity: 0.75;
+        }
+
+        @media (max-width: 767px) {
+            .cmp-head {
+                display: none;
+            }
+
+            .cmp-tag {
+                display: block;
+            }
+
+            .cmp-row {
+                grid-template-columns: 1fr;
+            }
+
+            .cmp-row > div {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+        }
+
+        /* Sección Contacto */
+        .contact {
+            padding: 100px 0;
+            background: linear-gradient(180deg, #ffffff 0%, var(--kudea-accent) 100%);
+        }
+
+        .contact-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .contact-bar > * {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: white;
+            border: 1px solid rgba(29, 53, 87, 0.1);
+            border-radius: 999px;
+            padding: 13px 26px 13px 14px;
+            text-decoration: none;
+            min-width: 255px;
+            box-shadow: 0 12px 28px -20px rgba(29, 53, 87, 0.8);
+            transition: all 0.3s ease;
+        }
+
+        .contact-bar a:hover {
+            transform: translateY(-3px);
+            border-color: rgba(69, 123, 157, 0.45);
+            box-shadow: 0 20px 34px -22px rgba(29, 53, 87, 0.85);
+        }
+
+        .contact-bar i {
+            flex: none;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: var(--kudea-accent);
+            color: var(--kudea-medium);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.05rem;
+        }
+
+        .contact-bar small {
+            display: block;
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--kudea-medium);
+            margin-bottom: 3px;
+        }
+
+        .contact-bar b {
+            display: block;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--kudea-dark);
+            line-height: 1.2;
+        }
+
         /* Footer Moderno */
         footer {
             background-color: #f8f9fa;
@@ -467,6 +1029,17 @@
             font-size: 0.9rem;
         }
 
+        @media (prefers-reduced-motion: reduce) {
+            html {
+                scroll-behavior: auto;
+            }
+
+            *, *::before, *::after {
+                animation: none !important;
+                transition: none !important;
+            }
+        }
+
         @media (max-width: 991px) {
             .hero h1 {
                 font-size: 2.5rem;
@@ -477,7 +1050,7 @@
             }
 
             .quick-actions {
-                margin-top: 40px;
+                margin-top: 24px;
             }
         }
     </style>
@@ -504,12 +1077,10 @@
                 <div class="d-flex gap-3 align-items-center">
                     {% if user.is_authenticated %}
                     <span class="text-kudea-dark fw-medium d-none d-lg-block">Hola, {{ user.username }}</span>
-                    <!-- Asumimos que tienes una url de logout, si no, ajusta el href -->
-                    <a href="#" class="btn-kudea-outline py-2 px-4">Ir al Área de Trabajo</a>
+                    <a href="{% url 'home_app:home' %}" class="btn-kudea py-2 px-4">Ir al Área de Trabajo</a>
+                    <a href="{% url 'account_logout' %}" class="btn-kudea-outline py-2 px-4">Cerrar sesión</a>
                     {% else %}
-                    <!-- Asumimos que la url de login predeterminada es '/admin/login/' o la que configures -->
                     <a href="{% url 'account_login' %}" class="btn-kudea-outline">Iniciar Sesión</a>
-                    <a href="#contacto" class="btn-kudea">Contactar</a>
                     {% endif %}
                 </div>
             </div>
@@ -545,47 +1116,29 @@
     {% if user.is_authenticated %}
     <div class="container" data-aos="fade-up" data-aos-duration="800">
         <div class="quick-actions">
-            <h5 class="text-kudea-dark fw-bold mb-4"><i class="fas fa-bolt text-warning me-2"></i> Tus Accesos Rápidos
-            </h5>
-            <div class="row g-3">
-                <div class="col-6 col-md-3 col-lg-2">
-                    <a href="{% url 'home_app:lista_productos' %}" class="quick-action-btn">
-                        <i class="fas fa-box-open"></i>
-                        <span>Productos</span>
-                    </a>
-                </div>
-                <div class="col-6 col-md-3 col-lg-2">
-                    <a href="#"
-                        onclick="if(typeof TPV !== 'undefined') TPV.processPayment(); else alert('TPV no cargado en portada');"
-                        class="quick-action-btn">
-                        <i class="fas fa-cash-register"></i>
-                        <span>Cobrar</span>
-                    </a>
-                </div>
-                <div class="col-6 col-md-3 col-lg-2">
-                    <a href="{% url 'home_app:lista_ventas' %}" class="quick-action-btn">
-                        <i class="fas fa-history"></i>
-                        <span>Historial</span>
-                    </a>
-                </div>
-                <div class="col-6 col-md-3 col-lg-2">
-                    <a href="#" class="quick-action-btn">
-                        <i class="fas fa-coins"></i>
-                        <span>Arqueo</span>
-                    </a>
-                </div>
-                <div class="col-6 col-md-3 col-lg-2">
-                    <a href="#" class="quick-action-btn">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Resumen</span>
-                    </a>
-                </div>
-                <div class="col-6 col-md-3 col-lg-2">
-                    <a href="#" class="quick-action-btn border-0 bg-kudea-medium text-white" style="border:none;">
-                        <i class="fas fa-th text-white"></i>
-                        <span>Ir al TPV Completo</span>
-                    </a>
-                </div>
+            <div class="qa-head">
+                <h5><i class="fas fa-bolt"></i>Tus Accesos Rápidos</h5>
+                <a href="{% url 'home_app:home' %}" class="qa-more">Ir al Panel <i class="fas fa-arrow-right"></i></a>
+            </div>
+            <div class="qa-row">
+                <a href="{% url 'home_app:lista_productos' %}" class="qa-pill">
+                    <i class="fas fa-box-open"></i> Productos
+                </a>
+                <a href="{% url 'home_app:tpv_general' %}" class="qa-pill">
+                    <i class="fas fa-cash-register"></i> Cobrar
+                </a>
+                <a href="{% url 'home_app:lista_ventas' %}" class="qa-pill">
+                    <i class="fas fa-history"></i> Historial
+                </a>
+                <a href="{% url 'home_app:arqueo_menu' %}" class="qa-pill">
+                    <i class="fas fa-coins"></i> Arqueo
+                </a>
+                <a href="{% url 'reporting_app:dashboard_informes' %}" class="qa-pill">
+                    <i class="fas fa-chart-line"></i> Resumen
+                </a>
+                <a href="{% url 'home_app:tpv' %}" class="qa-pill">
+                    <i class="fas fa-th"></i> Ir al TPV Completo
+                </a>
             </div>
         </div>
     </div>
@@ -599,65 +1152,117 @@
                 <h2>Todo lo que tu empresa necesita,<br>nada que no utilices.</h2>
             </div>
 
-            <div class="row g-4">
-                <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="100">
-                    <div class="feature-card">
-                        <div class="feature-icon-wrapper">
-                            <i class="fas fa-cash-register"></i>
-                        </div>
-                        <h4>TPV Inteligente</h4>
-                        <p>Realiza ventas rápidas, aplica descuentos, calcula impuestos y procesa múltiples métodos de
-                            pago desde una interfaz visual sin fricciones.</p>
+            <div class="mod-grid">
+                <article class="mod-item" data-aos="fade-up" data-aos-delay="100">
+                    <div class="mod-top">
+                        <span class="mod-ico"><i class="fas fa-cash-register"></i></span>
+                        <span class="mod-num">01</span>
+                    </div>
+                    <h4>TPV Inteligente</h4>
+                    <p>Realiza ventas rápidas, aplica descuentos, calcula impuestos y procesa múltiples métodos de
+                        pago desde una interfaz visual sin fricciones.</p>
+                    <span class="mod-tag"><i class="fas fa-circle"></i> Ventas</span>
+                </article>
+
+                <article class="mod-item" data-aos="fade-up" data-aos-delay="150">
+                    <div class="mod-top">
+                        <span class="mod-ico"><i class="fas fa-boxes"></i></span>
+                        <span class="mod-num">02</span>
+                    </div>
+                    <h4>Gestión de Inventario</h4>
+                    <p>Controla entradas y salidas de stock en tiempo real. Organiza tu catálogo físico o digital
+                        por categorías y evita roturas de stock.</p>
+                    <span class="mod-tag"><i class="fas fa-circle"></i> Stock</span>
+                </article>
+
+                <article class="mod-item" data-aos="fade-up" data-aos-delay="200">
+                    <div class="mod-top">
+                        <span class="mod-ico"><i class="fas fa-file-invoice-dollar"></i></span>
+                        <span class="mod-num">03</span>
+                    </div>
+                    <h4>Caja y Facturación</h4>
+                    <p>Emite facturas y presupuestos profesionales. El módulo de arqueo analiza las ventas del día
+                        para que la caja siempre cuadre al milímetro.</p>
+                    <span class="mod-tag"><i class="fas fa-circle"></i> Caja</span>
+                </article>
+
+                <article class="mod-item" data-aos="fade-up" data-aos-delay="250">
+                    <div class="mod-top">
+                        <span class="mod-ico"><i class="fas fa-users"></i></span>
+                        <span class="mod-num">04</span>
+                    </div>
+                    <h4>Control del Equipo</h4>
+                    <p>Un sistema de fichaje táctil optimizado para códigos, QR y NFC que facilita el registro de
+                        jornada en la entrada de tu negocio.</p>
+                    <span class="mod-tag"><i class="fas fa-circle"></i> Equipo</span>
+                </article>
+
+                <article class="mod-item" data-aos="fade-up" data-aos-delay="300">
+                    <div class="mod-top">
+                        <span class="mod-ico"><i class="fas fa-chart-pie"></i></span>
+                        <span class="mod-num">05</span>
+                    </div>
+                    <h4>Análisis Potente</h4>
+                    <p>Paneles de control modernos con métricas clave para la toma de decisiones: ingresos,
+                        productos más vendidos y pronósticos.</p>
+                    <span class="mod-tag"><i class="fas fa-circle"></i> Datos</span>
+                </article>
+
+                <article class="mod-item" data-aos="fade-up" data-aos-delay="350">
+                    <div class="mod-top">
+                        <span class="mod-ico"><i class="fas fa-puzzle-piece"></i></span>
+                        <span class="mod-num">06</span>
+                    </div>
+                    <h4>Arquitectura Escalable</h4>
+                    <p>Desarrollado sobre Django. KUDEA crece contigo: empieza habilitando el TPV e integra
+                        contabilidad u otras funciones a medida que crezcas.</p>
+                    <span class="mod-tag"><i class="fas fa-circle"></i> Escalable</span>
+                </article>
+            </div>
+
+            <p class="mod-cta" data-aos="fade-up">
+                ¿No sabes por dónde empezar?
+                <a href="#contacto">Te lo enseñamos en 15 minutos <i class="fas fa-arrow-right"></i></a>
+            </p>
+        </div>
+    </section>
+
+    <!-- KUDEA en acción (Demo en 3 pasos) -->
+    <section id="video-tour" class="tour">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <span>KUDEA en acción</span>
+                <h2>Vender con KUDEA es así de simple.</h2>
+                <p class="text-muted mx-auto mb-0" style="max-width: 620px;">Tres pasos entre abrir la tienda y
+                    saber exactamente cuánto has ganado hoy.</p>
+            </div>
+
+            <div class="row g-4 tour-grid">
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                    <div class="tour-step">
+                        <span class="step-num">1</span>
+                        <div class="step-icon"><i class="fas fa-unlock-alt"></i></div>
+                        <h4>Abre tu caja</h4>
+                        <p>Registra el dinero inicial en segundos y deja cada turno con su propio responsable. El
+                            sistema sabe quién ha tocado cada euro.</p>
                     </div>
                 </div>
-                <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="200">
-                    <div class="feature-card">
-                        <div class="feature-icon-wrapper">
-                            <i class="fas fa-boxes"></i>
-                        </div>
-                        <h4>Gestión de Inventario</h4>
-                        <p>Controla entradas y salidas de stock en tiempo real. Organiza tu catálogo físico o digital
-                            por categorías y evita roturas de stock.</p>
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                    <div class="tour-step">
+                        <span class="step-num">2</span>
+                        <div class="step-icon"><i class="fas fa-cash-register"></i></div>
+                        <h4>Cobra sin fricción</h4>
+                        <p>TPV visual, descuentos, impuestos y métodos de pago resueltos al instante. Factura o
+                            ticket con un solo clic, sin cambiar de pantalla.</p>
                     </div>
                 </div>
-                <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="300">
-                    <div class="feature-card">
-                        <div class="feature-icon-wrapper">
-                            <i class="fas fa-file-invoice-dollar"></i>
-                        </div>
-                        <h4>Caja y Facturación</h4>
-                        <p>Emite facturas y presupuestos profesionales. El módulo de arqueo analiza las ventas del día
-                            para que la caja siempre cuadre al milímetro.</p>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="400">
-                    <div class="feature-card">
-                        <div class="feature-icon-wrapper">
-                            <i class="fas fa-users"></i>
-                        </div>
-                        <h4>Control del Equipo</h4>
-                        <p>Un sistema de fichaje táctil optimizado para códigos, QR y NFC que facilita el registro de
-                            jornada en la entrada de tu negocio.</p>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="500">
-                    <div class="feature-card">
-                        <div class="feature-icon-wrapper">
-                            <i class="fas fa-chart-pie"></i>
-                        </div>
-                        <h4>Análisis Potente</h4>
-                        <p>Paneles de control modernos con métricas clave para la toma de decisiones: ingresos,
-                            productos más vendidos y pronósticos.</p>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="600">
-                    <div class="feature-card">
-                        <div class="feature-icon-wrapper">
-                            <i class="fas fa-puzzle-piece"></i>
-                        </div>
-                        <h4>Arquitectura Escalable</h4>
-                        <p>Desarrollado sobre Django. KUDEA crece contigo: empieza habilitando el TPV e integra
-                            contabilidad u otras funciones a medida que crezcas.</p>
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+                    <div class="tour-step">
+                        <span class="step-num">3</span>
+                        <div class="step-icon"><i class="fas fa-chart-line"></i></div>
+                        <h4>Cierra y analiza</h4>
+                        <p>Arqueo automático, cierre de caja cuadrado y un panel con las ventas del día para decidir
+                            con datos, no con intuición.</p>
                     </div>
                 </div>
             </div>
@@ -692,6 +1297,138 @@
         </div>
     </section>
 
+    <!-- Beneficios -->
+    <section id="beneficios" class="benefits">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <span>Beneficios</span>
+                <h2>Menos papeleo.<br>Más negocio.</h2>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="100">
+                    <div class="benefit-card">
+                        <div class="b-ico"><i class="fas fa-bolt"></i></div>
+                        <h5>Todo en tiempo real</h5>
+                        <span class="b-lead">Vendes, y ya está actualizado.</span>
+                        <p>Lo que cobras, lo que gastas y lo que queda en almacén se sincronizan al instante en
+                            todos los dispositivos.</p>
+                        <ul class="b-list">
+                            <li>Ventas y caja al momento</li>
+                            <li>Stock siempre al día</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="200">
+                    <div class="benefit-card">
+                        <div class="b-ico"><i class="fas fa-user-friends"></i></div>
+                        <h5>Equipo con permisos</h5>
+                        <span class="b-lead">Cada uno, lo suyo.</span>
+                        <p>Cajeros, encargados y administradores ven solo lo que les toca, sin pisarse ni perder
+                            tiempo con pantallas ajenas.</p>
+                        <ul class="b-list">
+                            <li>Roles y permisos claros</li>
+                            <li>Trazabilidad de movimientos</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="300">
+                    <div class="benefit-card">
+                        <div class="b-ico"><i class="fas fa-cloud"></i></div>
+                        <h5>100% web, sin instalar</h5>
+                        <span class="b-lead">Abres el navegador y trabajas.</span>
+                        <p>Ni servidores, ni instalaciones, ni licencias raras: lo usas en el ordenador, la tablet o
+                            el móvil del negocio.</p>
+                        <ul class="b-list">
+                            <li>Sin instalaciones ni updates</li>
+                            <li>Funciona en PC, tablet y móvil</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="400">
+                    <div class="benefit-card">
+                        <div class="b-ico"><i class="fas fa-puzzle-piece"></i></div>
+                        <h5>Crece por módulos</h5>
+                        <span class="b-lead">Empieza pequeño.</span>
+                        <p>Arranca con el TPV y añade facturación, stock o empleados cuando de verdad lo
+                            necesites, sin pagar de más.</p>
+                        <ul class="b-list">
+                            <li>Tú eliges cuándo crece</li>
+                            <li>Sin cambiar de sistema</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-band" data-aos="zoom-in">
+                <div class="row g-4 align-items-center">
+                    <div class="col-lg-4 cb-copy">
+                        <h3>La diferencia se nota desde el primer día</h3>
+                        <p>Misma jornada, menos fricción. Esto es lo que cambia cuando dejas atrás las hojas de
+                            cálculo y los cuadernos de la caja.</p>
+                        <a href="#video-tour" class="btn-kudea btn-light py-3 px-4">Ver cómo funciona</a>
+                    </div>
+                    <div class="col-lg-8">
+                        <div class="cmp-table">
+                            <div class="cmp-head">
+                                <span class="h-bad">Sin KUDEA</span>
+                                <span class="h-good">Con KUDEA</span>
+                            </div>
+                            <div class="cmp-row">
+                                <div class="cmp-bad">
+                                    <em class="cmp-tag">Sin KUDEA</em>
+                                    <i class="fas fa-times"></i>
+                                    <span>Hoja de cálculo y cuaderno aparte</span>
+                                </div>
+                                <div class="cmp-good">
+                                    <em class="cmp-tag">Con KUDEA</em>
+                                    <i class="fas fa-check"></i>
+                                    <span>Caja, stock y facturas en la misma pantalla</span>
+                                </div>
+                            </div>
+                            <div class="cmp-row">
+                                <div class="cmp-bad">
+                                    <em class="cmp-tag">Sin KUDEA</em>
+                                    <i class="fas fa-times"></i>
+                                    <span>Cerrar la caja a ojo y discutir al cierre</span>
+                                </div>
+                                <div class="cmp-good">
+                                    <em class="cmp-tag">Con KUDEA</em>
+                                    <i class="fas fa-check"></i>
+                                    <span>Arqueo automático y trazado de cada movimiento</span>
+                                </div>
+                            </div>
+                            <div class="cmp-row">
+                                <div class="cmp-bad">
+                                    <em class="cmp-tag">Sin KUDEA</em>
+                                    <i class="fas fa-times"></i>
+                                    <span>Fichar en papel o por WhatsApp</span>
+                                </div>
+                                <div class="cmp-good">
+                                    <em class="cmp-tag">Con KUDEA</em>
+                                    <i class="fas fa-check"></i>
+                                    <span>Jornada registrada con QR o código</span>
+                                </div>
+                            </div>
+                            <div class="cmp-row">
+                                <div class="cmp-bad">
+                                    <em class="cmp-tag">Sin KUDEA</em>
+                                    <i class="fas fa-times"></i>
+                                    <span>Facturas a mano al final del mes</span>
+                                </div>
+                                <div class="cmp-good">
+                                    <em class="cmp-tag">Con KUDEA</em>
+                                    <i class="fas fa-check"></i>
+                                    <span>Ticket o factura en el momento</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- CTA Section -->
     <section class="cta">
         <div class="container" data-aos="zoom-in">
@@ -704,49 +1441,57 @@
         </div>
     </section>
 
+    <!-- Contacto -->
+    <section id="contacto" class="contact">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <span>Contacto</span>
+                <h2>¿Hablamos de tu proyecto?</h2>
+                <p class="text-muted mx-auto mb-0" style="max-width: 620px;">Cuéntanos cómo trabaja tu negocio y te
+                    enseñamos KUDEA funcionando con tus propios datos.</p>
+            </div>
+
+            <div class="contact-bar" data-aos="fade-up">
+                <a href="tel:+34747478842">
+                    <i class="fas fa-phone-alt"></i>
+                    <span><small>Teléfono</small><b>+34 747 478 842</b></span>
+                </a>
+                <a href="mailto:euskodev@gmail.com">
+                    <i class="fas fa-envelope"></i>
+                    <span><small>Email</small><b>euskodev@gmail.com</b></span>
+                </a>
+                <div>
+                    <i class="fas fa-clock"></i>
+                    <span><small>Horario</small><b>Lun a Vie · 9:00 – 18:00</b></span>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Footer -->
     <footer>
         <div class="container">
             <div class="row g-4">
-                <div class="col-lg-4 pe-lg-5">
+                <div class="col-lg-5 pe-lg-5">
                     <div class="footer-brand">KUDE<span class="text-kudea-medium">A</span></div>
                     <p class="footer-text">El ecosistema de herramientas diseñado para digitalizar y simplificar la
                         administración de negocios. Interfaz moderna, escalabilidad garantizada.</p>
-                    <div class="social-links mt-4">
-                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
-                        <a href="#"><i class="fab fa-twitter"></i></a>
-                        <a href="#"><i class="fab fa-instagram"></i></a>
-                    </div>
                 </div>
-                <div class="col-lg-2 col-md-4">
+                <div class="col-lg-3 col-md-4">
                     <h5 class="footer-title">Producto</h5>
                     <ul class="footer-links">
-                        <li><a href="#">TPV Visual</a></li>
-                        <li><a href="#">Facturación</a></li>
-                        <li><a href="#">Control de Stock</a></li>
-                        <li><a href="#">Gestión Laboral</a></li>
-                    </ul>
-                </div>
-                <div class="col-lg-2 col-md-4">
-                    <h5 class="footer-title">Compañía</h5>
-                    <ul class="footer-links">
-                        <li><a href="#">Sobre nosotros</a></li>
-                        <li><a href="#">Visión SaaS</a></li>
-                        <li><a href="#">Blog</a></li>
-                        <li><a href="#">Contacto</a></li>
+                        <li><a href="#soluciones">Soluciones</a></li>
+                        <li><a href="#video-tour">KUDEA en acción</a></li>
+                        <li><a href="#ecosistema">Ecosistema</a></li>
+                        <li><a href="#beneficios">Beneficios</a></li>
                     </ul>
                 </div>
                 <div class="col-lg-4 col-md-4">
-                    <h5 class="footer-title">¿Hablamos?</h5>
-                    <p class="footer-text mb-3">Estamos listos para analizar las necesidades de tu empresa y mostrarte
-                        cómo KUDEA puede ayudarte a crecer.</p>
-                    <div class="mt-4">
-                        <a href="mailto:hola@kudea.com"
-                            class="btn-kudea text-decoration-none d-inline-block mb-3 w-100 text-center">
-                            <i class="fas fa-envelope me-2"></i> Solicitar Información
-                        </a>
-                        <p class="text-muted small m-0"><i class="fas fa-phone-alt me-2"></i> +34 900 123 456</p>
-                    </div>
+                    <h5 class="footer-title">Compañía</h5>
+                    <ul class="footer-links">
+                        <li><a href="#contacto">Contacto</a></li>
+                        <li><a href="{% url 'account_login' %}">Iniciar sesión</a></li>
+                    </ul>
                 </div>
             </div>
             <div class="copyright">
@@ -765,19 +1510,23 @@
             offset: 50,
         });
 
-        // Efecto glassmorphism navbar on scroll
-        window.addEventListener('scroll', function () {
+        // Efecto navbar al hacer scroll (throttled con requestAnimationFrame)
+        (function () {
             const navbar = document.querySelector('.navbar');
-            if (window.scrollY > 50) {
-                navbar.style.background = 'rgba(255, 255, 255, 0.95)';
-                navbar.style.padding = '10px 0';
-                navbar.style.boxShadow = '0 5px 20px rgba(0,0,0,0.05)';
-            } else {
-                navbar.style.background = 'rgba(255, 255, 255, 0.95)';
-                navbar.style.padding = '15px 0';
-                navbar.style.boxShadow = '0 2px 20px rgba(0,0,0,0.05)';
+            if (!navbar) return;
+            let ticking = false;
+            function update() {
+                navbar.classList.toggle('is-scrolled', window.scrollY > 50);
+                ticking = false;
             }
-        });
+            window.addEventListener('scroll', function () {
+                if (!ticking) {
+                    ticking = true;
+                    requestAnimationFrame(update);
+                }
+            }, { passive: true });
+            update();
+        })();
     </script>
 </body>
 

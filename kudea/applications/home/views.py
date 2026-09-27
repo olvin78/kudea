@@ -22,7 +22,7 @@ from django.utils.timezone import localdate, localtime
 
 import json
 from datetime import datetime, timedelta, date
-from decimal import Decimal  # 👈 AÑADIR
+from decimal import Decimal, ROUND_HALF_UP  # 👈 AÑADIR
 import random
 import string
 
@@ -106,6 +106,27 @@ def _build_pos_ticket_text(venta, detalles, iva_breakdown, total_real, cambio_re
     payload.extend(_ticket_bytes_line(f"Nº Ticket: {_sanitize_ticket_text(venta.codigo)}"))
     payload.extend(_ticket_bytes_line(""))
     payload.extend(_ticket_bytes_line(""))
+
+    # --------------------------------------------------------
+    # FIADO: el ticket se entrega sin cobrar → sello de aviso
+    # --------------------------------------------------------
+    if venta.metodo_pago.nombre == "Fiado":
+        payload.extend(ESC_ALIGN_CENTER.encode("latin-1"))
+        payload.extend(_ticket_bytes_line("=" * line_width))
+        payload.extend(ESC_BOLD_ON.encode("latin-1"))
+        payload.extend(_ticket_bytes_line("PENDIENTE DE PAGO - FIADO"))
+        payload.extend(ESC_BOLD_OFF.encode("latin-1"))
+        if venta.cliente_id:
+            payload.extend(
+                _ticket_bytes_line(
+                    f"Cliente: {_sanitize_ticket_text(venta.cliente.nombre)}"
+                )
+            )
+        payload.extend(_ticket_bytes_line("ESTE TICKET NO ESTA PAGADO"))
+        payload.extend(_ticket_bytes_line("=" * line_width))
+        payload.extend(ESC_ALIGN_LEFT.encode("latin-1"))
+        payload.extend(_ticket_bytes_line(""))
+        payload.extend(_ticket_bytes_line(""))
 
     for detalle in detalles:
         nombre = f"{detalle.cantidad} {_sanitize_ticket_text(detalle.producto.nombre)}"[:32]
@@ -293,6 +314,25 @@ class HomePageView(LoginRequiredMixin, ListView):
         context['comunicaciones'] = comunicaciones
         context['unread_comms'] = Comunicacion.objects.exclude(visto_por=self.request.user).count()
 
+        # Caja del usuario hoy (para la tarjeta de estado)
+        from applications.cash.models import AperturaCaja
+        caja_actual = AperturaCaja.objects.filter(
+            usuario=self.request.user,
+            fecha=hoy,
+            estado__in=['abierta', 'pausada'],
+        ).select_related('caja').first()
+        context['caja_actual'] = caja_actual
+        ventas_usuario_hoy = Venta.objects.filter(
+            usuario=self.request.user, creado_en__date=hoy, estado='completada'
+        ).aggregate(t=Sum('total'))['t'] or 0
+        context['ventas_usuario_hoy'] = ventas_usuario_hoy
+        context['saldo_caja'] = float(caja_actual.fondo_inicial if caja_actual else 0) + float(ventas_usuario_hoy)
+
+        # Moneda efectiva (dinámica, igual que el TPV)
+        from applications.home.models import ConfiguracionTPV
+        _tpv_cfg = ConfiguracionTPV.objects.first()
+        context['moneda'] = _get_effective_currency(_tpv_cfg.moneda if _tpv_cfg else 'C$')
+
         return context
 
 # ============================================================
@@ -309,6 +349,9 @@ class TpvGeneralView(LoginRequiredMixin, TemplateView):
         context['metodos_pago2'] = MetodoPago.objects.filter(activo=True)
         context['config'] = ConfiguracionFiscal.objects.first()
         tpv_config = ConfiguracionTPV.objects.first()
+        # Clientes para el popup de FIADO (elegir o crear al cobrar)
+        from applications.customer.models import Cliente
+        context['clientes'] = Cliente.objects.all().order_by('nombre')
         # Balance del día
         hoy = localdate()
         apertura = AperturaCaja.objects.filter(usuario=self.request.user, fecha=hoy, estado="abierta").first()
@@ -370,12 +413,15 @@ class ProcesarVentaView(LoginRequiredMixin, CreateView):
             data = json.loads(request.body)
             items = _parse_sale_items(data['items'])
 
+            total_procesado = Decimal(str(data['total']))
+            iva_procesado = Decimal(str(data['iva']))
             venta = Venta(
                 usuario=request.user,
                 metodo_pago_id=data['metodo_pago_id'],
-                subtotal=data['subtotal'],
-                iva=data['iva'],
-                total=data['total'],
+                # subtotal = base imponible real (base + IVA = total)
+                subtotal=total_procesado - iva_procesado,
+                iva=iva_procesado,
+                total=total_procesado,
                 recibido=data.get('recibido', 0),
                 cambio=data.get('cambio', 0)
             )
@@ -492,6 +538,11 @@ class CrearProductoView(LoginRequiredMixin, CreateView):
             # Editando: usar el código real del producto, limpiar sesión si existe
             if 'nuevo_codigo_barras' in self.request.session:
                 del self.request.session['nuevo_codigo_barras']
+            # El formulario pide la base sin IVA: mostramos la base del PVP guardado
+            # (si no, al guardar se le sumaría el IVA otra vez)
+            if instance.precio and instance.porcentaje_iva:
+                base = instance.precio / (Decimal("1") + instance.porcentaje_iva / Decimal("100"))
+                initial['precio'] = base.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         else:
             # Nuevo producto: mantener el mismo código entre refreshes
             if 'nuevo_codigo_barras' not in self.request.session:
@@ -501,6 +552,10 @@ class CrearProductoView(LoginRequiredMixin, CreateView):
                         self.request.session['nuevo_codigo_barras'] = new_code
                         break
             initial['codigo_barras'] = self.request.session['nuevo_codigo_barras']
+            # IVA por defecto = el de la tienda (Configuración Fiscal: 15% Nicaragua, 21% España...)
+            conf_iva = ConfiguracionFiscal.objects.first()
+            if conf_iva and conf_iva.iva_general is not None:
+                initial['porcentaje_iva'] = conf_iva.iva_general
         return initial
 
     def get_context_data(self, **kwargs):
@@ -520,7 +575,7 @@ class CrearProductoView(LoginRequiredMixin, CreateView):
         precio_sin_iva = form.cleaned_data.get('precio', Decimal('0'))
         iva_pct = form.cleaned_data.get('porcentaje_iva', Decimal('0'))
         precio_con_iva = precio_sin_iva * (Decimal('1') + iva_pct / Decimal('100'))
-        form.instance.precio = precio_con_iva
+        form.instance.precio = precio_con_iva.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
         # Limpiar código de barras de la sesión para el próximo producto nuevo
         if 'nuevo_codigo_barras' in self.request.session:
@@ -639,7 +694,7 @@ class VentaDetalleView(LoginRequiredMixin, TemplateView):
         total_items = 0
         
         for d in detalles:
-            rate = float(d.producto.porcentaje_iva or 21)
+            rate = float(d.producto.porcentaje_iva or 0)
             item_total = float(d.total)
             total_items += item_total
             
@@ -684,6 +739,7 @@ class VentaDetalleView(LoginRequiredMixin, TemplateView):
             'iva_breakdown': iva_breakdown,
             'total_real': total_final,
             'subtotal_real': total_items - float(venta.iva or 0), # Aproximado para la base
+            'base_antes_descuento': (venta.subtotal or Decimal("0")) + (venta.descuento or Decimal("0")),
             'cambio_real': cambio_real,
             'desglose_mixto': desglose_mixto,
             'config': ConfiguracionFiscal.objects.first(),
@@ -713,7 +769,7 @@ def imprimir_ticket_pos(request, pk):
     iva_breakdown = {}
     total_items = 0
     for detalle in detalles:
-        rate = float(detalle.producto.porcentaje_iva or 21)
+        rate = float(detalle.producto.porcentaje_iva or 0)
         item_total = float(detalle.total)
         total_items += item_total
         base = item_total / (1 + (rate / 100))
@@ -940,6 +996,7 @@ def guardar_venta(request):
         recibido = Decimal(str(data.get("recibido", 0)))
         descuento = Decimal(str(data.get("descuento", 0)))
         desglose_mixto = data.get("desglose_mixto")  # 👈 Obtener desglose de Pago Mixto
+        cliente_id = data.get("cliente_id")  # 👈 Cliente (obligatorio en el FIADO)
 
         if not ticket:
             return JsonResponse({"error": "El ticket está vacío"}, status=400)
@@ -948,6 +1005,18 @@ def guardar_venta(request):
             return JsonResponse({"error": "Método de pago requerido"}, status=400)
 
         metodo_pago = MetodoPago.objects.get(id=metodo_pago_id)
+
+        # =====================================================
+        # FIADO: el dinero NO entra en caja hasta que pague
+        # =====================================================
+        es_fiado = metodo_pago.nombre.strip().lower() == "fiado"
+        if es_fiado and not cliente_id:
+            return JsonResponse({
+                "success": False,
+                "code": "CLIENTE_REQUERIDO",
+                "error": "Para vender a fiado hay que elegir un cliente.",
+            }, status=400)
+
         parsed_items = _parse_sale_items(ticket)
 
         # ==========================
@@ -964,27 +1033,31 @@ def guardar_venta(request):
             producto = item["producto"]
             item_bruto = item["total"]
             item_neto = item_bruto * (Decimal("1") - tasa_descuento)
-            
-            p_iva = getattr(producto, 'porcentaje_iva', Decimal("21"))
-            if not p_iva: 
-                p_iva = Decimal("21")
-            
+
+            p_iva = getattr(producto, 'porcentaje_iva', None)
+            if p_iva is None:
+                conf_iva = ConfiguracionFiscal.objects.first()
+                p_iva = conf_iva.iva_general if conf_iva else Decimal("15")
+
             # El precio ya incluye IVA. Extraemos el IVA del precio.
             iva_rate = Decimal(p_iva) / Decimal("100")
             item_iva = item_neto - (item_neto / (Decimal("1") + iva_rate))
             iva += item_iva
 
-        subtotal = subtotal_bruto
-        total = subtotal - descuento
+        total = subtotal_bruto - descuento
+        # Cuota redondeada a céntimos; subtotal = base imponible (base + IVA = total)
+        iva = iva.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        subtotal = total - iva
 
-        if recibido < total:
+        # En el fiado no se entrega dinero: no se pide recibido ni hay cambio
+        if not es_fiado and recibido < total:
             return JsonResponse({
                 "success": False,
                 "code": "INSUFFICIENT_PAYMENT",
                 "error": f"El importe recibido ({recibido} €) es menor que el total ({total} €)."
             }, status=400)
 
-        cambio = max(Decimal("0"), recibido - total)
+        cambio = Decimal("0") if es_fiado else max(Decimal("0"), recibido - total)
 
         print("💰 Subtotal:", subtotal)
         print("💰 IVA Total:", iva)
@@ -1002,6 +1075,7 @@ def guardar_venta(request):
         # ==========================
         venta = Venta.objects.create(
             usuario=request.user,
+            cliente_id=cliente_id or None,
             metodo_pago=metodo_pago,
             subtotal=subtotal,
             descuento=descuento,
@@ -1035,6 +1109,19 @@ def guardar_venta(request):
             producto.save(update_fields=["stock"])
 
         print("📦 Detalles creados")
+
+        # =====================================================
+        # FIADO: aquí NO se registra dinero en caja.
+        # El ingreso se hará cuando el cliente pague (pantalla de fiados)
+        # =====================================================
+        if es_fiado:
+            print("🧾 Venta a FIADO: queda pendiente de cobro (no entra en caja)")
+            return JsonResponse({
+                "success": True,
+                "venta_id": venta.id,
+                "codigo_venta": venta.codigo,
+                "fiado": True,
+            })
 
         # ==========================================
         # REGISTRAR MOVIMIENTO EN CASHFLOW
@@ -1113,7 +1200,7 @@ def guardar_venta(request):
 # ======================================================
 # 📌 Función utilitaria — Obtener datos de ventas por rango
 # ======================================================
-def obtener_datos_arqueo_completo(inicio, fin, tipo, usuario, fondo_manual=None):
+def obtener_datos_arqueo_completo(inicio, fin, tipo, usuario, fondo_manual=None, caja_id=None):
     """Obtiene el conjunto completo de datos para el reporte profesional."""
     from django.db.models import Sum, Count, F, ExpressionWrapper, FloatField
     from django.db.models.functions import ExtractHour
@@ -1132,11 +1219,14 @@ def obtener_datos_arqueo_completo(inicio, fin, tipo, usuario, fondo_manual=None)
     if fondo_manual is not None:
         fondo_inicial = float(fondo_manual)
     else:
-        apertura = AperturaCaja.objects.filter(
+        apertura_qs = AperturaCaja.objects.filter(
             fecha__gte=inicio,
             fecha__lte=fin
-        ).order_by("hora_apertura").first()
-        
+        )
+        if caja_id:
+            apertura_qs = apertura_qs.filter(caja_id=caja_id)
+        apertura = apertura_qs.order_by("hora_apertura").first()
+
         if apertura:
             fondo_inicial = float(apertura.fondo_inicial)
         else:
@@ -1332,25 +1422,52 @@ def obtener_resumen_ventas(inicio, fin):
     }
 
 
-def registrar_cierre_desde_rango(request, tipo, fecha_inicio, fecha_fin):
+def registrar_cierre_desde_rango(request, tipo, fecha_inicio, fecha_fin, caja_id=None):
     """Función utilitaria para guardar un registro de CierreCaja."""
-    from applications.cash.models import CierreCaja, AperturaCaja
+    from applications.cash.models import CierreCaja, AperturaCaja, Caja
     from applications.config.models import ConfiguracionFiscal
     from django.db.models import Sum
     from django.utils import timezone
     from django.contrib import messages
 
     hoy = timezone.localdate()
+
+    # ── Sanidad de sesiones ────────────────────────────────────────────────
+    # Cualquier sesión de caja de días anteriores (fecha < hoy) que esté
+    # dentro del rango arqueado se cierra aquí mismo, ANTES de los controles
+    # de duplicidad. Así, aunque el CierreCaja ya exista (o el arqueo se
+    # aborte), las cajas de ese rango dejan de aparecer como "abiertas".
+    obsoletas = AperturaCaja.objects.filter(
+        estado__in=["abierta", "pausada"],
+        fecha__gte=fecha_inicio,
+        fecha__lte=fecha_fin,
+        fecha__lt=hoy,
+    )
+    if caja_id:
+        obsoletas = obsoletas.filter(caja_id=caja_id)
+    cerradas_antes = obsoletas.update(estado="cerrada", hora_cierre=timezone.now())
+    if cerradas_antes:
+        messages.success(
+            request,
+            f"Se cerraron {cerradas_antes} sesión(es) de caja de días anteriores "
+            f"incluidas en el arqueo del {fecha_inicio.strftime('%d/%m/%Y')}"
+            + (f" al {fecha_fin.strftime('%d/%m/%Y')}" if fecha_fin != fecha_inicio else "")
+            + ".",
+        )
+
     ventas = Venta.objects.filter(
         creado_en__date__gte=fecha_inicio,
         creado_en__date__lte=fecha_fin,
         estado="completada"
     )
 
-    apertura = AperturaCaja.objects.filter(
+    apertura_qs = AperturaCaja.objects.filter(
         fecha__gte=fecha_inicio,
         fecha__lte=fecha_fin
-    ).order_by("hora_apertura").first()
+    )
+    if caja_id:
+        apertura_qs = apertura_qs.filter(caja_id=caja_id)
+    apertura = apertura_qs.order_by("hora_apertura").first()
 
     if apertura:
         fondo_inicial = float(apertura.fondo_inicial)
@@ -1378,25 +1495,72 @@ def registrar_cierre_desde_rango(request, tipo, fecha_inicio, fecha_fin):
         messages.error(request, "Error de contabilidad: No se puede generar el arqueo porque tu sesión de caja ya fue cerrada o no existe.")
         return None
 
+    # Caja del cierre: la seleccionada explícitamente, o la de la apertura
+    if caja_id:
+        caja_obj = Caja.objects.filter(id=caja_id).first()
+    elif apertura_activa and apertura_activa.caja:
+        caja_obj = apertura_activa.caja
+    elif apertura and apertura.caja:
+        caja_obj = apertura.caja
+    else:
+        caja_obj = None
+
+    # ── Control de duplicidad: no permitir dos cierres de la misma caja
+    #    en el mismo rango de fechas (sea del tipo que sea)
+    duplicado_qs = CierreCaja.objects.filter(
+        fecha_inicio=fecha_inicio,
+        fecha_fin=fecha_fin,
+    )
+    if caja_obj:
+        duplicado_qs = duplicado_qs.filter(caja=caja_obj)
+    else:
+        duplicado_qs = duplicado_qs.filter(caja__isnull=True)
+
+    dup = duplicado_qs.first()
+    if dup:
+        nombre_caja = caja_obj.nombre if caja_obj else "(sin caja)"
+        messages.error(
+            request,
+            f"Cierre bloqueado: la caja {nombre_caja} ya tiene un cierre para el rango "
+            f"{fecha_inicio.strftime('%d/%m/%Y')} → {fecha_fin.strftime('%d/%m/%Y')} "
+            f"(ID #{dup.id}, {dup.total_ventas}). No se permite registrar dos cierres del mismo periodo."
+        )
+        return None
+
     cierre = CierreCaja.objects.create(
         tipo=tipo,
         fecha_inicio=fecha_inicio,
         fecha_fin=fecha_fin,
         fecha=hoy,
         usuario=request.user,
-        caja=apertura_activa.caja if apertura_activa and apertura_activa.caja else (apertura.caja if apertura and apertura.caja else None),
+        caja=caja_obj,
         fondo_inicial=fondo_inicial,
         efectivo_esperado=total_esperado,
         efectivo_retirado=total_efectivo_neto,
         total_ventas=total_bruto,
     )
-    
-    # Cerrar la sesión de caja (AperturaCaja) si está abierta o pausada
-    if apertura_activa:
-        apertura_activa.estado = 'cerrada'
-        apertura_activa.hora_cierre = timezone.now()
-        apertura_activa.save()
-        messages.success(request, f"Cierre de caja registrado (ID: #{cierre.id}) y sesión cerrada con éxito.")
+
+    # Cerrar las sesiones de caja (AperturaCaja) afectadas por el rango arqueado
+    en_rango = AperturaCaja.objects.filter(
+        estado__in=['abierta', 'pausada'],
+        fecha__gte=fecha_inicio,
+        fecha__lte=fecha_fin,
+    )
+    if caja_id:
+        aperturas_a_cerrar = en_rango.filter(caja_id=caja_id)
+    else:
+        aperturas_a_cerrar = en_rango.filter(usuario=request.user)
+
+    cerradas = 0
+    for a in aperturas_a_cerrar:
+        a.estado = 'cerrada'
+        a.hora_cierre = timezone.now()
+        a.save()
+        cerradas += 1
+
+    if cerradas:
+        nombre_caja = caja_obj.nombre if caja_obj else "caja"
+        messages.success(request, f"Cierre de caja registrado (ID: #{cierre.id}), sesión de {nombre_caja} cerrada con éxito.")
     else:
         messages.success(request, f"Reporte de cierre ({tipo.capitalize()}) generado con éxito (ID: #{cierre.id}).")
     
@@ -1496,6 +1660,16 @@ class ArqueoPersonalizadoView(LoginRequiredMixin, TemplateView):
         # Permitir pre-llenar fechas desde parámetros GET
         context['inicio_prefill'] = self.request.GET.get('inicio', '')
         context['fin_prefill'] = self.request.GET.get('fin', '')
+        # Selector de caja a cerrar
+        from applications.cash.models import Caja, AperturaCaja
+        context['cajas'] = Caja.objects.filter(activa=True)
+        apertura_activa = AperturaCaja.objects.filter(
+            usuario=self.request.user, estado__in=['abierta', 'pausada']
+        ).select_related('caja').first()
+        prefill_caja = self.request.GET.get('caja', '')
+        if not prefill_caja and apertura_activa and apertura_activa.caja_id:
+            prefill_caja = apertura_activa.caja_id
+        context['caja_prefill'] = prefill_caja
         return context
 
     def post(self, request, *args, **kwargs):
@@ -1504,25 +1678,33 @@ class ArqueoPersonalizadoView(LoginRequiredMixin, TemplateView):
             inicio_str = request.POST.get("inicio")
             fin_str = request.POST.get("fin")
             fondo_str = request.POST.get("fondo")
+            caja_id_str = request.POST.get("caja_id") or ""
             inicio = datetime.strptime(inicio_str, "%Y-%m-%d").date()
             fin = datetime.strptime(fin_str, "%Y-%m-%d").date()
-            
-            fondo_manual = float(fondo_str) if fondo_str else None
 
-            data = obtener_datos_arqueo_completo(inicio, fin, "personalizado", request.user, fondo_manual=fondo_manual)
+            fondo_manual = float(fondo_str) if fondo_str else None
+            caja_id = int(caja_id_str) if caja_id_str.isdigit() else None
+
+            data = obtener_datos_arqueo_completo(inicio, fin, "personalizado", request.user, fondo_manual=fondo_manual, caja_id=caja_id)
             data["fecha_inicio_raw"] = inicio_str
             data["fecha_fin_raw"] = fin_str
+            data["caja_id_sel"] = caja_id_str if caja_id else ""
 
             return render(request, "home/arqueo_pdf.html", data)
         else:
             # Es el botón de GUARDAR en el resultado
             inicio_str = request.POST.get("fecha_inicio_raw")
             fin_str = request.POST.get("fecha_fin_raw")
+            caja_id_str = request.POST.get("caja_id") or ""
             inicio = datetime.strptime(inicio_str, "%Y-%m-%d").date()
             fin = datetime.strptime(fin_str, "%Y-%m-%d").date()
-            
-            registrar_cierre_desde_rango(request, "personalizado", inicio, fin)
-            return redirect(request.path)
+            caja_id = int(caja_id_str) if caja_id_str.isdigit() else None
+
+            cierre = registrar_cierre_desde_rango(request, "personalizado", inicio, fin, caja_id=caja_id)
+            if cierre is None:
+                # Cierre duplicado o bloqueado: volver al formulario con el aviso
+                return redirect('home_app:arqueo_personalizado')
+            return redirect('cashflow:movement_list')
 
 
 # ======================================================
@@ -1699,3 +1881,87 @@ def create_comm(request):
             )
             return JsonResponse({'ok': True})
     return JsonResponse({'ok': False}, status=400)
+
+
+# =====================================================================
+#  ANULAR VENTA → DEVOLVER LA MERCANCÍA AL ALMACÉN (devolución)
+# =====================================================================
+@require_POST
+@login_required
+def anular_venta(request, pk):
+    """Anula una venta y devuelve al stock todas las unidades vendidas.
+
+    - Si la venta ya estaba cancelada NO se devuelve nada otra vez
+      (evita duplicar stock por doble clic o doble anulación).
+    - Cada devolución queda registrada como Movement tipo 'entrada'
+      con la observación 'Devolución por anulación de venta ...'.
+    """
+    from django.contrib import messages
+    from applications.stock.models import Movement
+
+    venta = get_object_or_404(Venta, pk=pk)
+
+    # --- Caso 1: ya estaba anulada → avisamos y no devolvemos dos veces ---
+    if venta.estado == 'cancelada':
+        messages.warning(
+            request,
+            f"La venta {venta.codigo} ya estaba anulada: no se devolvió stock otra vez.",
+        )
+        return redirect('home_app:venta_detalle', pk=venta.pk)
+
+    # --- Caso 2: anulación normal → devolvemos stock y marcamos la venta ---
+    with transaction.atomic():
+        # 1) Devolver unidades (Movement tipo 'entrada' suma el stock solo)
+        for detalle in venta.detalles.all():
+            Movement.objects.create(
+                producto=detalle.producto,
+                cantidad=detalle.cantidad,
+                tipo='entrada',
+                observaciones=f"Devolución por anulación de venta {venta.codigo}",
+            )
+
+        # 2) Devolver el dinero: por cada ingreso que dejó esta venta en caja
+        #    (normal o pago mixto) creamos el gasto equivalente → la caja,
+        #    el arqueo y los informes bajan solos y no descuadran.
+        originales = Movimiento.objects.filter(
+            origen=Movimiento.Origen.TPV,
+        ).filter(
+            Q(external_ref=f"tpv:venta:{venta.id}")
+            | Q(external_ref__startswith=f"tpv:venta:{venta.id}:")
+        ).exclude(external_ref__contains="anulacion")
+
+        for mov in originales:
+            register_movement(
+                concepto=f"Devolución por anulación de venta {venta.codigo}",
+                tipo=Movimiento.Tipo.GASTO,
+                origen=Movimiento.Origen.TPV,
+                cuenta=mov.cuenta,
+                cantidad=mov.cantidad,
+                metodo_pago=mov.metodo_pago,
+                external_ref=f"{mov.external_ref}:anulacion",
+                created_by=request.user,
+            )
+
+        # 2b) Caso sin movimiento previo (ventas antiguas o importadas):
+        #     devolvemos el total de la venta a la cuenta Caja.
+        if not originales.exists() and venta.total and venta.total > 0:
+            cuenta_caja, _ = Cuenta.objects.get_or_create(nombre="Caja")
+            register_movement(
+                concepto=f"Devolución por anulación de venta {venta.codigo}",
+                tipo=Movimiento.Tipo.GASTO,
+                origen=Movimiento.Origen.TPV,
+                cuenta=cuenta_caja,
+                cantidad=venta.total,
+                external_ref=f"tpv:venta:{venta.id}:anulacion",
+                created_by=request.user,
+            )
+
+        # 3) Marcar la venta como cancelada (el arqueo deja de contarla)
+        venta.estado = 'cancelada'
+        venta.save(update_fields=['estado', 'actualizado_en'])
+
+    messages.success(
+        request,
+        f"Venta {venta.codigo} anulada. Stock devuelto y dinero devuelto en caja.",
+    )
+    return redirect('home_app:venta_detalle', pk=venta.pk)

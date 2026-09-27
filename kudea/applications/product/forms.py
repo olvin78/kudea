@@ -14,6 +14,8 @@ class ProductoForm(forms.ModelForm):
             'costo': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'stock': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
             'stock_minimo': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
+            # PROVEEDOR HABITUAL: se usa para el PDF de pedido de reposición
+            'proveedor': forms.Select(attrs={'class': 'form-select'}),
             'descuento': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'min': 0,
@@ -28,7 +30,9 @@ class ProductoForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Puedes aplicar lógica adicional aquí si lo necesitas
+        # Proveedor opcional: etiqueta amigable para el desplegable
+        if 'proveedor' in self.fields:
+            self.fields['proveedor'].empty_label = "— Sin proveedor —"
 
 
 

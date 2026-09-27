@@ -52,7 +52,6 @@
         }
         .glass-card {
             background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(12px);
             border: 1px solid rgba(73, 158, 207, 0.2);
             box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
         }
@@ -165,7 +164,7 @@
 
     <!-- ADMIN MODAL -->
     <div id="adminModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-dark-blue/40 backdrop-blur-sm" onclick="closeAdminModal()"></div>
+        <div class="absolute inset-0 bg-dark-blue/60" onclick="closeAdminModal()"></div>
         <div class="relative w-full max-w-md animate-fade-in">
             <div class="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden relative border border-slate-100">
                 <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary-blue to-dark-blue"></div>

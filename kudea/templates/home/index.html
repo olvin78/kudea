@@ -1,0 +1,333 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block title %}KUDEA - Dashboard{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" href="{% static 'css/index.css' %}">
+
+<style>
+    :root {
+        --kudea-dark: #1D3557;
+        --kudea-medium: #457B9D;
+        --kudea-light: #A8DADC;
+        --kudea-accent: #F1FAEE;
+        --kudea-success: #2A9D8F;
+        --kudea-danger: #E63946;
+    }
+
+    /* ── Fondo "agua": a sangre completa, sin cortes ni bordes ── */
+    .dash-wrap {
+        position: relative;
+        min-height: calc(100vh - 56px);
+        isolation: isolate;
+        background-color: #f5fafb;
+        background-image:
+            radial-gradient(880px 400px at 10% -6%, rgba(168, 218, 220, .55), transparent 62%),
+            radial-gradient(720px 360px at 94% 2%, rgba(69, 123, 157, .16), transparent 60%),
+            radial-gradient(640px 520px at 68% 104%, rgba(42, 157, 143, .10), transparent 65%),
+            linear-gradient(180deg, #f8fcfd 0%, #f2f7fa 100%);
+        background-repeat: no-repeat;
+    }
+    /* Si algo asoma por debajo, el color de la página es el mismo: no hay corte */
+    body { background-color: #f2f7fa; }
+
+    /* ── Tarjeta de vidrio suave ── */
+    .k-card {
+        background: rgba(255, 255, 255, .78);
+        border: 1px solid rgba(255, 255, 255, .9);
+        border-radius: 26px;
+        box-shadow: 0 22px 44px -32px rgba(29, 53, 87, .55);
+        transition: transform .25s ease, box-shadow .25s ease;
+    }
+    .k-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 28px 50px -30px rgba(29, 53, 87, .5);
+    }
+
+    /* Iconos con degradado */
+    .k-chip {
+        width: 48px; height: 48px; border-radius: 16px;
+        display: flex; align-items: center; justify-content: center;
+        color: #fff; flex: none;
+        box-shadow: 0 10px 20px -12px rgba(29, 53, 87, .6);
+    }
+    .k-chip.blue   { background: linear-gradient(135deg, #1D3557, #457B9D); }
+    .k-chip.green  { background: linear-gradient(135deg, #2A9D8F, #76C7BD); }
+    .k-chip.amber  { background: linear-gradient(135deg, #F4A261, #E9C46A); }
+    .k-chip.indigo { background: linear-gradient(135deg, #457B9D, #A8DADC); }
+    .k-chip.rose   { background: linear-gradient(135deg, #E63946, #F4A6A6); }
+    .k-chip.slate  { background: linear-gradient(135deg, #64748B, #94A3B8); }
+    .k-chip.soft-blue  { background: linear-gradient(135deg, #EAF3F9, #D8EAF3); color: #457B9D; box-shadow: none; }
+    .k-chip.soft-green { background: linear-gradient(135deg, #E6F5F2, #D2EDE8); color: #2A9D8F; box-shadow: none; }
+    .k-chip.soft-amber { background: linear-gradient(135deg, #FDF1E3, #FAE5CD); color: #E08A3C; box-shadow: none; }
+
+    /* Cabecera */
+    .k-eyebrow {
+        display: inline-flex; align-items: center; gap: 8px;
+        font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
+        color: #457B9D; background: rgba(255, 255, 255, .7);
+        border: 1px solid rgba(168, 218, 220, .8);
+        padding: 6px 14px; border-radius: 999px;
+    }
+    .k-eyebrow .dot { width: 7px; height: 7px; border-radius: 50%; background: #2A9D8F; }
+    .k-eyebrow .dot.off { background: #E63946; }
+    .k-title { font-size: clamp(1.75rem, 3vw, 2.4rem); font-weight: 800; color: var(--kudea-dark); letter-spacing: -.02em; margin: 14px 0 6px; }
+    .k-sub { color: #64748B; font-weight: 500; font-size: 15px; }
+
+    .k-btn {
+        display: inline-flex; align-items: center; gap: 8px;
+        background: linear-gradient(135deg, #1D3557, #457B9D);
+        color: #fff; font-weight: 700; font-size: 14px;
+        padding: 12px 22px; border-radius: 999px; border: 0;
+        box-shadow: 0 16px 30px -18px rgba(29, 53, 87, .9);
+        transition: transform .2s ease, box-shadow .2s ease;
+        text-decoration: none;
+    }
+    .k-btn:hover { transform: translateY(-2px); color: #fff; box-shadow: 0 20px 34px -18px rgba(29, 53, 87, .9); }
+    .k-btn.ghost {
+        background: rgba(255, 255, 255, .8); color: var(--kudea-dark);
+        border: 1px solid rgba(69, 123, 157, .25); box-shadow: none;
+    }
+    .k-btn.ghost:hover { background: #fff; }
+
+    /* Estadísticas */
+    .stat { padding: 22px 24px; display: flex; align-items: center; gap: 16px; position: relative; overflow: hidden; }
+    .stat::after {
+        content: ""; position: absolute; left: 24px; right: 24px; bottom: 14px; height: 3px;
+        border-radius: 3px; background: linear-gradient(90deg, rgba(168, 218, 220, .85), rgba(168, 218, 220, 0));
+    }
+    .stat .lbl { font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #94A3B8; }
+    .stat .val { font-size: 26px; font-weight: 800; color: var(--kudea-dark); letter-spacing: -.02em; line-height: 1.15; }
+    .stat .val small { font-size: 13px; font-weight: 700; color: #CBD5E1; }
+
+    /* Paneles (últimas ventas / caja) */
+    .k-panel { padding: 22px 24px; }
+    .k-panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .k-panel-head h5 { margin: 0; font-size: 13px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--kudea-dark); }
+    .k-panel-head a { font-size: 12px; font-weight: 700; color: var(--kudea-medium); text-decoration: none; }
+    .k-panel-head a:hover { text-decoration: underline; }
+
+    .k-row {
+        display: flex; align-items: center; gap: 14px;
+        padding: 11px 12px; border-radius: 16px;
+        transition: background .18s ease;
+    }
+    .k-row + .k-row { border-top: 1px dashed #E9EEF3; }
+    .k-row:hover { background: rgba(234, 243, 249, .7); }
+    .k-row .ico { width: 36px; height: 36px; border-radius: 12px; flex: none; display: flex; align-items: center; justify-content: center; background: #EAF3F9; color: #457B9D; font-size: 14px; }
+    .k-row .meta { flex: 1; min-width: 0; }
+    .k-row .meta b { display: block; font-size: 14px; color: var(--kudea-dark); font-weight: 700; }
+    .k-row .meta span { font-size: 12px; color: #94A3B8; }
+    .k-row .amt { font-weight: 800; color: var(--kudea-dark); font-size: 14px; white-space: nowrap; }
+    .k-empty { text-align: center; color: #94A3B8; font-size: 13px; padding: 26px 10px; }
+
+    /* Estado de caja */
+    .caja-state { text-align: center; padding: 6px 0 2px; }
+    .caja-state .ring {
+        width: 84px; height: 84px; border-radius: 50%; margin: 6px auto 12px;
+        display: flex; align-items: center; justify-content: center; font-size: 30px; color: #fff;
+        background: linear-gradient(135deg, #2A9D8F, #76C7BD);
+        box-shadow: 0 18px 34px -18px rgba(42, 157, 143, .9);
+    }
+    .caja-state.closed .ring { background: linear-gradient(135deg, #94A3B8, #CBD5E1); box-shadow: 0 18px 34px -18px rgba(100, 116, 139, .8); }
+    .caja-state h4 { margin: 0; font-size: 17px; font-weight: 800; color: var(--kudea-dark); }
+    .caja-state p { margin: 4px 0 14px; font-size: 13px; color: #94A3B8; }
+    .caja-balance { font-size: 28px; font-weight: 800; color: var(--kudea-dark); letter-spacing: -.02em; }
+    .caja-balance small { font-size: 14px; color: #94A3B8; font-weight: 700; }
+
+    /* Accesos rápidos */
+    .qa {
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 10px; padding: 20px 12px; text-decoration: none; height: 100%;
+        border-radius: 22px; text-align: center;
+    }
+    .qa .k-chip { transition: transform .22s ease; }
+    .qa:hover .k-chip { transform: scale(1.08) rotate(-3deg); }
+    .qa .name { font-size: 13px; font-weight: 800; color: var(--kudea-dark); }
+    .qa .hint { font-size: 11px; color: #94A3B8; font-weight: 600; }
+    .qa.muted .name { color: #64748B; }
+
+    .btn-outline-kudea { border: 2px solid var(--kudea-medium); color: var(--kudea-medium); font-weight: 600; transition: all .2s ease; }
+    .btn-outline-kudea:hover { background-color: var(--kudea-medium); color: white; transform: translateY(-2px); }
+    .bg-kudea { background-color: var(--kudea-medium) !important; color: white !important; }
+
+    @media (max-width: 767px) { .stat::after { left: 18px; right: 18px; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dash-wrap container-fluid px-8 py-10">
+
+    <!-- Cabecera -->
+    <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-10">
+        <div>
+            <span class="k-eyebrow">
+                <span class="dot {% if caja_actual %}{% else %}off{% endif %}"></span>
+                {% if caja_actual %}Caja abierta · {{ caja_actual.caja.nombre|default:"Principal" }}{% else %}Caja cerrada{% endif %}
+            </span>
+            <h1 class="k-title">¡Hola, {{ user.first_name|default:user.username }}! 👋</h1>
+            <p class="k-sub">Bienvenido de nuevo al centro de control de KUDEA · {% now "d/m/Y" %}</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+            <a href="{% url 'home_app:tpv_general' %}" class="k-btn">
+                <i data-lucide="store" class="w-4 h-4"></i> Ir al TPV
+            </a>
+            <a href="{% url 'home_app:arqueo_menu' %}" class="k-btn ghost">
+                <i data-lucide="coins" class="w-4 h-4"></i> Arqueo
+            </a>
+            <!-- Botón directo: registrar una compra a proveedor -->
+            <a href="{% url 'purchases_app:compra_create' %}" class="k-btn ghost">
+                <i data-lucide="truck" class="w-4 h-4"></i> Nueva compra
+            </a>
+            <div class="bg-white/85 p-3 px-5 rounded-2xl border border-white shadow-sm flex items-center gap-3">
+                <div class="k-chip soft-green" style="width:40px;height:40px;border-radius:12px;">
+                    <i data-lucide="calendar" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0">Hoy es</p>
+                    <p class="font-bold text-dark-blue">{% now "d M, Y" %}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas del día -->
+    <div class="row g-3 mb-8">
+        <div class="col-md-4">
+            <div class="k-card stat">
+                <div class="k-chip blue"><i data-lucide="trending-up" class="w-6 h-6"></i></div>
+                <div>
+                    <p class="lbl mb-1">Ventas Hoy</p>
+                    <p class="val mb-0">{{ ventas_total_hoy|floatformat:2 }} <small>{{ moneda }}</small></p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="k-card stat">
+                <div class="k-chip green"><i data-lucide="shopping-cart" class="w-6 h-6"></i></div>
+                <div>
+                    <p class="lbl mb-1">Operaciones</p>
+                    <p class="val mb-0">{{ ventas_count_hoy }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="k-card stat">
+                <div class="k-chip amber"><i data-lucide="package" class="w-4 h-4"></i></div>
+                <div>
+                    <p class="lbl mb-1">Inventario</p>
+                    <p class="val mb-0">{{ total_productos }} <small>Art.</small></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actividad + Caja -->
+    <div class="row g-3 mb-8">
+        <div class="col-lg-8">
+            <div class="k-card k-panel h-100">
+                <div class="k-panel-head">
+                    <h5><i class="fas fa-bolt me-2 text-amber-500"></i>Últimas ventas</h5>
+                    <a href="{% url 'home_app:lista_ventas' %}">Ver todas →</a>
+                </div>
+                {% for v in actividad_reciente|slice:":5" %}
+                <div class="k-row">
+                    <div class="ico"><i class="fas fa-receipt"></i></div>
+                    <div class="meta">
+                        <b>{{ v.codigo|default:"Venta" }}</b>
+                        <span>{{ v.creado_en|date:"d/m/Y H:i" }} · {{ v.metodo_pago.nombre|default:"—" }} · {{ v.usuario.username }}</span>
+                    </div>
+                    <div class="amt">{{ v.total|floatformat:2 }} {{ moneda }}</div>
+                </div>
+                {% empty %}
+                <div class="k-empty">Todavía no hay ventas registradas. <br><a href="{% url 'home_app:tpv_general' %}" class="text-primary-blue font-bold">Abrir el TPV →</a></div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="k-card k-panel h-100">
+                <div class="k-panel-head">
+                    <h5><i class="fas fa-cash-register me-2 text-emerald-500"></i>Mi caja</h5>
+                    {% if caja_actual %}<a href="{% url 'home_app:arqueo_menu' %}">Arquear →</a>{% endif %}
+                </div>
+                <div class="caja-state {% if caja_actual %}{% else %}closed{% endif %}">
+                    <div class="ring"><i class="fas {% if caja_actual %}fa-unlock{% else %}fa-lock{% endif %}"></i></div>
+                    <h4>{% if caja_actual %}Abierta{% else %}Cerrada{% endif %}</h4>
+                    <p>
+                        {% if caja_actual %}
+                            Desde {{ caja_actual.hora_apertura|date:"H:i" }} · Fondo {{ caja_actual.fondo_inicial|floatformat:2 }} {{ moneda }}
+                        {% else %}
+                            Inicia sesión de caja desde el TPV
+                        {% endif %}
+                    </p>
+                    <div class="caja-balance">{{ saldo_caja|floatformat:2 }} <small>{{ moneda }}</small></div>
+                    <p class="mt-1 mb-3" style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#94A3B8;font-weight:800;">Saldo en caja hoy</p>
+                    <a href="{% url 'home_app:tpv_general' %}" class="k-btn {% if caja_actual %}ghost{% endif %} w-100 justify-center">
+                        <i class="fas fa-lock-open me-1"></i> {% if caja_actual %}Ir a cobrar{% else %}Abrir caja{% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Accesos rápidos -->
+    <div class="row g-3">
+        <div class="col-6 col-md-4 col-lg-2">
+            <a href="{% url 'home_app:tpv_general' %}" class="k-card qa">
+                <div class="k-chip blue"><i data-lucide="store" class="w-6 h-6"></i></div>
+                <span class="name">TPV</span>
+                <span class="hint">Cobrar</span>
+            </a>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <a href="{% url 'home_app:lista_productos' %}" class="k-card qa">
+                <div class="k-chip amber"><i data-lucide="box" class="w-6 h-6"></i></div>
+                <span class="name">Productos</span>
+                <span class="hint">Catálogo</span>
+            </a>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <a href="{% url 'home_app:lista_ventas' %}" class="k-card qa">
+                <div class="k-chip green"><i data-lucide="history" class="w-6 h-6"></i></div>
+                <span class="name">Ventas</span>
+                <span class="hint">Historial</span>
+            </a>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <a href="{% url 'home_app:arqueo_menu' %}" class="k-card qa">
+                <div class="k-chip indigo"><i data-lucide="coins" class="w-6 h-6"></i></div>
+                <span class="name">Arqueo</span>
+                <span class="hint">Cierre de caja</span>
+            </a>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <a href="{% url 'stock_app:movement_list' %}" class="k-card qa">
+                <div class="k-chip rose"><i data-lucide="warehouse" class="w-6 h-6"></i></div>
+                <span class="name">Stock Hub</span>
+                <span class="hint">Movimientos</span>
+            </a>
+        </div>
+        <!-- Acceso rápido: listado de compras -->
+        <div class="col-6 col-md-4 col-lg-2">
+            <a href="{% url 'purchases_app:compra_list' %}" class="k-card qa">
+                <div class="k-chip amber"><i data-lucide="truck" class="w-6 h-6"></i></div>
+                <span class="name">Compras</span>
+                <span class="hint">Listado y proveedores</span>
+            </a>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <a href="{% url 'home_app:ayuda' %}" class="k-card qa muted">
+                <div class="k-chip slate"><i data-lucide="help-circle" class="w-6 h-6"></i></div>
+                <span class="name">Ayuda</span>
+                <span class="hint">Soporte</span>
+            </a>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

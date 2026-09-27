@@ -268,13 +268,13 @@ KUDEA_KNOWLEDGE = {
             "titulo": "⚖️ ¿Qué es el IVA y Cómo se Gestiona en Kudea?",
             "keywords": ["iva", "impuesto", "cambiar iva", "configuracion iva", "fiscal", "que es iva", "modificar iva"],
             "paso_a_paso": [
-                "**¿Qué es el IVA?**\nEs el impuesto que se aplica a cada venta. En Kudea, metes el precio final (IVA incluido) y el sistema lo desglosa automáticamente sin que tú hagas nada.",
+                "**¿Qué es el IVA?** Es el impuesto que se aplica a cada venta. En Kudea introduces el precio sin IVA (base) y el sistema calcula el PVP con IVA incluido; en el ticket lo desglosa automáticamente sin que tú hagas nada.",
                 "**¿Cómo cambio el IVA general?**\n   - Ve a **'Administración'** -> **'Configuración Fiscal'** para cambiar el IVA por defecto de toda la tienda.",
                 "**¿Y si un producto tiene un IVA diferente?**\n   - Edita el producto directamente. Hay un campo **'Tipo de IVA'** donde puedes poner 21%, 10% o 4%.",
                 "**En el ticket:** Kudea muestra siempre la base imponible y la cuota de IVA separadas, para que tu contabilidad esté perfecta."
             ],
             "deep_memory": [
-                "⚡ **Fórmula**: `Base = PVP / (1 + tasa_iva)`. El sistema calcula solo, tú solo pones el PVP.",
+                "⚡ **Fórmula**: `PVP = base × (1 + tasa_iva)`. Tú introduces la base sin IVA y el sistema calcula el PVP; el ticket muestra Base + Cuota = Total.",
                 "⚡ **Modelo**: `ConfiguracionFiscal` guarda el IVA por defecto y el fondo de caja sugerido."
             ]
         }

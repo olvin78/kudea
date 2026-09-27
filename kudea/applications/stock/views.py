@@ -2,6 +2,7 @@ from django.views.generic import ListView
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_protect
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
 from django.db.models import F, Sum, Q
 from django.utils import timezone
@@ -9,7 +10,7 @@ from applications.product.models import Producto
 from .models import Movement
 
 
-class MovementListView(ListView):
+class MovementListView(LoginRequiredMixin, ListView):
     model = Movement
     template_name = 'stock/movement_list.html'
     context_object_name = 'movements'

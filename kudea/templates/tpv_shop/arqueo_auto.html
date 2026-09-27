@@ -1,0 +1,140 @@
+{% extends 'tpv_shop/base_tpv_shop.html' %}
+{% load static %}
+
+{% block tpv_content %}
+<link rel="stylesheet" href="{% static 'css/arqueo.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+
+<div class="arqueo-container">
+  <div class="arqueo-header">
+    <h2><i class="fas fa-calculator me-2"></i> Arqueo de Caja Automático</h2>
+    <div class="fecha-actual" id="fecha-actual"></div>
+  </div>
+
+  <div class="arqueo-body">
+    <!-- Columna izquierda -->
+    <div class="entrada-section">
+      <h3 class="section-title"><i class="fas fa-edit me-2"></i> Datos de Entrada</h3>
+      <form id="arqueoForm">
+        {% csrf_token %}
+        <div class="input-group">
+          <label for="monto-inicial"><i class="fas fa-coins me-2"></i> Efectivo Inicial</label>
+          <input type="number" id="monto-inicial" step="0.01" placeholder="0.00 €" required>
+        </div>
+        <div class="input-group">
+          <label for="observaciones"><i class="fas fa-comment me-2"></i> Observaciones</label>
+          <textarea id="observaciones" rows="3" placeholder="Notas adicionales..."></textarea>
+        </div>
+        <div id="loading">
+          <div class="spinner"></div>
+          <p>Cargando datos...</p>
+        </div>
+        <button type="submit" class="btn btn-primary" id="calcular-arqueo">
+          <i class="fas fa-calculator me-2"></i> Calcular Arqueo
+        </button>
+      </form>
+    </div>
+
+    <!-- Columna derecha -->
+    <div class="resultados-section">
+      <h3 class="section-title"><i class="fas fa-chart-bar me-2"></i> Resultados Automáticos</h3>
+      <div class="resultado-item"><span class="resultado-label">Efectivo Teórico:</span><span class="resultado-value" id="efectivo-teorico">0.00 €</span></div>
+      <div class="resultado-item"><span class="resultado-label">Efectivo Contado:</span><span class="resultado-value" id="efectivo-contado">0.00 €</span></div>
+      <div class="resultado-item"><span class="resultado-label">Total Ventas Efectivo:</span><span class="resultado-value" id="total-ventas-efectivo">0.00 €</span></div>
+      <div class="resultado-item"><span class="resultado-label">Total Ventas Tarjeta:</span><span class="resultado-value" id="total-ventas-tarjeta">0.00 €</span></div>
+      <div class="resultado-item"><span class="resultado-label">Total Ventas Bizum:</span><span class="resultado-value" id="total-ventas-bizum">0.00 €</span></div>
+      <div class="resultado-item"><span class="resultado-label">Total Ventas del Día:</span><span class="resultado-value" id="total-ventas-dia">0.00 €</span></div>
+      <div class="resultado-item"><span class="resultado-label">Diferencia:</span><span class="resultado-value diferencia" id="diferencia">0.00 €</span></div>
+      <button class="btn btn-secondary" id="guardar-arqueo" disabled>
+        <i class="fas fa-save me-2"></i> Guardar Arqueo
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('fecha-actual').textContent = new Date().toLocaleDateString('es-ES', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  });
+
+  const calcularBtn = document.getElementById('calcular-arqueo');
+  const guardarBtn = document.getElementById('guardar-arqueo');
+  const loadingDiv = document.getElementById('loading');
+  let arqueoData = {};
+
+  document.getElementById('arqueoForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const efectivoInicial = parseFloat(document.getElementById('monto-inicial').value);
+    if (isNaN(efectivoInicial)) {
+      alert('Por favor ingresa un monto inicial válido');
+      return;
+    }
+
+    loadingDiv.style.display = 'block';
+    calcularBtn.disabled = true;
+
+    fetch("{% url 'tpv_shop:arqueo_automatico' %}", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+      },
+      body: `efectivo_inicial=${efectivoInicial}`
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.error) throw new Error(data.error);
+
+      arqueoData = data;
+      document.getElementById('efectivo-teorico').textContent = `${data.efectivo_final.toFixed(2)} €`;
+      document.getElementById('efectivo-contado').textContent = `${data.efectivo_inicial.toFixed(2)} €`;
+      document.getElementById('total-ventas-efectivo').textContent = `${data.efectivo_final.toFixed(2)} €`;
+      document.getElementById('total-ventas-tarjeta').textContent = `${data.tarjeta_total.toFixed(2)} €`;
+      document.getElementById('total-ventas-bizum').textContent = `${data.bizum_total.toFixed(2)} €`;
+      document.getElementById('total-ventas-dia').textContent = `${data.total_ventas.toFixed(2)} €`;
+
+      const diferencia = data.efectivo_final - data.efectivo_inicial;
+      const diffEl = document.getElementById('diferencia');
+      diffEl.textContent = `${Math.abs(diferencia).toFixed(2)} €`;
+      diffEl.classList.toggle('diferencia', diferencia < 0);
+      diffEl.classList.toggle('positive', diferencia > 0);
+      guardarBtn.disabled = false;
+    })
+    .catch(err => {
+      console.error(err);
+      alert(err.message || 'Error al calcular el arqueo');
+    })
+    .finally(() => {
+      loadingDiv.style.display = 'none';
+      calcularBtn.disabled = false;
+    });
+  });
+
+  guardarBtn.addEventListener('click', function() {
+    arqueoData.observaciones = document.getElementById('observaciones').value;
+
+    fetch("{% url 'tpv_shop:guardar_arqueo_auto' %}", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+      },
+      body: JSON.stringify(arqueoData)
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.status === 'ok') {
+        window.location.href = data.redirect_url || "{% url 'tpv_shop:caja_arqueo_list' %}";
+      } else {
+        throw new Error('Error al guardar');
+      }
+    })
+    .catch(err => {
+      alert(err.message || 'Error al guardar');
+    });
+  });
+});
+</script>
+{% endblock %}

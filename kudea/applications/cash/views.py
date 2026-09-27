@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.utils.timezone import localdate
 from datetime import timedelta
 from applications.home.models import Venta, DetalleVenta
-from .models import AperturaCaja, Caja
+from .models import AperturaCaja, Caja, CierreCaja
 from .forms import AperturaCajaForm
 
 
@@ -15,7 +15,7 @@ from .forms import AperturaCajaForm
 # ==================== VISTA PRINCIPAL =======================
 # ============================================================
 
-class CashIndexView(TemplateView):
+class CashIndexView(LoginRequiredMixin, TemplateView):
 
     template_name = "cash/index.html"
 
@@ -158,7 +158,7 @@ class CashIndexView(TemplateView):
 
 
         # ============================================================
-        # ==================== 5️⃣ PERIODO ACTUAL ====================
+        # ==================== 5️⃣ PERÍODO ACTUAL ====================
         # ============================================================
 
         context["apertura_hoy"] = apertura_activa
@@ -229,9 +229,6 @@ class AperturaCajaView(LoginRequiredMixin, View):
                 'monto': str(cierre.efectivo_retirado),
             }
 
-        # Últimos 7 días de cierres para cada caja
-        from applications.cash.models import CierreCaja
-        from datetime import timedelta
         hace_7_dias = localdate() - timedelta(days=7)
         cierres_recientes = CierreCaja.objects.filter(
             fecha__gte=hace_7_dias
@@ -249,9 +246,16 @@ class AperturaCajaView(LoginRequiredMixin, View):
         })
 
     def post(self, request, *args, **kwargs):
-        # Si ya tiene una apertura abierta, no permitir duplicar
+        import logging
+        _log = logging.getLogger("apertura_debug")
+        _log.warning("POST user=%s keys=%s caja_id=%s pin=%s fondo=%s",
+                      request.user, list(request.POST.keys()),
+                      request.POST.get("caja_id"), request.POST.get("pin_apertura"),
+                      request.POST.get("fondo_inicial"))
+
         apertura = self._apertura_hoy(request.user)
         if apertura:
+            _log.warning("ALREADY_OPEN -> redirect tpv_general")
             messages.warning(request, "Ya existe una apertura de caja abierta para hoy.")
             return redirect("home_app:tpv_general")
 
@@ -261,43 +265,43 @@ class AperturaCajaView(LoginRequiredMixin, View):
             caja = Caja.objects.filter(id=caja_id, activa=True).first()
 
         if not caja:
-            messages.error(request, "Selecciona una caja válida.")
+            _log.warning("NO_CAJA_VALID -> redirect apertura_caja")
+            messages.error(request, "Selecciona una caja valida.")
             return redirect("cash_app:apertura_caja")
 
-        # Bloquear si la caja ya tiene una apertura abierta o pausada por OTRO usuario
         apertura_existente = AperturaCaja.objects.filter(
             caja=caja,
             estado__in=['abierta', 'pausada']
         ).exclude(usuario=request.user).first()
         if apertura_existente:
+            _log.warning("CAJA_IN_USE by %s", apertura_existente.usuario.username)
             estado_txt = "abierta" if apertura_existente.estado == "abierta" else "en pausa"
-            messages.error(request, f"La caja '{caja.nombre}' ya está {estado_txt} por {apertura_existente.usuario.username}. No puedes abrirla hasta que se cierre.")
+            messages.error(request, f"La caja '{caja.nombre}' ya esta {estado_txt} por {apertura_existente.usuario.username}. No puedes abrirla hasta que se cierre.")
             return redirect("cash_app:apertura_caja")
 
-        # Reanudar si el mismo usuario tiene una apertura pausada en esta caja
         apertura_pausada = AperturaCaja.objects.filter(
             usuario=request.user,
             caja=caja,
             estado="pausada"
         ).first()
         if apertura_pausada:
-            # Validar PIN también para reanudar
             pin_correcto = caja.pin if caja.pin else "1234"
             pin_usuario = request.POST.get('pin_apertura', '').strip()
             if pin_usuario != pin_correcto:
+                _log.warning("PIN_WRONG_RESUME got=%s expected=%s", pin_usuario, pin_correcto)
                 messages.error(request, f"PIN incorrecto para reanudar '{caja.nombre}'.")
                 return redirect("cash_app:apertura_caja")
             apertura_pausada.estado = "abierta"
             apertura_pausada.save()
+            _log.warning("RESUMED -> redirect tpv_general")
             messages.success(request, f"Turno reanudado en '{caja.nombre}'.")
             return redirect("home_app:tpv_general")
 
-        # Validar PIN contra la caja seleccionada
         pin_correcto = caja.pin if caja.pin else "1234"
         pin_usuario = request.POST.get('pin_apertura', '').strip()
         if pin_usuario != pin_correcto:
+            _log.warning("PIN_WRONG got=%s expected=%s", pin_usuario, pin_correcto)
             messages.error(request, f"El PIN de seguridad para '{caja.nombre}' es incorrecto.")
-            
             form = AperturaCajaForm(request.POST)
             ctx = self._build_error_context(request)
             ctx.update({"form": form, "apertura_activa": None, "apertura_pausada": None})
@@ -312,10 +316,11 @@ class AperturaCajaView(LoginRequiredMixin, View):
             ap.save()
             from applications.home.models import ConfiguracionTPV
             moneda = ConfiguracionTPV.objects.first().moneda if ConfiguracionTPV.objects.exists() else "C$"
+            _log.warning("SUCCESS apertura_id=%s -> redirect tpv_general", ap.id)
             messages.success(request, f"Caja '{caja.nombre}' abierta con fondo inicial de {ap.fondo_inicial} {moneda}")
             return redirect("home_app:tpv_general")
 
-        # Si el form no es válido
+        _log.warning("FORM_INVALID errors=%s", form.errors)
         ctx = self._build_error_context(request)
         ctx.update({"form": form, "apertura_activa": None, "apertura_pausada": None})
         return render(request, self.template_name, ctx)

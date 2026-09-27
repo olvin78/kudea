@@ -108,7 +108,11 @@ class HomeSalesFlowTests(TestCase):
         producto_a.refresh_from_db()
         producto_b.refresh_from_db()
 
-        self.assertEqual(venta.total, Decimal("56.10"))
+        # Los precios guardados son PVP con IVA incluido: el total es la suma de líneas
+        self.assertEqual(venta.total, Decimal("50.00"))
+        # Base imponible + cuota de IVA = total (el IVA está dentro de los 50,00)
+        self.assertEqual(venta.iva, Decimal("5.37"))
+        self.assertEqual(venta.subtotal + venta.iva, venta.total)
         self.assertEqual(producto_a.stock, 4)
         self.assertEqual(producto_b.stock, 6)
         self.assertEqual(DetalleVenta.objects.filter(venta=venta).count(), 2)
@@ -123,6 +127,64 @@ class HomeSalesFlowTests(TestCase):
         movimiento = Movimiento.objects.get(external_ref=f"tpv:venta:{venta.id}")
         self.assertEqual(movimiento.cuenta.nombre, "Caja")
         self.assertEqual(movimiento.metodo_pago, Movimiento.MetodoPago.EFECTIVO)
+
+    def test_anular_venta_devuelve_stock_y_no_duplica(self):
+        from applications.stock.models import Movement
+
+        producto = Producto.objects.create(
+            nombre="Producto Devolución",
+            precio=Decimal("10.00"),
+            porcentaje_iva=Decimal("21.00"),
+            stock=4,
+            stock_minimo=1,
+        )
+        venta = Venta.objects.create(
+            codigo="VT-TEST-ANULAR",
+            usuario=self.user,
+            metodo_pago=self.cash_method,
+            subtotal=Decimal("8.26"),
+            iva=Decimal("1.74"),
+            total=Decimal("10.00"),
+            estado="completada",
+        )
+        DetalleVenta.objects.create(
+            venta=venta,
+            producto=producto,
+            cantidad=2,
+            precio_unitario=Decimal("10.00"),
+            total=Decimal("20.00"),
+        )
+        # Simulamos que la venta ya descontó el stock: 4 → 2
+        producto.stock = 2
+        producto.save(update_fields=["stock"])
+
+        # 1ª anulación → devuelve las 2 unidades (2 → 4)
+        response = self.client.post(f"/home/venta/{venta.id}/anular/")
+        self.assertEqual(response.status_code, 302)
+        producto.refresh_from_db()
+        venta.refresh_from_db()
+        self.assertEqual(producto.stock, 4)
+        self.assertEqual(venta.estado, "cancelada")
+
+        # 2ª anulación → NO devuelve otra vez (evita duplicar stock)
+        self.client.post(f"/home/venta/{venta.id}/anular/")
+        producto.refresh_from_db()
+        self.assertEqual(producto.stock, 4)
+
+        # Queda registrado el movimiento de devolución
+        entradas = Movement.objects.filter(producto=producto, tipo="entrada")
+        self.assertEqual(entradas.count(), 1)
+        self.assertIn("Devolución por anulación", entradas.first().observaciones)
+
+        # El dinero también vuelve a caja: un GASTO de devolución (y sólo uno)
+        from applications.cashflow.models import Movimiento as CashMov
+        devoluciones = CashMov.objects.filter(
+            tipo=CashMov.Tipo.GASTO,
+            concepto__contains="Devolución por anulación",
+        )
+        self.assertEqual(devoluciones.count(), 1)
+        self.assertEqual(devoluciones.first().cantidad, Decimal("10.00"))
+        self.assertEqual(devoluciones.first().cuenta.nombre, "Caja")
 
     def test_guardar_venta_rechaza_stock_insuficiente(self):
         producto = Producto.objects.create(
@@ -191,7 +253,8 @@ class HomeSalesFlowTests(TestCase):
         cierre = CierreCaja.objects.get(tipo="diario")
         apertura = AperturaCaja.objects.get(usuario=self.user)
 
-        self.assertEqual(cierre.total_ventas, Decimal("12.10"))
-        self.assertEqual(cierre.efectivo_esperado, Decimal("112.10"))
-        self.assertEqual(cierre.efectivo_retirado, Decimal("12.10"))
+        # El total de la venta (10,00 con IVA incluido) es el que entra en caja
+        self.assertEqual(cierre.total_ventas, Decimal("10.00"))
+        self.assertEqual(cierre.efectivo_esperado, Decimal("110.00"))
+        self.assertEqual(cierre.efectivo_retirado, Decimal("10.00"))
         self.assertEqual(apertura.estado, "cerrada")

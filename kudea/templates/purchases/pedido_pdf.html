@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Pedido de Reposición KUDEA</title>
+    <style>
+        /* ============ ESTILO PDF (mismo lenguaje que informe de inventario) ============ */
+        @page { size: A4; margin: 1.6cm; }
+
+        body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 10pt; line-height: 1.45; color: #2c3e50; }
+
+        .header { text-align: center; margin-bottom: 24px; border-bottom: 2px solid #457B9D; padding-bottom: 14px; }
+        .header h1 { color: #1D3557; font-size: 22pt; font-weight: 600; margin: 0; letter-spacing: 1px; }
+        .header h1 span { color: #457B9D; font-weight: 300; font-size: 13pt; display: block; margin-top: 5px; }
+        .header p { color: #6c757d; font-size: 9pt; margin: 8px 0 0; }
+
+        .fecha { color: #6c757d; font-size: 9pt; text-align: right; border-bottom: 1px dashed #dee2e6; padding-bottom: 8px; margin-bottom: 16px; }
+
+        .resumen { background: #f8f9fa; padding: 12px 15px; border-radius: 8px; margin-bottom: 22px; border-left: 4px solid #457B9D; font-size: 9.5pt; }
+
+        /* Bloque por proveedor */
+        .grupo { margin-bottom: 22px; page-break-inside: avoid; }
+        .grupo h2 {
+            background: #1D3557; color: #fff; font-size: 11pt; margin: 0;
+            padding: 8px 14px; border-radius: 6px 6px 0 0; letter-spacing: .5px;
+        }
+        .grupo h2 .contacto { float: right; font-weight: 300; font-size: 9pt; color: #a8dadc; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 9.5pt; }
+        thead th { background: #eef4f7; color: #1D3557; text-align: left; padding: 7px 10px; border-bottom: 1px solid #cbd5e1; font-size: 8.5pt; text-transform: uppercase; letter-spacing: .5px; }
+        tbody td { padding: 7px 10px; border-bottom: 1px solid #eef2f5; }
+        tbody tr:nth-child(even) { background: #fbfcfd; }
+        .num { text-align: center; width: 70px; }
+        .faltan { text-align: center; font-weight: 700; color: #e63946; }
+        .cat { color: #6c757d; font-size: 8.5pt; }
+        tfoot td { padding: 7px 10px; font-weight: 700; background: #f8f9fa; }
+
+        .sin-prov h2 { background: #64748b; }
+
+        .pie { margin-top: 28px; padding-top: 10px; border-top: 1px dashed #dee2e6; font-size: 8.5pt; color: #94a3b8; text-align: center; }
+    </style>
+</head>
+<body>
+
+<!-- ============ CABECERA DEL PEDIDO ============ -->
+<div class="header">
+    <h1>PEDIDO DE REPOSICIÓN
+        <span>Productos por debajo del stock mínimo</span>
+    </h1>
+    <p>Una línea por producto · "A pedir" = stock mínimo − stock actual</p>
+</div>
+
+<div class="fecha">Fecha: {{ fecha|date:"d/m/Y H:i" }}</div>
+
+<div class="resumen">
+    <strong>{{ total_lineas }}</strong> producto(s) bajo mínimo ·
+    repartidos en <strong>{{ total_proveedores }}</strong> proveedor(es).
+    Marca las cantidades y confirma cada línea con el botón
+    "Nueva compra" de la pantalla de Compras.
+</div>
+
+{% if not grupos %}
+<p style="text-align:center; color:#6c757d; padding: 30px 0;">No hay productos por debajo de su stock mínimo. Nada que pedir.</p>
+{% endif %}
+
+<!-- ============ UN BLOQUE POR PROVEEDOR ============ -->
+{% for proveedor, lineas in grupos %}
+<div class="grupo {% if not proveedor %}sin-prov{% endif %}">
+    <h2>
+        {% if proveedor %}{{ proveedor.nombre }}{% else %}Sin proveedor asignado{% endif %}
+        <span class="contacto">
+            {% if proveedor %}
+                {% if proveedor.telefono %}☎ {{ proveedor.telefono }}{% endif %}
+                {% if proveedor.email %} · ✉ {{ proveedor.email }}{% endif %}
+                {% if proveedor.nit %} · NIT {{ proveedor.nit }}{% endif %}
+            {% else %}Asígales proveedor en Productos para agrupar el pedido{% endif %}
+        </span>
+    </h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th class="num">Stock</th>
+                <th class="num">Mínimo</th>
+                <th class="num">A pedir</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for l in lineas %}
+            <tr>
+                <td>
+                    {{ l.producto.nombre }}
+                    <div class="cat">{{ l.producto.categoria.nombre|default:"Sin categoría" }} · {{ l.producto.codigo_barras|default:"—" }}</div>
+                </td>
+                <td class="num">{{ l.producto.stock }}</td>
+                <td class="num">{{ l.producto.stock_minimo }}</td>
+                <td class="faltan">{{ l.faltan }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3">Total a pedir ({{ lineas|length }} artículo{% if lineas|length != 1 %}s{% endif %})</td>
+                <td class="faltan">{{ lineas|length }}</td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+{% endfor %}
+
+<div class="pie">Documento generado automáticamente por KUDEA · Módulo de Compras y Proveedores</div>
+
+</body>
+</html>

@@ -19,4 +19,5 @@ services:
       - ./db.sqlite3:/app/db.sqlite3
       - ./media:/app/media
       - ./staticfiles:/app/staticfiles
+      - ./templates:/app/templates
     restart: unless-stopped

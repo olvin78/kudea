@@ -1,0 +1,114 @@
+{% extends 'home/base.html' %}
+
+{# ============================================================
+   FORMULARIO DE PROVEEDOR  →  /compras/proveedores/nuevo/
+                             →  /compras/proveedores/<id>/editar/
+   Alta y edición de la ficha del proveedor
+   ============================================================ #}
+
+{% block title %}KUDEA - {{ title }}{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+  {% include 'purchases/_purchases_styles.html' %}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="k-wrap">
+
+  <!-- ============ CABECERA ============ -->
+  <div class="k-header-section">
+    <div class="k-title-group">
+      <span class="k-eyebrow"><span class="dot"></span> Proveedores · {% if es_edicion %}Edición{% else %}Alta{% endif %}</span>
+      <h1>{{ title }}</h1>
+      <p>{% if es_edicion %}Actualiza los datos de contacto y condiciones del proveedor.{% else %}Ficha básica para identificar quién te vende y cómo contactarle.{% endif %}</p>
+    </div>
+    <a href="{% url 'purchases_app:proveedor_list' %}" class="k-btn-action k-btn-outline">
+      <i class="fas fa-arrow-left"></i> Volver
+    </a>
+  </div>
+
+  <!-- ============ FORMULARIO ============ -->
+  <div class="k-form-card">
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+      <div class="k-estado k-estado-cancelada" style="margin-bottom: 18px;">
+        {{ form.non_field_errors|join:", " }}
+      </div>
+      {% endif %}
+
+      <div class="k-form-grid">
+        <!-- Nombre y NIT -->
+        <div class="k-form-field">
+          <label class="k-form-label" for="{{ form.nombre.id_for_label }}">Nombre *</label>
+          {{ form.nombre }}
+          {{ form.nombre.errors }}
+        </div>
+        <div class="k-form-field">
+          <label class="k-form-label" for="{{ form.nit.id_for_label }}">NIT / NIF / CIF</label>
+          {{ form.nit }}
+          {{ form.nit.errors }}
+        </div>
+
+        <!-- Contacto y teléfono -->
+        <div class="k-form-field">
+          <label class="k-form-label" for="{{ form.contacto.id_for_label }}">Persona de contacto</label>
+          {{ form.contacto }}
+          {{ form.contacto.errors }}
+        </div>
+        <div class="k-form-field">
+          <label class="k-form-label" for="{{ form.telefono.id_for_label }}">Teléfono</label>
+          {{ form.telefono }}
+          {{ form.telefono.errors }}
+        </div>
+
+        <!-- Email y días de entrega -->
+        <div class="k-form-field">
+          <label class="k-form-label" for="{{ form.email.id_for_label }}">Email de pedidos</label>
+          {{ form.email }}
+          {{ form.email.errors }}
+        </div>
+        <div class="k-form-field">
+          <label class="k-form-label" for="{{ form.dias_entrega.id_for_label }}">Días de entrega</label>
+          {{ form.dias_entrega }}
+          {{ form.dias_entrega.errors }}
+        </div>
+
+        <!-- Dirección -->
+        <div class="k-form-field full">
+          <label class="k-form-label" for="{{ form.direccion.id_for_label }}">Dirección de entrega</label>
+          {{ form.direccion }}
+          {{ form.direccion.errors }}
+        </div>
+
+        <!-- Notas -->
+        <div class="k-form-field full">
+          <label class="k-form-label" for="{{ form.notas.id_for_label }}">Notas / condiciones</label>
+          {{ form.notas }}
+          {{ form.notas.errors }}
+        </div>
+
+        <!-- Activo -->
+        <div class="k-form-field full">
+          <label class="k-form-label" for="{{ form.activo.id_for_label }}">
+            {{ form.activo }} Proveedor activo (aparece en los formularios de compra)
+          </label>
+        </div>
+      </div>
+
+      <!-- ============ ACCIONES ============ -->
+      <div class="k-form-actions">
+        <a href="{% url 'purchases_app:proveedor_list' %}" class="k-btn-action k-btn-outline">Cancelar</a>
+        <button type="submit" class="k-btn-action k-btn-primary">
+          <i class="fas fa-save"></i> {% if es_edicion %}Guardar cambios{% else %}Crear proveedor{% endif %}
+        </button>
+      </div>
+    </form>
+  </div>
+
+</div>
+{% endblock %}

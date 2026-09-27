@@ -1,0 +1,126 @@
+{% extends 'home/base.html' %}
+
+{# ============================================================
+   DETALLE DE COMPRA  →  /compras/<id>/
+   Líneas + totales + acciones (recibir / cancelar)
+   ============================================================ #}
+
+{% block title %}KUDEA - {{ title }}{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+  {% include 'purchases/_purchases_styles.html' %}
+  /* Caja de totales del detalle */
+  .k-totales { display: flex; justify-content: flex-end; margin-top: 20px; }
+  .k-totales-box { min-width: 300px; background: rgba(255,255,255,.85); border: 1px solid rgba(168,218,220,.6);
+    border-radius: 18px; padding: 18px 22px; }
+  .k-totales-row { display: flex; justify-content: space-between; padding: 7px 0; font-size: .95rem; }
+  .k-totales-row.grand { border-top: 2px dashed #cfe3ea; margin-top: 6px; padding-top: 12px;
+    font-weight: 900; font-size: 1.2rem; color: var(--k-primary); }
+  .k-acciones { display: flex; gap: 12px; justify-content: flex-end; margin-top: 22px; flex-wrap: wrap; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="k-wrap">
+
+  <!-- ============ CABECERA ============ -->
+  <div class="k-header-section">
+    <div class="k-title-group">
+      <span class="k-eyebrow">
+        <span class="dot {% if compra.estado == 'borrador' %}warn{% endif %}"></span>
+        Compra · {{ compra.get_estado_display }}
+      </span>
+      <h1>{{ compra.numero }}</h1>
+      <p>
+        {{ compra.proveedor.nombre }} · {{ compra.fecha|date:"d/m/Y" }}
+        {% if compra.recibida_en %} · recibida el {{ compra.recibida_en|date:"d/m/Y H:i" }}{% endif %}
+      </p>
+    </div>
+    <a href="{% url 'purchases_app:compra_list' %}" class="k-btn-action k-btn-outline">
+      <i class="fas fa-arrow-left"></i> Volver
+    </a>
+  </div>
+
+  {% if compra.notas %}
+  <div class="k-form-card" style="margin-bottom: 20px; padding: 18px 22px;">
+    <span class="k-form-label">Notas</span>
+    <div style="margin-top: 6px;">{{ compra.notas|linebreaksbr }}</div>
+  </div>
+  {% endif %}
+
+  <!-- ============ LÍNEAS ============ -->
+  <div class="k-table-card">
+    <table class="k-table">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th class="text-center">Cant.</th>
+          <th class="text-end">Precio compra</th>
+          <th class="text-center">IVA</th>
+          <th class="text-end">Base</th>
+          <th class="text-end">Cuota IVA</th>
+          <th class="text-end">Total línea</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td style="font-weight: 700;">{{ item.producto.nombre }}</td>
+          <td class="text-center">{{ item.cantidad }}</td>
+          <td class="text-end">{{ item.precio_unitario|floatformat:2 }} €</td>
+          <td class="text-center">{{ item.porcentaje_iva|floatformat:0 }}%</td>
+          <td class="text-end">{{ item.subtotal|floatformat:2 }} €</td>
+          <td class="text-end">{{ item.iva_importe|floatformat:2 }} €</td>
+          <td class="text-end" style="font-weight: 800;">{{ item.total|floatformat:2 }} €</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7">
+            <div class="k-empty">
+              <i class="fas fa-box-open"></i>
+              <p>Esta compra no tiene líneas</p>
+              <div class="k-empty-hint">No se puede recibir mercancía sin productos.</div>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ============ TOTALES (base + IVA = total) ============ -->
+  <div class="k-totales">
+    <div class="k-totales-box">
+      <div class="k-totales-row"><span>Base imponible</span><strong>{{ compra.subtotal|floatformat:2 }} €</strong></div>
+      <div class="k-totales-row"><span>IVA soportado</span><strong>{{ compra.iva|floatformat:2 }} €</strong></div>
+      <div class="k-totales-row grand"><span>Total compra</span><span>{{ compra.total|floatformat:2 }} €</span></div>
+    </div>
+  </div>
+
+  <!-- ============ ACCIONES SEGÚN ESTADO ============ -->
+  <div class="k-acciones">
+    {% if compra.estado == 'borrador' %}
+      <form method="post" action="{% url 'purchases_app:compra_cancelar' compra.pk %}" style="display: inline;">
+        {% csrf_token %}
+        <button type="submit" class="k-btn-action k-btn-outline" onclick="return confirm('¿Cancelar la compra {{ compra.numero }}? No se tocará el stock.')">
+          <i class="fas fa-ban"></i> Cancelar compra
+        </button>
+      </form>
+      <form method="post" action="{% url 'purchases_app:compra_recibir' compra.pk %}" style="display: inline;">
+        {% csrf_token %}
+        <button type="submit" class="k-btn-action k-btn-primary" {% if not items %}disabled{% endif %}
+                onclick="return confirm('¿Recibir la mercancía de {{ compra.numero }}? El stock de los productos subirá.')">
+          <i class="fas fa-truck-arrow-down"></i> Recibir mercancía
+        </button>
+      </form>
+    {% else %}
+      <span class="k-estado k-estado-{{ compra.estado }}" style="font-size: .85rem; padding: 10px 18px;">
+        Compra {{ compra.get_estado_display|lower }}
+      </span>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

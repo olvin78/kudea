@@ -1,0 +1,207 @@
+{% extends 'home/base.html' %}
+
+{# ============================================================
+   INFORME DE COMPRAS  →  /compras/informes/
+   Filtros (periodo + proveedor) + gasto por proveedor
+   + margen por producto (coste de compra vs precio de venta)
+   ============================================================ #}
+
+{% block title %}KUDEA - Informe de compras{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+  {% include 'purchases/_purchases_styles.html' %}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="k-wrap">
+
+  <!-- ============ CABECERA ============ -->
+  <div class="k-header-section">
+      <div class="k-title-group">
+        <span class="k-eyebrow"><span class="dot"></span> Compras · Informes</span>
+        <h1>Informe de compras</h1>
+        <p>Gasto por proveedor y margen por producto en el periodo seleccionado.</p>
+      </div>
+      <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'purchases_app:compra_list' %}" class="k-btn-action k-btn-outline">
+          <i class="fas fa-arrow-left"></i> Volver
+        </a>
+      </div>
+  </div>
+
+  <!-- ============ FILTROS (GET) ============ -->
+  <form method="get" class="k-form-card" style="margin-bottom: 24px;">
+    <div class="k-form-grid">
+      <div class="k-form-field third">
+        <label class="k-form-label" for="id_desde">Desde</label>
+        <input type="date" id="id_desde" name="desde" value="{{ desde }}" class="k-form-input">
+      </div>
+      <div class="k-form-field third">
+        <label class="k-form-label" for="id_hasta">Hasta</label>
+        <input type="date" id="id_hasta" name="hasta" value="{{ hasta }}" class="k-form-input">
+      </div>
+      <div class="k-form-field third">
+        <label class="k-form-label" for="id_proveedor">Proveedor</label>
+        <select id="id_proveedor" name="proveedor" class="k-form-input">
+          <option value="">— Todos —</option>
+          {% for p in proveedores %}
+          <option value="{{ p.pk }}" {% if proveedor_id == p.pk|stringformat:'s' %}selected{% endif %}>{{ p.nombre }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="k-form-actions">
+      <button type="submit" class="k-btn-action k-btn-primary">
+        <i class="fas fa-filter"></i> Aplicar
+      </button>
+    </div>
+  </form>
+
+  <!-- ============ KPIs ============ -->
+  <div class="k-stats-row" style="margin-top: 0; margin-bottom: 30px;">
+    <div class="k-stat-card">
+      <i class="fas fa-file-invoice"></i>
+      <span class="k-stat-label">Compras en el periodo</span>
+      <span class="k-stat-value">{{ totales.n|default:0 }}</span>
+    </div>
+    <div class="k-stat-card">
+      <i class="fas fa-coins"></i>
+      <span class="k-stat-label">Base imponible</span>
+      <span class="k-stat-value">{{ totales.base|default_if_none:"0"|floatformat:2 }} €</span>
+    </div>
+    <div class="k-stat-card">
+      <i class="fas fa-percent"></i>
+      <span class="k-stat-label">IVA soportado</span>
+      <span class="k-stat-value">{{ totales.iva|default_if_none:"0"|floatformat:2 }} €</span>
+    </div>
+    <div class="k-stat-card">
+      <i class="fas fa-euro-sign"></i>
+      <span class="k-stat-label">Gasto total (base + IVA)</span>
+      <span class="k-stat-value">{{ totales.total|default_if_none:"0"|floatformat:2 }} €</span>
+    </div>
+  </div>
+
+  <!-- ============ 6a) GASTO POR PROVEEDOR ============ -->
+  <div class="k-table-card" style="max-height: none; margin-bottom: 30px;">
+    <div style="padding: 18px 25px; border-bottom: 1px solid #edf2f7;">
+      <h2 style="margin: 0; font-size: 1.1rem; color: var(--k-primary);">
+        <i class="fas fa-truck"></i> Gasto por proveedor
+      </h2>
+    </div>
+    {% if por_proveedor %}
+    <table class="k-table">
+      <thead>
+        <tr>
+          <th>Proveedor</th>
+          <th class="text-center">Compras</th>
+          <th class="text-center">Recibidas</th>
+          <th class="text-end">Base</th>
+          <th class="text-end">IVA</th>
+          <th class="text-end">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for fila in por_proveedor %}
+        <tr>
+          <td style="font-weight: 700;">{{ fila.proveedor__nombre }}</td>
+          <td class="text-center">{{ fila.n_compras }}</td>
+          <td class="text-center">{{ fila.n_recibidas }}</td>
+          <td class="text-end">{{ fila.base|floatformat:2 }} €</td>
+          <td class="text-end">{{ fila.iva|floatformat:2 }} €</td>
+          <td class="text-end" style="font-weight: 800; color: var(--k-primary);">{{ fila.total|floatformat:2 }} €</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td style="font-weight: 800;">TOTAL</td>
+          <td class="text-center" style="font-weight: 800;">{{ totales.n|default:0 }}</td>
+          <td></td>
+          <td class="text-end" style="font-weight: 800;">{{ totales.base|default_if_none:"0"|floatformat:2 }} €</td>
+          <td class="text-end" style="font-weight: 800;">{{ totales.iva|default_if_none:"0"|floatformat:2 }} €</td>
+          <td class="text-end" style="font-weight: 800;">{{ totales.total|default_if_none:"0"|floatformat:2 }} €</td>
+        </tr>
+      </tfoot>
+    </table>
+    {% else %}
+    <div class="k-empty">
+      <i class="fas fa-inbox"></i>
+      <p>No hay compras en este periodo.</p>
+      <p class="k-empty-hint">Cambia las fechas o registra una compra nueva.</p>
+      <a href="{% url 'purchases_app:compra_create' %}" class="k-btn-action k-btn-primary">
+        <i class="fas fa-plus"></i> Nueva compra
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ============ 6b) MARGEN POR PRODUCTO ============ -->
+  <div class="k-table-card" style="max-height: none; margin-bottom: 30px;">
+    <div style="padding: 18px 25px; border-bottom: 1px solid #edf2f7;" class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <h2 style="margin: 0; font-size: 1.1rem; color: var(--k-primary);">
+        <i class="fas fa-chart-line"></i> Margen por producto comprado
+      </h2>
+      <span class="k-estado k-estado-recibida">Margen total {{ margen_total_pct|floatformat:1 }} %</span>
+    </div>
+
+    {% if productos %}
+    <table class="k-table">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th class="text-center">Unidades</th>
+          <th class="text-center">Compras</th>
+          <th class="text-end">Coste medio</th>
+          <th class="text-end">Precio base (venta)</th>
+          <th class="text-end">Margen / ud.</th>
+          <th class="text-center">Margen %</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in productos %}
+        <tr>
+          <td style="font-weight: 700;">{{ p.nombre }}</td>
+          <td class="text-center">{{ p.unidades }}</td>
+          <td class="text-center">{{ p.n_compras }}</td>
+          <td class="text-end">{{ p.costo_medio|floatformat:2 }} €</td>
+          <td class="text-end">{{ p.precio_base|floatformat:2 }} €</td>
+          <td class="text-end" style="font-weight: 700; color: {% if p.margen_unit < 0 %}#e63946{% elif p.margen_unit < 1 %}#b45309{% else %}#047857{% endif %};">
+            {{ p.margen_unit|floatformat:2 }} €
+          </td>
+          <td class="text-center">
+            <span class="k-estado {% if p.margen_pct < 0 %}k-estado-cancelada{% elif p.margen_pct < 10 %}k-estado-borrador{% else %}k-estado-recibida{% endif %}">
+              {{ p.margen_pct|floatformat:1 }} %
+            </span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td style="font-weight: 800;">TOTAL ({{ unidades_totales }} uds.)</td>
+          <td class="text-center" style="font-weight: 800;">{{ unidades_totales }}</td>
+          <td colspan="4"></td>
+          <td class="text-center" style="font-weight: 800;">{{ margen_total_pct|floatformat:1 }} %</td>
+        </tr>
+      </tfoot>
+    </table>
+    <p style="font-size: .82rem; color: var(--k-muted); padding: 14px 25px; margin: 0;">
+      <i class="fas fa-info-circle"></i>
+      <strong>Coste medio</strong> = lo pagado por unidad (sin IVA) en las compras del periodo.
+      <strong>Precio base</strong> = PVP actual sin IVA (los PVP llevan IVA incluido).
+      <strong>Margen %</strong> = (precio base − coste medio) ÷ precio base.
+    </p>
+    {% else %}
+    <div class="k-empty">
+      <i class="fas fa-chart-line"></i>
+      <p>No hay líneas de compra en este periodo.</p>
+      <p class="k-empty-hint">El margen aparece cuando compras productos.</p>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

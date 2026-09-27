@@ -1,0 +1,189 @@
+{% extends 'tpv/base_tpv.html' %}
+{% load static %}
+
+{% block head %}
+<style>
+:root {
+  --kudea-primary: #2C3E50;
+  --kudea-secondary: #499ecf;
+  --kudea-accent: #3498DB;
+  --kudea-dark: #1A252F;
+  --kudea-light: #ECF0F1;
+  --kudea-text: #2C3E50;
+  --kudea-hover: #53809e;
+}
+
+.comandas-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.comandas-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--kudea-accent);
+}
+
+.comandas-header h2 {
+  color: var(--kudea-primary);
+  font-weight: 600;
+  margin: 0;
+}
+
+.btn-group {
+  display: flex;
+  gap: 1rem;
+}
+
+.btn {
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.btn-primary {
+  background-color: var(--kudea-accent);
+  color: white;
+  border: 1px solid var(--kudea-accent);
+}
+
+.btn-primary:hover {
+  background-color: var(--kudea-secondary);
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+}
+
+.btn-secondary {
+  background-color: var(--kudea-primary);
+  color: white;
+  border: 1px solid var(--kudea-primary);
+}
+
+.btn-secondary:hover {
+  background-color: var(--kudea-dark);
+  transform: translateY(-2px);
+}
+
+.comandas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.comanda-card {
+  background: white;
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  border-left: 4px solid var(--kudea-accent);
+}
+
+.comanda-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.comanda-card h5 {
+  color: var(--kudea-primary);
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.comanda-card p {
+  color: var(--kudea-text);
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.comanda-card .btn {
+  margin-top: 1rem;
+  width: 100%;
+  justify-content: center;
+}
+
+.empty-comandas {
+  text-align: center;
+  padding: 3rem;
+  color: var(--kudea-text);
+}
+
+.empty-comandas i {
+  font-size: 2.5rem;
+  color: var(--kudea-secondary);
+  margin-bottom: 1rem;
+}
+
+.empty-comandas p {
+  font-size: 1.1rem;
+  margin-top: 1rem;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-left: 0.5rem;
+}
+
+.status-abierta {
+  background-color: #28a745;
+  color: white;
+}
+
+.status-cerrada {
+  background-color: #6c757d;
+  color: white;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="comandas-container container">
+  <div class="comandas-header">
+    <h2>Listado de Comandas</h2>
+    <div class="btn-group">
+      <a href="{% url 'tpv_app:create_comanda' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Nueva Comanda
+      </a>
+      <a href="{% url 'tpv_app:tpv_index' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Regresar
+      </a>
+    </div>
+  </div>
+
+  {% if comandas %}
+  <div class="comandas-grid">
+    {% for comanda in comandas %}
+    <div class="comanda-card">
+      <h5>Mesa: {{ comanda.mesa.nombre }}</h5>
+      <p>Estado: {{ comanda.get_estado_display }} <span class="status-badge status-{{ comanda.estado }}">{{ comanda.get_estado_display }}</span></p>
+      <p><i class="far fa-calendar-alt"></i> {{ comanda.fecha_creacion|date:"d/m/Y H:i" }}</p>
+      <p><i class="fas fa-euro-sign"></i> {{ comanda.total }} €</p>
+<a href="{% url 'tpv_app:mesa_productos' comanda.mesa.id categoria.id %}" class="btn btn-primary">
+
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-comandas">
+    <i class="fas fa-clipboard-list"></i>
+    <p>No hay comandas registradas</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -286,6 +286,7 @@
         {% csrf_token %}
         {% if fecha_inicio_raw %}<input type="hidden" name="fecha_inicio_raw" value="{{ fecha_inicio_raw }}">{% endif %}
         {% if fecha_fin_raw %}<input type="hidden" name="fecha_fin_raw" value="{{ fecha_fin_raw }}">{% endif %}
+        {% if caja_id_sel %}<input type="hidden" name="caja_id" value="{{ caja_id_sel }}">{% endif %}
         <button type="submit" class="k-btn k-btn-success" onclick="return confirm('¿Confirmas guardar este informe de cierre?');">
             💾 Guardar Cierre
         </button>

@@ -1,36 +1,60 @@
 from django.core.management.base import BaseCommand
 from django.utils import timezone
-from applications.cash.models import AperturaCaja
-from applications.home.views import registrar_cierre_desde_rango
-from django.contrib.auth.models import User
+from applications.cash.models import AperturaCaja, CierreCaja
+
 
 class Command(BaseCommand):
     help = 'Cierra automáticamente las cajas que se quedaron abiertas de días anteriores.'
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--con-cierre',
+            action='store_true',
+            help='Solo cierra sesiones que ya tengan un CierreCaja que las cubra.',
+        )
+
     def handle(self, *args, **options):
         hoy = timezone.localdate()
-        cajas_pendientes = AperturaCaja.objects.filter(estado='abierta', fecha__lt=hoy)
-        
-        if not cajas_pendientes.exists():
+        pendientes = AperturaCaja.objects.filter(
+            estado__in=['abierta', 'pausada'],
+            fecha__lt=hoy,
+        ).select_related('usuario', 'caja')
+
+        if not pendientes.exists():
             self.stdout.write(self.style.SUCCESS('No hay cajas pendientes de días anteriores.'))
             return
 
-        # Usar un usuario administrador para el registro del cierre automático
-        admin_user = User.objects.filter(is_superuser=True).first()
-        
-        for caja in cajas_pendientes:
-            self.stdout.write(f"Cerrando caja de {caja.usuario.username} del día {caja.fecha}...")
-            
-            # Simulamos un request básico para la función de registro
-            class MockRequest:
-                def __init__(self, user):
-                    self.user = user
-                    self._messages = []
-            
-            mock_request = MockRequest(admin_user)
-            
-            try:
-                registrar_cierre_desde_rango(mock_request, "diario", caja.fecha, caja.fecha)
-                self.stdout.write(self.style.SUCCESS(f"Caja del {caja.fecha} cerrada correctamente."))
-            except Exception as e:
-                self.stdout.write(self.style.ERROR(f"Error al cerrar caja del {caja.fecha}: {str(e)}"))
+        cerradas = 0
+        sin_arqueo = 0
+
+        for sesion in pendientes:
+            cubierta = CierreCaja.objects.filter(
+                fecha_inicio__lte=sesion.fecha,
+                fecha_fin__gte=sesion.fecha,
+                caja=sesion.caja,
+            ).exists()
+
+            if options['con_cierre'] and not cubierta:
+                sin_arqueo += 1
+                continue
+
+            self.stdout.write(
+                f"Cerrando caja de {sesion.usuario.username} del día {sesion.fecha} "
+                f"(abierta desde {sesion.hora_apertura:%d/%m/%Y %H:%M})..."
+            )
+            sesion.estado = 'cerrada'
+            sesion.hora_cierre = timezone.now()
+            sesion.save(update_fields=['estado', 'hora_cierre'])
+            cerradas += 1
+            if not cubierta:
+                self.stdout.write(self.style.WARNING(
+                    f"  Aviso: el {sesion.fecha:%d/%m/%Y} de {sesion.usuario.username} "
+                    f"no tenía arqueo (CierreCaja) registrado."
+                ))
+
+        if cerradas:
+            self.stdout.write(self.style.SUCCESS(f'{cerradas} caja(s) cerrada(s).'))
+        if sin_arqueo:
+            self.stdout.write(self.style.WARNING(
+                f'{sin_arqueo} caja(s) siguen abiertas porque su día no tiene arqueo.'
+            ))

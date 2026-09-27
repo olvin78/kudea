@@ -47,6 +47,13 @@ class Producto(models.Model):
     descuento = models.DecimalField(max_digits=5, decimal_places=2, default=0, validators=[MinValueValidator(0), MaxValueValidator(100)])
     stock = models.IntegerField(default=0, validators=[MinValueValidator(0)])
     stock_minimo = models.IntegerField(default=5, validators=[MinValueValidator(0)])
+    # PROVEEDOR HABITUAL (módulo Compras): con él se agrupa el PDF de
+    # pedido de reposición por proveedor. Opcional (SET_NULL si se borra).
+    proveedor = models.ForeignKey(
+        'purchases.Proveedor', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='productos',
+        verbose_name="Proveedor habitual",
+    )
     activo = models.BooleanField(default=True)
     imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
     tipo_producto = models.CharField(max_length=10, choices=TipoProducto.choices, default=TipoProducto.FISICO)
