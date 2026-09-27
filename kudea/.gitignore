@@ -49,3 +49,6 @@ Thumbs.db
 =
 f{base}{suffix}
 .gemini/
+
+# Salida de collectstatic (generada)
+staticfiles/
