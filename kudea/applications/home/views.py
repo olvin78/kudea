@@ -91,6 +91,9 @@ def _build_pos_ticket_text(venta, detalles, iva_breakdown, total_real, cambio_re
     line_width = 48
     moneda = _sanitize_ticket_text(moneda)
     nombre_tienda = _sanitize_ticket_text(nombre_tienda)
+    es_fiado_pendiente = (
+        venta.metodo_pago.nombre == "Fiado" and venta.pendiente_fiado > 0
+    )
     payload = bytearray()
     payload.extend(ESC_INIT.encode("latin-1"))
     payload.extend(ESC_ALIGN_CENTER.encode("latin-1"))
@@ -110,7 +113,7 @@ def _build_pos_ticket_text(venta, detalles, iva_breakdown, total_real, cambio_re
     # --------------------------------------------------------
     # FIADO: el ticket se entrega sin cobrar → sello de aviso
     # --------------------------------------------------------
-    if venta.metodo_pago.nombre == "Fiado":
+    if es_fiado_pendiente:
         payload.extend(ESC_ALIGN_CENTER.encode("latin-1"))
         payload.extend(_ticket_bytes_line("=" * line_width))
         payload.extend(ESC_BOLD_ON.encode("latin-1"))
@@ -167,8 +170,18 @@ def _build_pos_ticket_text(venta, detalles, iva_breakdown, total_real, cambio_re
                 padding = "." * padding_len if padding_len > 0 else " "
                 payload.extend(_ticket_bytes_line(f"{m_lbl} {padding} {m_val}"))
     else:
-        p_lbl = f"PAGADO ({_sanitize_ticket_text(venta.metodo_pago.nombre).upper()}):"
-        p_val = _format_ticket_amount(total_real)
+        if es_fiado_pendiente:
+            if venta.pagado_fiado > 0:
+                a_lbl = "PAGADO A CUENTA:"
+                a_val = _format_ticket_amount(venta.pagado_fiado)
+                a_pad_len = line_width - len(a_lbl) - len(a_val) - 2
+                a_padding = "." * a_pad_len if a_pad_len > 0 else " "
+                payload.extend(_ticket_bytes_line(f"{a_lbl} {a_padding} {a_val}"))
+            p_lbl = "POR PAGAR (FIADO):"
+            p_val = _format_ticket_amount(venta.pendiente_fiado)
+        else:
+            p_lbl = f"PAGADO ({_sanitize_ticket_text(venta.metodo_pago.nombre).upper()}):"
+            p_val = _format_ticket_amount(total_real)
         padding_len = line_width - len(p_lbl) - len(p_val) - 2
         padding = "." * padding_len if padding_len > 0 else " "
         payload.extend(_ticket_bytes_line(f"{p_lbl} {padding} {p_val}"))
@@ -208,7 +221,12 @@ def _build_pos_ticket_text(venta, detalles, iva_breakdown, total_real, cambio_re
 
     payload.extend(_ticket_bytes_line(""))
     payload.extend(ESC_ALIGN_CENTER.encode("latin-1"))
-    payload.extend(_ticket_bytes_line("Gracias por su visita"))
+    if es_fiado_pendiente:
+        payload.extend(_ticket_bytes_line("*** PENDIENTE DE PAGO - NO ESTA PAGADO ***"))
+        falta_val = _format_ticket_amount(venta.pendiente_fiado)
+        payload.extend(_ticket_bytes_line(f"Falta: {falta_val} {moneda}"))
+    else:
+        payload.extend(_ticket_bytes_line("Gracias por su visita"))
     payload.extend(_ticket_bytes_line(""))
 
     payload.extend(b"\x1dH\x02")
