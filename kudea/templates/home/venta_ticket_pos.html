@@ -239,6 +239,23 @@
                 Nº Ticket: {{ venta.codigo }}
             </div>
 
+            {% if venta.metodo_pago.nombre == "Fiado" and venta.pendiente_fiado > 0 %}
+            <!-- Sello de FIADO: el dinero se paga después -->
+            <div style="border: 2px dashed #000; padding: 8px; text-align: center; font-weight: bold;
+                        font-size: 15px; margin: 12px 0; letter-spacing: 1px;">
+                PENDIENTE DE PAGO — FIADO
+                <div style="font-weight: normal; font-size: 12px; margin-top: 4px;">
+                    Cliente: {{ venta.cliente.nombre|default:"—" }} · Este ticket NO está pagado
+                </div>
+                {% if venta.pagado_fiado > 0 %}
+                <div style="font-weight: normal; font-size: 12px;">
+                    Pagado a cuenta: {{ venta.pagado_fiado|floatformat:2 }} {{ moneda }}
+                    · Falta: {{ venta.pendiente_fiado|floatformat:2 }} {{ moneda }}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
             <div class="items-list">
                 {% for d in detalles %}
                 <div class="item-flex">
@@ -365,9 +382,9 @@
         {% if venta.metodo_pago.nombre == "Fiado" and venta.pendiente_fiado > 0 %}
         <div class="text-center" style="margin-top: 25px; border: 2px dashed #000; padding: 10px;
                     font-weight: bold; letter-spacing: 1px;">
-            TOTAL A PAGAR: {{ venta.pendiente_fiado|floatformat:2 }} {{ moneda }}
+            *** PENDIENTE DE PAGO — NO ESTÁ PAGADO ***
             <div style="font-weight: normal; font-size: 12px; margin-top: 4px;">
-                Pendiente de pago{% if venta.cliente %} · Cliente: {{ venta.cliente.nombre }}{% endif %}
+                Falta: {{ venta.pendiente_fiado|floatformat:2 }} {{ moneda }}{% if venta.cliente %} · Cliente: {{ venta.cliente.nombre }}{% endif %}
             </div>
         </div>
         {% else %}

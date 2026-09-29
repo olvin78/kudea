@@ -318,7 +318,7 @@
 {% if messages %}
 <div class="k-toasts" id="kToasts">
   {% for message in messages %}
-  <div class="k-toast {% if message.tags == 'error' %}err{% elif message.tags == 'warning' %}warn{% else %}ok{% endif %}" data-msg="{{ message }}">
+  <div class="k-toast {% if message.tags == 'error' %}err{% elif message.tags == 'warning' %}warn{% else %}ok{% endif %}" data-msg="{{ message|escapejs }}">
     <span class="k-ic"><i class="fas {% if message.tags == 'error' %}fa-circle-exclamation{% elif message.tags == 'warning' %}fa-triangle-exclamation{% else %}fa-check-circle{% endif %}"></i></span>
     <div>
       <strong>{% if message.tags == 'error' %}Atención{% elif message.tags == 'warning' %}Aviso{% else %}Operación realizada{% endif %}</strong>

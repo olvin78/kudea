@@ -163,6 +163,27 @@ def _build_pos_ticket_text(venta, detalles, iva_breakdown, total_real, cambio_re
     payload.extend(_ticket_bytes_line(""))
     payload.extend(_ticket_bytes_line(""))
 
+    # --------------------------------------------------------
+    # FIADO: el ticket se entrega sin cobrar → sello de aviso
+    # --------------------------------------------------------
+    if es_fiado_pendiente:
+        payload.extend(ESC_ALIGN_CENTER.encode("latin-1"))
+        payload.extend(_ticket_bytes_line("=" * line_width))
+        payload.extend(ESC_BOLD_ON.encode("latin-1"))
+        payload.extend(_ticket_bytes_line("PENDIENTE DE PAGO - FIADO"))
+        payload.extend(ESC_BOLD_OFF.encode("latin-1"))
+        if venta.cliente_id:
+            payload.extend(
+                _ticket_bytes_line(
+                    f"Cliente: {_sanitize_ticket_text(venta.cliente.nombre)}"
+                )
+            )
+        payload.extend(_ticket_bytes_line("ESTE TICKET NO ESTA PAGADO"))
+        payload.extend(_ticket_bytes_line("=" * line_width))
+        payload.extend(ESC_ALIGN_LEFT.encode("latin-1"))
+        payload.extend(_ticket_bytes_line(""))
+        payload.extend(_ticket_bytes_line(""))
+
     for detalle in detalles:
         nombre = f"{detalle.cantidad} {_sanitize_ticket_text(detalle.producto.nombre)}"[:32]
         total = _format_ticket_amount(detalle.total)
@@ -254,9 +275,9 @@ def _build_pos_ticket_text(venta, detalles, iva_breakdown, total_real, cambio_re
     payload.extend(_ticket_bytes_line(""))
     payload.extend(ESC_ALIGN_CENTER.encode("latin-1"))
     if es_fiado_pendiente:
+        payload.extend(_ticket_bytes_line("*** PENDIENTE DE PAGO - NO ESTA PAGADO ***"))
         total_lbl = f"TOTAL A PAGAR: {_format_ticket_amount(venta.pendiente_fiado)} {moneda}"
         payload.extend(_ticket_bytes_line(total_lbl))
-        payload.extend(_ticket_bytes_line("Pendiente de pago"))
         if venta.cliente_id:
             payload.extend(
                 _ticket_bytes_line(
