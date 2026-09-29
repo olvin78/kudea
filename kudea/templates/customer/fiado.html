@@ -1,0 +1,942 @@
+{% extends "home/base.html" %}
+
+{% block title %}Fiado · Cuentas por cobrar — KUDEA{% endblock %}
+
+{% block head %}
+<style>
+  :root {
+    --kudea-dark: #1D3557;
+    --kudea-medium: #457B9D;
+    --kudea-light: #A8DADC;
+    --kudea-success: #2A9D8F;
+    --kudea-danger: #E63946;
+  }
+
+  /* ── Fondo "agua" (mismo que el /home) ── */
+  .fx-wrap {
+    position: relative;
+    min-height: calc(100vh - 56px);
+    isolation: isolate;
+    background-color: #f5fafb;
+    background-image:
+      radial-gradient(880px 400px at 10% -6%, rgba(168, 218, 220, .55), transparent 62%),
+      radial-gradient(720px 360px at 94% 2%, rgba(69, 123, 157, .16), transparent 60%),
+      radial-gradient(640px 520px at 68% 104%, rgba(42, 157, 143, .10), transparent 65%),
+      linear-gradient(180deg, #f8fcfd 0%, #f2f7fa 100%);
+    background-repeat: no-repeat;
+  }
+  body { background-color: #f2f7fa; }
+
+  /* ── Tarjeta de vidrio (efecto agua / glass) ── */
+  .k-card {
+    background: rgba(255, 255, 255, .72);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, .85);
+    border-radius: 26px;
+    box-shadow: 0 22px 44px -32px rgba(29, 53, 87, .55);
+    transition: transform .25s ease, box-shadow .25s ease;
+  }
+  .k-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 28px 50px -30px rgba(29, 53, 87, .5);
+  }
+
+  /* Iconos con degradado */
+  .k-chip {
+    width: 48px; height: 48px; border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; flex: none;
+    box-shadow: 0 10px 20px -12px rgba(29, 53, 87, .6);
+  }
+  .k-chip.amber  { background: linear-gradient(135deg, #F4A261, #E9C46A); }
+  .k-chip.blue   { background: linear-gradient(135deg, #1D3557, #457B9D); }
+  .k-chip.indigo { background: linear-gradient(135deg, #457B9D, #A8DADC); }
+  .k-chip.green  { background: linear-gradient(135deg, #2A9D8F, #76C7BD); }
+
+  /* Cabecera */
+  .k-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
+    color: #457B9D; background: rgba(255, 255, 255, .7);
+    border: 1px solid rgba(168, 218, 220, .8);
+    padding: 6px 14px; border-radius: 999px;
+    backdrop-filter: blur(10px);
+  }
+  .k-eyebrow .dot { width: 7px; height: 7px; border-radius: 50%; background: #2A9D8F; }
+  .k-title { font-size: clamp(1.75rem, 3vw, 2.4rem); font-weight: 800; color: var(--kudea-dark); letter-spacing: -.02em; margin: 14px 0 6px; }
+  .k-sub { color: #64748B; font-weight: 500; font-size: 15px; margin: 0; }
+
+  .k-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: linear-gradient(135deg, #1D3557, #457B9D);
+    color: #fff; font-weight: 700; font-size: 14px;
+    padding: 12px 22px; border-radius: 999px; border: 0;
+    box-shadow: 0 16px 30px -18px rgba(29, 53, 87, .9);
+    transition: transform .2s ease, box-shadow .2s ease;
+    text-decoration: none; cursor: pointer;
+  }
+  .k-btn:hover { transform: translateY(-2px); color: #fff; box-shadow: 0 20px 34px -18px rgba(29, 53, 87, .9); }
+  .k-btn.ghost {
+    background: rgba(255, 255, 255, .8); color: var(--kudea-dark);
+    border: 1px solid rgba(69, 123, 157, .25); box-shadow: none;
+    backdrop-filter: blur(10px);
+  }
+  .k-btn.ghost:hover { background: #fff; }
+
+  /* Paneles */
+  .k-panel { padding: 22px 24px; }
+  .k-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+  .k-panel-head h5 { margin: 0; font-size: 13px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--kudea-dark); }
+
+  .fx-pill {
+    background: linear-gradient(135deg, #FDF1E3, #FAE5CD); color: #E08A3C;
+    border-radius: 999px; padding: 5px 13px; font-size: 12px; font-weight: 800;
+    white-space: nowrap;
+  }
+  .fx-pill.blue { background: linear-gradient(135deg, #EAF3F9, #D8EAF3); color: #457B9D; }
+  .fx-pill.gray { background: linear-gradient(135deg, #F1F5F9, #E2E8F0); color: #64748B; }
+
+  /* Total grande */
+  .fx-total {
+    font-size: clamp(2rem, 4vw, 2.6rem); font-weight: 800; letter-spacing: -.02em; line-height: 1.1;
+    background: linear-gradient(135deg, #F4A261, #E9C46A);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .fx-note {
+    font-size: 13px; color: #64748B; line-height: 1.55;
+    background: rgba(234, 243, 249, .7); border: 1px dashed rgba(69, 123, 157, .3);
+    border-radius: 16px; padding: 12px 14px;
+  }
+  .fx-note b { color: var(--kudea-dark); }
+
+  /* Tablas */
+  .fx-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+  .fx-table thead th {
+    font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+    color: #94A3B8; background: rgba(248, 250, 252, .8); padding: 14px 16px;
+    border-bottom: 1px solid #E9EEF3; white-space: nowrap;
+  }
+  .fx-table tbody td { padding: 14px 16px; font-size: 14px; border-bottom: 1px solid #F1F5F9; vertical-align: middle; }
+  .fx-table tbody tr:last-child td { border-bottom: 0; }
+  .fx-table tbody tr { transition: background .18s ease; }
+  .fx-table tbody tr:hover { background: rgba(234, 243, 249, .55); }
+  .fx-table .who b { display: block; font-size: 14px; color: var(--kudea-dark); font-weight: 700; }
+  .fx-table .who span { font-size: 12px; color: #94A3B8; }
+  .fx-code {
+    font-weight: 800; color: var(--kudea-dark); font-size: 13px;
+    background: linear-gradient(135deg, #EAF3F9, #D8EAF3); border-radius: 999px; padding: 4px 12px;
+    display: inline-block;
+  }
+  .amt-amber { color: #b45309; font-weight: 800; white-space: nowrap; }
+  .amt-green { color: #2A9D8F; font-weight: 700; white-space: nowrap; }
+
+  /* Cobrar */
+  .fx-input {
+    border: 1px solid #CBD5E1; border-radius: 12px; font-size: 13.5px; padding: 8px 10px;
+    background: #fff; transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .fx-input:focus { outline: none; border-color: #A8DADC; box-shadow: 0 0 0 3px rgba(168, 218, 220, .35); }
+  .fx-pay {
+    background: linear-gradient(135deg, #2A9D8F, #76C7BD); color: #fff; border: 0;
+    border-radius: 12px; font-weight: 700; font-size: 13px; padding: 9px 15px; cursor: pointer;
+    box-shadow: 0 12px 22px -14px rgba(42, 157, 143, .9); transition: transform .15s ease;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .fx-pay:hover { transform: translateY(-1px); color: #fff; }
+
+  /* Pago mixto: dos partes */
+  .fx-split {
+    margin-top: 8px; padding: 9px 11px;
+    background: rgba(234, 243, 249, .75);
+    border: 1px dashed rgba(69, 123, 157, .4);
+    border-radius: 14px;
+    display: flex; flex-direction: column; gap: 6px; min-width: 300px;
+  }
+  .fx-split-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .fx-split-lbl {
+    font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+    color: #457B9D; width: 52px; flex: none;
+  }
+  .fx-split-hint { font-size: 11px; color: #94A3B8; }
+  .fx-split-hint b { color: var(--kudea-dark); }
+
+  /* ── Scroll de UN cliente por pantalla (snap) ── */
+  .fx-scroll {
+    max-height: min(72vh, 640px);
+    overflow-y: auto;
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+    padding: 2px 10px 10px 2px;
+    display: flex; flex-direction: column; gap: 14px;
+    scrollbar-width: thin; scrollbar-color: rgba(69, 123, 157, .45) transparent;
+  }
+  .fx-scroll::-webkit-scrollbar { width: 8px; }
+  .fx-scroll::-webkit-scrollbar-thumb { background: rgba(69, 123, 157, .4); border-radius: 99px; }
+  .fx-scroll::-webkit-scrollbar-track { background: rgba(234, 243, 249, .6); border-radius: 99px; }
+  .fx-scroll-card {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    background: rgba(255, 255, 255, .82);
+    backdrop-filter: blur(14px) saturate(150%);
+    -webkit-backdrop-filter: blur(14px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, .95);
+    border-radius: 22px;
+    box-shadow: 0 18px 36px -30px rgba(29, 53, 87, .55);
+    padding: 18px 20px;
+    transition: border-color .2s ease, box-shadow .2s ease;
+  }
+  .fx-scroll-card:hover {
+    border-color: rgba(168, 218, 220, .95);
+    box-shadow: 0 22px 42px -28px rgba(29, 53, 87, .5);
+  }
+  .fx-card-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .fx-card-name { font-size: 16px; font-weight: 800; color: var(--kudea-dark); display: block; }
+  .fx-card-meta {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    font-size: 12.5px; color: #94A3B8; margin-top: 4px;
+  }
+  .fx-card-amounts {
+    display: flex; gap: 10px; flex-wrap: wrap; margin: 14px 0;
+  }
+  .fx-amt {
+    flex: 1 1 130px;
+    background: rgba(234, 243, 249, .7);
+    border: 1px solid rgba(168, 218, 220, .5);
+    border-radius: 16px; padding: 9px 14px;
+  }
+  .fx-amt span {
+    display: block; font-size: 10px; font-weight: 800; letter-spacing: .1em;
+    text-transform: uppercase; color: #94A3B8;
+  }
+  .fx-amt b { font-size: 17px; font-weight: 800; color: var(--kudea-dark); }
+  .fx-amt.highlight { background: linear-gradient(135deg, #FDF1E3, #FAE5CD); border-color: rgba(244, 162, 97, .5); }
+  .fx-card-pay { border-top: 1px dashed #E2E8F0; padding-top: 14px; }
+
+  /* Botón icono */
+  .fx-icon-btn {
+    width: 36px; height: 36px; border-radius: 12px; flex: none;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgba(255, 255, 255, .9); border: 1px solid rgba(69, 123, 157, .3);
+    color: var(--kudea-medium); cursor: pointer; transition: all .15s ease;
+    padding: 0;
+  }
+  .fx-icon-btn:hover { background: var(--kudea-dark); color: #fff; transform: translateY(-1px); }
+  .fx-icon-btn.danger { color: var(--kudea-danger); border-color: rgba(230, 57, 70, .35); background: #fff5f5; }
+  .fx-icon-btn.danger:hover { background: var(--kudea-danger); color: #fff; }
+  .fx-icon-btn svg, .fx-icon-btn i { width: 16px; height: 16px; }
+  .fx-icon-btn.fx-del-2 {
+    width: auto; padding: 0 12px; font-size: 11.5px; font-weight: 800; white-space: nowrap;
+  }
+  .fx-cli-row form { display: inline-flex; gap: 4px; }
+
+  /* ── Tickets pagados (histórico en gris, sólo lectura) ── */
+  .k-chip.gray { background: linear-gradient(135deg, #94A3B8, #CBD5E1); }
+  .fx-paid-row {
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(248, 250, 252, .92);
+    border: 1px solid rgba(203, 213, 225, .85);
+    border-radius: 18px; padding: 10px 14px;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  .fx-paid-row:hover { background: #fff; border-color: #CBD5E1; }
+  .fx-paid-amts { text-align: right; flex: none; margin-left: auto; }
+  .fx-paid-amts span {
+    display: block; font-size: 10px; font-weight: 800; letter-spacing: .08em;
+    text-transform: uppercase; color: #94A3B8;
+  }
+  .fx-paid-amts b { font-size: 14.5px; font-weight: 800; color: #64748B; white-space: nowrap; }
+  .fx-paid-badge {
+    flex: none; font-size: 11px; font-weight: 800; color: #64748B;
+    background: #F1F5F9; border: 1px solid #E2E8F0; border-radius: 999px;
+    padding: 5px 12px; white-space: nowrap;
+  }
+  .fx-paid-meta { font-size: 11.5px; color: #94A3B8; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 3px; }
+  .fx-code.gray { background: linear-gradient(135deg, #F1F5F9, #E2E8F0); color: #64748B; }
+
+  /* ── Overlay "Todos los clientes" ── */
+  .fx-overlay {
+    position: fixed; inset: 0; z-index: 1200;
+    background: rgba(29, 53, 87, .35);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+    animation: fxFade .18s ease;
+  }
+  @keyframes fxFade { from { opacity: 0; } to { opacity: 1; } }
+  .fx-overlay-box {
+    width: min(760px, 100%); max-height: min(84vh, 860px);
+    display: flex; flex-direction: column; gap: 14px;
+    background: rgba(255, 255, 255, .92);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, .95);
+    border-radius: 26px; padding: 22px 24px;
+    box-shadow: 0 40px 80px -40px rgba(29, 53, 87, .6);
+    animation: fxUp .2s ease;
+  }
+  @keyframes fxUp { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .fx-overlay-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .fx-overlay-title { font-size: 24px; font-weight: 800; color: var(--kudea-dark); margin: 8px 0 0; display: flex; align-items: center; gap: 10px; }
+  .fx-overlay-list {
+    overflow-y: auto; display: flex; flex-direction: column; gap: 8px;
+    padding-right: 6px; min-height: 90px;
+    scrollbar-width: thin; scrollbar-color: rgba(69, 123, 157, .45) transparent;
+  }
+  .fx-overlay-list::-webkit-scrollbar { width: 8px; }
+  .fx-overlay-list::-webkit-scrollbar-thumb { background: rgba(69, 123, 157, .4); border-radius: 99px; }
+  .fx-cli-row {
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(248, 252, 253, .9);
+    border: 1px solid rgba(168, 218, 220, .45);
+    border-radius: 18px; padding: 10px 14px;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  .fx-cli-row:hover { background: #fff; border-color: rgba(69, 123, 157, .5); }
+  .fx-cli-info { flex: 1 1 180px; min-width: 0; }
+  .fx-cli-info b { display: block; font-size: 14.5px; font-weight: 800; color: var(--kudea-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fx-cli-info span { font-size: 12px; color: #94A3B8; }
+  .fx-cli-saldo { text-align: right; flex: none; }
+  .fx-cli-saldo span { display: block; font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #94A3B8; }
+  .fx-cli-saldo b { font-size: 14.5px; font-weight: 800; color: var(--kudea-dark); }
+  .fx-cli-saldo.debe b { color: #b45309; }
+  .fx-cli-saldo b.ok { color: var(--kudea-success); font-size: 13px; }
+
+  /* ── Modal crear/editar cliente (glass) ── */
+  .fx-modal { z-index: 1300; }
+  body > .modal-backdrop { z-index: 1290; }
+  .fx-modal .modal-content {
+    background: rgba(255, 255, 255, .95);
+    backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, .95);
+    border-radius: 24px;
+    box-shadow: 0 40px 80px -40px rgba(29, 53, 87, .6);
+    overflow: hidden;
+  }
+  .fx-modal .modal-header, .fx-modal .modal-footer { border: 0; padding: 18px 22px 0; }
+  .fx-modal .modal-footer { padding: 0 22px 20px; }
+  .fx-modal .modal-body { padding: 14px 22px 6px; }
+  .fx-modal-title { font-size: 20px; font-weight: 800; color: var(--kudea-dark); margin: 8px 0 0; }
+  .fx-lbl {
+    display: block; font-size: 10.5px; font-weight: 800; letter-spacing: .1em;
+    text-transform: uppercase; color: #94A3B8; margin: 12px 0 5px;
+  }
+  .fx-lbl:first-child { margin-top: 0; }
+
+  /* Estado vacío / hint */
+  .fx-empty { text-align: center; color: #94A3B8; padding: 34px 12px; }
+  .fx-empty .big { font-size: 2.4rem; }
+  .fx-empty .t { font-size: 16px; font-weight: 800; color: var(--kudea-dark); margin-top: 6px; }
+  .fx-hint {
+    display: flex; gap: 10px; align-items: center; margin-top: 18px;
+    background: rgba(255, 255, 255, .7); backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, .9); border-radius: 18px;
+    padding: 13px 18px; font-size: 13px; color: #64748B;
+    box-shadow: 0 14px 28px -24px rgba(29, 53, 87, .6);
+  }
+  .fx-hint b { color: var(--kudea-dark); }
+
+  /* Buscador */
+  .fx-search {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    background: rgba(255, 255, 255, .75);
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, .9);
+    border-radius: 999px; padding: 9px 10px 9px 20px;
+    box-shadow: 0 18px 36px -30px rgba(29, 53, 87, .7);
+    transition: box-shadow .2s ease;
+  }
+  .fx-search:focus-within { box-shadow: 0 22px 40px -28px rgba(29, 53, 87, .65), 0 0 0 3px rgba(168, 218, 220, .35); }
+  .fx-search input {
+    flex: 1 1 240px; min-width: 180px; border: 0; background: transparent;
+    font-size: 15px; color: var(--kudea-dark); outline: none;
+  }
+  .fx-search input::placeholder { color: #94A3B8; }
+  .fx-search-x {
+    font-size: 12.5px; font-weight: 700; color: #457B9D; text-decoration: none;
+    padding: 7px 14px; border-radius: 999px; border: 1px solid rgba(69, 123, 157, .3);
+    background: rgba(255, 255, 255, .8); white-space: nowrap;
+  }
+  .fx-search-x:hover { background: #fff; color: #1D3557; }
+  .fx-search-btn {
+    background: linear-gradient(135deg, #1D3557, #457B9D); color: #fff; border: 0;
+    border-radius: 999px; font-weight: 700; font-size: 13.5px; padding: 9px 18px;
+    cursor: pointer; box-shadow: 0 14px 26px -16px rgba(29, 53, 87, .9);
+    display: inline-flex; align-items: center; gap: 7px; transition: transform .15s ease;
+    text-decoration: none;
+  }
+  .fx-search-btn:hover { transform: translateY(-1px); color: #fff; }
+
+  @media print {
+    .no-print, .sidebar, .topbar, .fx-overlay, .fx-icon-btn { display: none !important; }
+    .main-content, #main-content { margin-left: 0 !important; padding: 0 !important; }
+    .fx-wrap { background: #fff !important; background-image: none !important; min-height: auto; }
+    .k-card { background: #fff !important; backdrop-filter: none !important; box-shadow: none !important; border-color: #E2E8F0 !important; }
+    .k-card:hover { transform: none !important; }
+    .fx-scroll { max-height: none !important; overflow: visible !important; scroll-snap-type: none !important; }
+    .fx-scroll-card { background: #fff !important; backdrop-filter: none !important; box-shadow: none !important; border-color: #E2E8F0 !important; page-break-inside: avoid; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="fx-wrap container-fluid px-8 py-10">
+
+  <!-- ═══ CABECERA ═══ -->
+  <div class="d-flex flex-wrap justify-content-between align-items-end gap-4 mb-8 no-print">
+    <div>
+      <span class="k-eyebrow"><span class="dot"></span> Cuenta corriente de cliente</span>
+      <h1 class="k-title">Fiado · Cuentas por cobrar</h1>
+      <p class="k-sub">{{ ventas|length }} ticket{{ ventas|length|pluralize }} en curso{% if deudores %} · {{ deudores|length }} cliente{{ deudores|length|pluralize }} a cobrar{% endif %}</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2 no-print">
+      <button type="button" class="k-btn" id="fxOpenClientes">
+        <i data-lucide="users" class="w-4 h-4"></i> Todos los clientes
+      </button>
+      <button type="button" class="k-btn ghost" id="fxOpenPagados">
+        <i data-lucide="receipt" class="w-4 h-4"></i> Tickets pagados
+        <span class="fx-pill gray" style="margin-left:2px;">{{ pagados|length }}</span>
+      </button>
+      <button type="button" class="k-btn ghost" id="fxNuevoCliente">
+        <i data-lucide="user-plus" class="w-4 h-4"></i> Nuevo cliente
+      </button>
+      <button onclick="window.print()" class="k-btn ghost">
+        <i data-lucide="printer" class="w-4 h-4"></i> Imprimir listado
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══ BUSCADOR ═══ -->
+  <form method="get" id="fxSearchForm" class="fx-search mb-4 no-print">
+    <i data-lucide="search" class="w-4 h-4" style="flex:none;color:#94A3B8;"></i>
+    <input type="search" name="q" value="{{ q }}" autocomplete="off"
+           placeholder="Buscar por cliente, DNI, teléfono o nº de ticket…">
+    {% if q %}
+      <span class="fx-pill blue">{{ ventas|length }} resultado{{ ventas|length|pluralize }}</span>
+      <a href="{% url 'fiado_lista' %}" class="fx-search-x"><i class="fas fa-times me-1"></i>Limpiar</a>
+    {% endif %}
+    <button type="submit" class="fx-search-btn"><i class="fas fa-filter"></i> Buscar</button>
+  </form>
+
+  <!-- ═══ FILA: TOTAL + DEUDORES ═══ -->
+  <div class="row g-4 mb-4">
+    <div class="{% if deudores %}col-lg-4{% else %}col-lg-12{% endif %}">
+      <div class="k-card k-panel h-100">
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <div class="k-chip amber"><i data-lucide="coins" class="w-6 h-6"></i></div>
+          <div class="lbl" style="font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#94A3B8;">
+            Total pendiente de cobro
+          </div>
+        </div>
+        <div class="fx-total">{{ total_por_cobrar|floatformat:2 }} {{ moneda }}</div>
+        <div class="fx-note mt-3">
+          El dinero <b>no entra en caja</b> hasta que el cliente paga.<br>
+          Al cobrar, se genera el recibo y la caja sube.
+        </div>
+      </div>
+    </div>
+
+    {% if deudores %}
+    <div class="col-lg-8">
+      <div class="k-card k-panel h-100">
+        <div class="k-panel-head">
+          <h5>Clientes con deuda</h5>
+          <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'customer_app:lista' %}" class="fx-pill text-decoration-none" title="Ver ficha y historial de todos los clientes">
+              <i class="fas fa-address-book me-1"></i>Todos los clientes
+            </a>
+            <span class="fx-pill">{{ deudores|length }} cliente{{ deudores|length|pluralize }} a cobrar</span>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="fx-table">
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Teléfono</th>
+                <th class="text-end">Tickets</th>
+                <th class="text-end">Debe</th>
+                <th class="no-print">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for d in deudores %}
+              <tr>
+                <td class="who">
+                  <b><a href="{% url 'customer_app:ficha' d.cliente.pk %}" class="text-decoration-none" style="color:inherit;" title="Ver ficha del cliente">{{ d.cliente.nombre }}</a></b>
+                  {% if d.cliente.dni %}<span>DNI {{ d.cliente.dni }}</span>{% endif %}
+                </td>
+                <td>{{ d.cliente.telefono|default:"—" }}</td>
+                <td class="text-end">{{ d.tickets }}</td>
+                <td class="text-end amt-amber">{{ d.deuda|floatformat:2 }} {{ moneda }}</td>
+                <td class="no-print">
+                  <button type="button" class="fx-icon-btn" title="Editar cliente"
+                          data-editar-id="{{ d.cliente.id }}"
+                          data-editar-nombre="{{ d.cliente.nombre }}"
+                          data-editar-dni="{{ d.cliente.dni|default:'' }}"
+                          data-editar-telefono="{{ d.cliente.telefono|default:'' }}"
+                          data-editar-correo="{{ d.cliente.correo|default:'' }}">
+                    <i data-lucide="pencil"></i>
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ═══ TICKETS PENDIENTES ═══ -->
+  <div class="k-card k-panel">
+    <div class="k-panel-head">
+      <h5>Tickets pendientes de cobro</h5>
+      <span class="fx-pill blue">{{ ventas|length }} ticket{{ ventas|length|pluralize }}</span>
+    </div>
+
+    {% if not ventas %}
+      <div class="fx-empty">
+        {% if q %}
+          <div class="big">🔍</div>
+          <div class="t">Sin resultados para «{{ q }}»</div>
+          <div>Prueba con otro nombre, DNI, teléfono o nº de ticket.</div>
+          <a href="{% url 'fiado_lista' %}" class="k-btn mt-3" style="display:inline-flex;">
+            <i data-lucide="x" class="w-4 h-4"></i> Limpiar búsqueda
+          </a>
+        {% else %}
+          <div class="big">✅</div>
+          <div class="t">Nadie te debe dinero</div>
+          <div>No hay tickets de fiado pendientes de cobro.</div>
+          <a href="{% url 'fiado_cliente_nuevo' %}" class="k-btn mt-3" style="display:inline-flex;">
+            <i data-lucide="user-plus" class="w-4 h-4"></i> Nuevo cliente
+          </a>
+        {% endif %}
+      </div>
+    {% else %}
+      <div class="fx-scroll" aria-label="Desliza para ver el siguiente cliente">
+        {% for v in ventas %}
+        <article class="fx-scroll-card">
+          <div class="fx-card-top">
+            <div class="d-flex align-items-center gap-3" style="min-width:0;">
+              <div class="k-chip blue" style="width:44px;height:44px;border-radius:14px;">
+                <i data-lucide="user" class="w-6 h-6"></i>
+              </div>
+              <div style="min-width:0;">
+                <b class="fx-card-name">{{ v.cliente.nombre|default:"Sin cliente" }}</b>
+                <div class="fx-card-meta">
+                  <span class="fx-code">{{ v.codigo }}</span>
+                  {% if v.cliente.telefono %}<span><i class="fas fa-phone me-1"></i>{{ v.cliente.telefono }}</span>{% endif %}
+                  {% if v.cliente.dni %}<span>DNI {{ v.cliente.dni }}</span>{% endif %}
+                  <span><i class="far fa-clock me-1"></i>{{ v.creado_en|date:"d/m/Y H:i" }}</span>
+                </div>
+              </div>
+            </div>
+            {% if v.cliente %}
+            <div class="d-flex gap-2 no-print">
+              <button type="button" class="fx-icon-btn" title="Editar cliente"
+                      data-editar-id="{{ v.cliente.id }}"
+                      data-editar-nombre="{{ v.cliente.nombre }}"
+                      data-editar-dni="{{ v.cliente.dni|default:'' }}"
+                      data-editar-telefono="{{ v.cliente.telefono|default:'' }}"
+                      data-editar-correo="{{ v.cliente.correo|default:'' }}">
+                <i data-lucide="pencil"></i>
+              </button>
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="fx-card-amounts">
+            <div class="fx-amt"><span>Total</span><b>{{ v.total|floatformat:2 }} {{ moneda }}</b></div>
+            <div class="fx-amt"><span>Pagado</span><b style="color:var(--kudea-success);">{{ v.pagado_fiado|floatformat:2 }} {{ moneda }}</b></div>
+            <div class="fx-amt highlight"><span>Pendiente</span><b class="amt-amber">{{ v.pendiente_fiado|floatformat:2 }} {{ moneda }}</b></div>
+          </div>
+
+          <div class="fx-card-pay no-print">
+            <form method="post" action="{% url 'fiado_cobrar' v.id %}" class="fx-cobrar">
+              {% csrf_token %}
+              <div class="d-flex flex-wrap gap-2 align-items-center">
+                <input class="fx-input" style="width:110px" type="number" step="0.01" min="0.01"
+                       max="{{ v.pendiente_fiado }}" name="cantidad" value="{{ v.pendiente_fiado }}">
+                <select class="fx-input fx-metodo" name="metodo_pago" style="width:130px">
+                  {% for m in metodos_pago %}
+                  <option value="{{ m.id }}" {% if m.nombre|lower == "pago mixto" %}data-mixto="1"{% endif %}>{{ m.nombre }}</option>
+                  {% endfor %}
+                </select>
+                <button type="submit" class="fx-pay"><i class="fas fa-check"></i> Cobrar</button>
+              </div>
+              <div class="fx-split d-none">
+                <div class="fx-split-row">
+                  <span class="fx-split-lbl">Parte 1</span>
+                  <input class="fx-input" style="width:90px" type="number" step="0.01" min="0.01"
+                         name="parte1_cantidad" value="">
+                  <select class="fx-input" name="parte1_metodo" style="width:115px">
+                    {% for m in metodos_pago %}{% if m.nombre|lower != "pago mixto" %}
+                    <option value="{{ m.id }}" {% if m.nombre|lower == "efectivo" %}selected{% endif %}>{{ m.nombre }}</option>
+                    {% endif %}{% endfor %}
+                  </select>
+                </div>
+                <div class="fx-split-row">
+                  <span class="fx-split-lbl">Parte 2</span>
+                  <input class="fx-input" style="width:90px" type="number" step="0.01" min="0.01"
+                         name="parte2_cantidad" value="">
+                  <select class="fx-input" name="parte2_metodo" style="width:115px">
+                    {% for m in metodos_pago %}{% if m.nombre|lower != "pago mixto" %}
+                    <option value="{{ m.id }}" {% if m.nombre|lower == "card" %}selected{% endif %}>{{ m.nombre }}</option>
+                    {% endif %}{% endfor %}
+                  </select>
+                </div>
+                <div class="fx-split-hint">Se registran como <b>dos abonos</b> (uno por cada método).</div>
+              </div>
+            </form>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- ═══ AYUDA ═══ -->
+  <div class="fx-hint no-print">
+    <i data-lucide="lightbulb" class="w-4 h-4" style="flex:none;color:#E08A3C;"></i>
+    <span>Para <b>vender a fiado</b>: en el TPV elige el método de pago <b>Fiado</b> y selecciona el cliente (o créalo en el momento).</span>
+  </div>
+
+</div>
+
+<!-- ═══ OVERLAY: TODOS LOS CLIENTES ═══ -->
+<div class="fx-overlay d-none" id="fxOverlay" role="dialog" aria-label="Todos los clientes">
+  <div class="fx-overlay-box">
+    <div class="fx-overlay-head">
+      <div>
+        <span class="k-eyebrow"><span class="dot"></span> Agenda de clientes</span>
+        <h3 class="fx-overlay-title">
+          Todos los clientes
+          <span class="fx-pill blue">{{ clientes|length }}</span>
+        </h3>
+      </div>
+      <div class="d-flex gap-2 align-items-center no-print">
+        <button type="button" class="k-btn" id="fxOverlayNuevo">
+          <i data-lucide="user-plus" class="w-4 h-4"></i> Nuevo cliente
+        </button>
+        <button type="button" class="fx-icon-btn" id="fxOverlayClose" data-cerrar-overlay title="Cerrar">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="fx-search no-print">
+      <i data-lucide="search" class="w-4 h-4" style="flex:none;color:#94A3B8;"></i>
+      <input type="search" id="fxCliSearch" autocomplete="off"
+             placeholder="Buscar por nombre, DNI, teléfono o correo…">
+      <span class="fx-pill blue" id="fxCliResults">{{ clientes|length }}</span>
+    </div>
+
+    <div class="fx-overlay-list" id="fxCliList">
+      {% for c in clientes %}
+      <div class="fx-cli-row"
+           data-buscar="{{ c.obj.nombre|lower }} {{ c.obj.dni|default:''|lower }} {{ c.obj.telefono|lower }} {{ c.obj.correo|lower }}">
+        <div class="k-chip indigo" style="width:40px;height:40px;border-radius:13px;">
+          <i data-lucide="user" class="w-5 h-5"></i>
+        </div>
+        <div class="fx-cli-info">
+          <b>{{ c.obj.nombre }}</b>
+          <span>
+            {% if c.obj.dni %}DNI {{ c.obj.dni }} · {% endif %}
+            {{ c.obj.telefono|default:"sin teléfono" }}{% if c.obj.correo %} · {{ c.obj.correo }}{% endif %}
+          </span>
+        </div>
+        <div class="fx-cli-saldo {% if c.deuda > 0 %}debe{% endif %}">
+          {% if c.deuda > 0 %}
+            <span>Debe</span><b>{{ c.deuda|floatformat:2 }} {{ moneda }}</b>
+          {% else %}
+            <span>Estado</span><b class="ok">Al día</b>
+          {% endif %}
+        </div>
+        <div class="d-flex gap-1 no-print">
+          <button type="button" class="fx-icon-btn" title="Editar cliente"
+                  data-editar-id="{{ c.obj.id }}"
+                  data-editar-nombre="{{ c.obj.nombre }}"
+                  data-editar-dni="{{ c.obj.dni|default:'' }}"
+                  data-editar-telefono="{{ c.obj.telefono|default:'' }}"
+                  data-editar-correo="{{ c.obj.correo|default:'' }}">
+            <i data-lucide="pencil"></i>
+          </button>
+          <form method="post" action="{% url 'fiado_cliente_eliminar' c.obj.id %}">
+            {% csrf_token %}
+            <button type="button" class="fx-icon-btn danger fx-del-1" title="Eliminar cliente">
+              <i data-lucide="trash-2"></i>
+            </button>
+            <button type="submit" class="fx-icon-btn danger fx-del-2 d-none" title="Confirmar">¿Eliminar?</button>
+          </form>
+        </div>
+      </div>
+      {% empty %}
+      <div class="fx-empty">
+        <div class="big">👥</div>
+        <div class="t">Todavía no hay clientes</div>
+        <div>Crea el primero con el botón «Nuevo cliente».</div>
+      </div>
+      {% endfor %}
+      <div class="fx-empty d-none" id="fxCliEmpty">
+        <div class="big">🔍</div>
+        <div class="t">Sin resultados</div>
+        <div>Ningún cliente coincide con la búsqueda.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ OVERLAY: TICKETS PAGADOS (histórico en gris) ═══ -->
+<div class="fx-overlay d-none" id="fxPagadosOverlay" role="dialog" aria-label="Tickets pagados">
+  <div class="fx-overlay-box">
+    <div class="fx-overlay-head">
+      <div>
+        <span class="k-eyebrow" style="background:rgba(241,245,249,.85);border-color:#E2E8F0;color:#64748B;">
+          <span class="dot" style="background:#94A3B8;"></span> Histórico · sólo lectura
+        </span>
+        <h3 class="fx-overlay-title">
+          Tickets pagados
+          <span class="fx-pill gray">{{ pagados|length }}</span>
+        </h3>
+      </div>
+      <button type="button" class="fx-icon-btn" data-cerrar-overlay title="Cerrar">
+        <i data-lucide="x"></i>
+      </button>
+    </div>
+
+    <div class="fx-search no-print">
+      <i data-lucide="search" class="w-4 h-4" style="flex:none;color:#94A3B8;"></i>
+      <input type="search" id="fxPagSearch" autocomplete="off"
+             placeholder="Buscar por cliente, DNI o nº de ticket…">
+      <span class="fx-pill gray" id="fxPagResults">{{ pagados|length }}</span>
+    </div>
+
+    <div class="fx-overlay-list" id="fxPagList">
+      {% for v in pagados %}
+      <div class="fx-paid-row"
+           data-buscar="{{ v.cliente.nombre|lower }} {{ v.codigo|lower }} {{ v.cliente.dni|default:''|lower }} {{ v.cliente.telefono|lower }}">
+        <div class="k-chip gray" style="width:40px;height:40px;border-radius:13px;">
+          <i data-lucide="receipt" class="w-5 h-5"></i>
+        </div>
+        <div class="fx-cli-info">
+          <b>{{ v.cliente.nombre|default:"Sin cliente" }}</b>
+          <div class="fx-paid-meta">
+            <span class="fx-code gray">{{ v.codigo }}</span>
+            <span>Vendido {{ v.creado_en|date:"d/m/Y" }}</span>
+            {% with ultimo=v.pagos_fiado.0 %}
+            {% if ultimo %}
+              <span>· Liquidado {{ ultimo.creado_en|date:"d/m/Y H:i" }}</span>
+              {% if ultimo.metodo_pago %}<span>· {{ ultimo.metodo_pago.nombre }}</span>{% endif %}
+            {% endif %}
+            {% endwith %}
+            <span>· {{ v.pagos_fiado|length }} abono{{ v.pagos_fiado|length|pluralize }}</span>
+          </div>
+        </div>
+        <div class="fx-paid-amts">
+          <span>Total pagado</span>
+          <b>{{ v.total|floatformat:2 }} {{ moneda }}</b>
+        </div>
+        <div class="fx-paid-badge no-print"><i class="fas fa-check me-1"></i>Pagado</div>
+      </div>
+      {% empty %}
+      <div class="fx-empty">
+        <div class="big">📦</div>
+        <div class="t">Aún no hay tickets pagados</div>
+        <div>Cuando cobres un ticket de fiado por completo, aparecerá aquí en gris.</div>
+      </div>
+      {% endfor %}
+      <div class="fx-empty d-none" id="fxPagEmpty">
+        <div class="big">🔍</div>
+        <div class="t">Sin resultados</div>
+        <div>Ningún ticket pagado coincide con la búsqueda.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: NUEVO / EDITAR CLIENTE (popup) ═══ -->
+<div class="modal fade fx-modal" id="fxCliModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form method="post" id="fxCliForm" action="{% url 'fiado_cliente_nuevo' %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <div>
+            <span class="k-eyebrow"><span class="dot"></span> <span id="fxModalKicker">Cliente</span></span>
+            <h5 class="fx-modal-title" id="fxModalTitle">Nuevo cliente</h5>
+          </div>
+          <button type="button" class="fx-icon-btn" data-bs-dismiss="modal" title="Cerrar">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <label class="fx-lbl" for="fxFNombre">Nombre y apellido *</label>
+          <input class="fx-input w-100" id="fxFNombre" name="nombre" required
+                 placeholder="Nombre y apellido *">
+          <label class="fx-lbl" for="fxFDni">DNI</label>
+          <input class="fx-input w-100" id="fxFDni" name="dni" placeholder="DNI (opcional)">
+          <label class="fx-lbl" for="fxFTel">Teléfono</label>
+          <input class="fx-input w-100" id="fxFTel" name="telefono" placeholder="Teléfono (opcional)">
+          <label class="fx-lbl" for="fxFCorreo">Correo</label>
+          <input class="fx-input w-100" type="email" id="fxFCorreo" name="correo" placeholder="Correo (opcional)">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="k-btn ghost" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="k-btn">
+            <i data-lucide="save" class="w-4 h-4"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var form = document.getElementById('fxSearchForm');
+    if (!form) return;
+    var input = form.querySelector('input[name="q"]');
+    var t;
+    input.addEventListener('input', function () {
+      clearTimeout(t);
+      t = setTimeout(function () { form.submit(); }, 450);
+    });
+    if (input.value) {
+      input.focus();
+      var v = input.value; input.value = ''; input.value = v;
+    }
+  })();
+
+  /* Pago mixto: al elegirlo se despliegan dos importes + dos métodos */
+  document.querySelectorAll('.fx-cobrar').forEach(function (form) {
+    var sel = form.querySelector('.fx-metodo');
+    var split = form.querySelector('.fx-split');
+    var cant = form.querySelector('input[name="cantidad"]');
+    var p1 = form.querySelector('input[name="parte1_cantidad"]');
+    var p2 = form.querySelector('input[name="parte2_cantidad"]');
+    if (!sel || !split || !p1 || !p2) return;
+    function isMixto() {
+      var o = sel.options[sel.selectedIndex];
+      return !!(o && o.dataset.mixto === '1');
+    }
+    function num(el) { return parseFloat(el.value) || 0; }
+    function fmt(n) { return (Math.round(n * 100) / 100).toFixed(2); }
+    function toggle(reset) {
+      if (isMixto()) {
+        split.classList.remove('d-none');
+        if (reset) {
+          var half = Math.round(num(cant) / 2 * 100) / 100;
+          p1.value = fmt(half);
+          p2.value = fmt(Math.max(num(cant) - half, 0));
+        }
+      } else {
+        split.classList.add('d-none');
+      }
+    }
+    sel.addEventListener('change', function () { toggle(true); });
+    cant.addEventListener('input', function () { if (isMixto()) toggle(true); });
+    p1.addEventListener('input', function () { p2.value = fmt(Math.max(num(cant) - num(p1), 0)); });
+    p2.addEventListener('input', function () { p1.value = fmt(Math.max(num(cant) - num(p2), 0)); });
+  });
+
+  /* ── Overlay "Todos los clientes" + modal crear/editar ── */
+  window.addEventListener('DOMContentLoaded', function () {
+    /* Overlays (Clientes / Tickets pagados): abrir, cerrar y buscador en vivo */
+    function bindOverlay(btnId, ovId, searchId, resultsId, emptyId) {
+      var ov = document.getElementById(ovId);
+      if (!ov) return;
+      var btn = document.getElementById(btnId);
+      var search = document.getElementById(searchId);
+      var res = document.getElementById(resultsId);
+      var emp = document.getElementById(emptyId);
+
+      function abrir() {
+        ov.classList.remove('d-none');
+        document.documentElement.style.overflow = 'hidden';
+        if (search) search.focus();
+      }
+      function cerrar() {
+        ov.classList.add('d-none');
+        document.documentElement.style.overflow = '';
+      }
+      if (btn) btn.addEventListener('click', abrir);
+      ov.querySelectorAll('[data-cerrar-overlay]').forEach(function (b) {
+        b.addEventListener('click', cerrar);
+      });
+      ov.addEventListener('click', function (e) { if (e.target === ov) cerrar(); });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !ov.classList.contains('d-none')) cerrar();
+      });
+      if (search) search.addEventListener('input', function () {
+        var q = search.value.trim().toLowerCase();
+        var rows = ov.querySelectorAll('.fx-cli-row, .fx-paid-row');
+        var n = 0;
+        rows.forEach(function (r) {
+          var ok = !q || (r.dataset.buscar || '').indexOf(q) !== -1;
+          r.classList.toggle('d-none', !ok);
+          if (ok) n++;
+        });
+        if (res) res.textContent = n;
+        if (emp) emp.classList.toggle('d-none', n !== 0);
+      });
+    }
+    bindOverlay('fxOpenClientes', 'fxOverlay', 'fxCliSearch', 'fxCliResults', 'fxCliEmpty');
+    bindOverlay('fxOpenPagados', 'fxPagadosOverlay', 'fxPagSearch', 'fxPagResults', 'fxPagEmpty');
+
+    /* Modal crear/editar (bootstrap) */
+    var form = document.getElementById('fxCliForm');
+    var modal = (window.bootstrap && bootstrap.Modal)
+      ? bootstrap.Modal.getOrCreateInstance(document.getElementById('fxCliModal')) : null;
+
+    function abrirModal(datos) {
+      form.reset();
+      if (datos && datos.id) {
+        form.action = '/fiado/cliente/' + datos.id + '/editar/';
+        document.getElementById('fxModalTitle').textContent = 'Editar cliente';
+        document.getElementById('fxModalKicker').textContent = datos.nombre || 'Cliente';
+        document.getElementById('fxFNombre').value = datos.nombre || '';
+        document.getElementById('fxFDni').value = datos.dni || '';
+        document.getElementById('fxFTel').value = datos.telefono || '';
+        document.getElementById('fxFCorreo').value = datos.correo || '';
+      } else {
+        form.action = '{% url "fiado_cliente_nuevo" %}';
+        document.getElementById('fxModalTitle').textContent = 'Nuevo cliente';
+        document.getElementById('fxModalKicker').textContent = 'Cliente';
+      }
+      if (modal) modal.show();
+    }
+
+    document.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-editar-id]');
+      if (!b) return;
+      abrirModal({
+        id: b.dataset.editarId,
+        nombre: b.dataset.editarNombre,
+        dni: b.dataset.editarDni,
+        telefono: b.dataset.editarTelefono,
+        correo: b.dataset.editarCorreo,
+      });
+    });
+    document.getElementById('fxNuevoCliente').addEventListener('click', function () { abrirModal(null); });
+    document.getElementById('fxOverlayNuevo').addEventListener('click', function () { abrirModal(null); });
+
+    /* Eliminar: confirmación en dos pasos */
+    document.querySelectorAll('.fx-del-1').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var f = btn.closest('form');
+        btn.classList.add('d-none');
+        var ok = f.querySelector('.fx-del-2');
+        ok.classList.remove('d-none');
+        clearTimeout(f._t);
+        f._t = setTimeout(function () {
+          btn.classList.remove('d-none');
+          ok.classList.add('d-none');
+        }, 4000);
+      });
+    });
+  });
+</script>
+{% endblock %}

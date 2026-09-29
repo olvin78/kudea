@@ -1,3 +1,15 @@
+# =====================================================================
+# 📁 RUTAS · APP 'tpv'  (TPV DE RESTAURANTE — comandas y mesas)
+# URL base: /tpv/
+#   · Comandas, mesas, tickets y empleados del salón
+#   · MÓDULO 'tpv_restaurante' (apagado por defecto): si está off,
+#     /tpv/* redirige al home (ModuloActivoMiddleware)
+# SE RELACIONA CON:
+#   · product (ComandaItem→Producto)
+#   · invoice (Factura.comanda → tpv.Comanda) ← facturación de comandas
+# OJO: NO toca home.Venta (el TPV de tienda) — son mundos separados.
+# =====================================================================
+
 from django.contrib import admin
 from . import views
 from django.urls import path

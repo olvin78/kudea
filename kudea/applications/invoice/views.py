@@ -1,3 +1,14 @@
+# =====================================================================
+# 📁 VISTAS · APP 'invoice' — CRUD de facturas + anular (serie/numeración automática)
+# =====================================================================
+#   L15    class FacturaListView(ListView):
+#   L22    class FacturaDetailView(DetailView):
+#   L29    class FacturaCreateView(CreateView):
+#   L60    class FacturaUpdateView(UpdateView):
+#   L89    class FacturaDeleteView(DeleteView):
+#   L95    def anular_factura(request, pk):
+# =====================================================================
+
 from django.views.generic import CreateView, ListView, DetailView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.shortcuts import get_object_or_404, redirect, render
@@ -30,6 +41,7 @@ class FacturaCreateView(CreateView):
     model = Factura
     form_class = FacturaForm
     template_name = 'invoice/invoice_form.html'
+    success_url = reverse_lazy('invoice_app:invoice_list')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

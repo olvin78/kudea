@@ -1,9 +1,22 @@
+# =====================================================================
+# 📁 RUTAS · APP 'home'  (EL TPV DE TIENDA — el corazón del sistema)
+# URL base: /  y  /home/...
+#   · Landing, ventas del TPV, detalle de venta, anular/devolver
+#   · Inventario (lista, ficha, CSV export/import), arqueo, API venta
+#   · Genera dinero en caja vía cashflow (refs: tpv:venta:<id>[:método])
+# SE RELACIONA CON:
+#   · customer (cliente de la venta)   · product (DetalleVenta→Producto)
+#   · payments (método de pago)        · stock (descuento al vender)
+#   · cashflow (movimientos de caja)   · Modulo (on/off de módulos BD)
+# =====================================================================
+
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 
 from . import views, api_mentor
 from .views import CrearCategoriaAjaxView, KudeaLandingPageView
+from applications.config.roles import role_required
 
 app_name = 'home_app'
 
@@ -26,8 +39,11 @@ urlpatterns = [
     # PRODUCTOS
     # ===========================
     path('home/productos/', views.ProductoListView.as_view(), name='lista_productos'),
-    path('home/productos/crear/', views.CrearProductoView.as_view(), name='crear_producto'),
-    path('categoria/ajax/crear/', CrearCategoriaAjaxView.as_view(), name='crear_categoria_ajax'),
+    path('home/productos/crear/', role_required('gerente')(views.CrearProductoView.as_view()), name='crear_producto'),
+    path('home/productos/exportar/', role_required('gerente')(views.exportar_productos_csv), name='exportar_productos_csv'),
+    path('home/productos/importar/', role_required('gerente')(views.importar_productos_csv), name='importar_productos_csv'),
+    path('home/productos/<int:pk>/', views.ProductoFichaView.as_view(), name='producto_ficha'),
+    path('categoria/ajax/crear/', role_required('gerente')(CrearCategoriaAjaxView.as_view()), name='crear_categoria_ajax'),
 
     # ===========================
     # VENTAS / HISTORIAL
@@ -42,6 +58,12 @@ urlpatterns = [
     # Detalle de venta
     path('home/venta/<int:pk>/', views.VentaDetalleView.as_view(), name='venta_detalle'),
     path('home/venta/<int:pk>/imprimir-pos/', views.imprimir_ticket_pos, name='imprimir_ticket_pos'),
+
+    # Anular venta → devuelve el stock (devolución)
+    path('home/venta/<int:pk>/anular/', role_required('gerente')(views.anular_venta), name='anular_venta'),
+
+    # Devolución parcial → Nota de crédito (gerente+)
+    path('home/venta/<int:pk>/devolver/', role_required('gerente')(views.devolver_venta), name='devolver_venta'),
 
 
     # ===========================
@@ -73,7 +95,7 @@ urlpatterns = [
     # ===========================
     path('home/api/productos/', views.obtener_productos, name='obtener_productos'),
     path('home/api/reporte-ventas/', views.reporte_ventas, name='reporte_ventas'),
-    path('home/api/guardar-venta/', views.guardar_venta, name='guardar_venta'),
+    path('home/api/guardar-venta/', role_required('cajero', 'gerente')(views.guardar_venta), name='guardar_venta'),
     # ===========================
     path("api/mentor/", api_mentor.mentor_query, name="mentor_api"),
     

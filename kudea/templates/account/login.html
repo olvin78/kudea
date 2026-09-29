@@ -1,98 +1,359 @@
 {% load static %}
 {% load socialaccount %}
 <!DOCTYPE html>
-<html lang="es" class="h-full bg-slate-50">
+<html lang="es" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar Sesión - KUDEA</title>
-    
-    <!-- Estética: Google Fonts Outfit -->
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-    <!-- Tailwind CSS Output -->
     <link rel="stylesheet" href="{% static 'css/output.css' %}">
-    
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
-        body { font-family: 'Outfit', sans-serif; }
-        .login-card-cute {
-            background: white;
-            border-radius: 3rem;
-            box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.05);
-            border: 1px solid #f1f5f9;
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2.5rem 1.25rem;
+            color: #0f172a;
+            background: linear-gradient(160deg, #eaf2ff 0%, #f4f7ff 35%, #eef8ff 70%, #f6f4ff 100%);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── FONDO "AGUA" ─────────────────────────────────────── */
+        .water {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        .drop {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(46px);
+            opacity: .6;
+            
+        }
+        .drop.d1 { width: 46vmax; height: 46vmax; left: -14vmax; top: -16vmax;
+                   background: radial-gradient(circle at 30% 30%, #a5c8ff, transparent 70%);
+                   }
+        .drop.d2 { width: 40vmax; height: 40vmax; right: -12vmax; top: 8vmax;
+                   background: radial-gradient(circle at 60% 40%, #bfe4ff, transparent 70%);
+                   }
+        .drop.d3 { width: 44vmax; height: 44vmax; left: 20vmax; bottom: -18vmax;
+                   background: radial-gradient(circle at 50% 50%, #d9d2ff, transparent 70%);
+                   }
+        /* textura de agua */
+        .water::after {
+            content: "";
+            position: absolute;
+            inset: -20%;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='w'><feTurbulence type='fractalNoise' baseFrequency='0.012 0.02' numOctaves='3' seed='7'/><feColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.55 0 0 0 0 0.95 0 0 0 0.35 0'/></filter><rect width='300' height='300' filter='url(%23w)'/></svg>");
+            background-size: 480px 480px;
+            opacity: .3;
+        }
+        @keyframes drift1 { to { transform: translate3d(9vmax, 7vmax, 0) scale(1.15); } }
+        @keyframes drift2 { to { transform: translate3d(-8vmax, 10vmax, 0) scale(1.1); } }
+        @keyframes drift3 { to { transform: translate3d(7vmax, -9vmax, 0) scale(1.12); } }
+
+        /* ── CONTENIDO (sin card, incrustado) ─────────────────── */
+        .screen {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 25rem;
+            text-align: center;
+            animation: rise .7s cubic-bezier(.22,.8,.3,1) both;
+        }
+        @keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+
+        .brand {
+            width: 58px; height: 58px;
+            margin: 0 auto 1.15rem;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff;
+            border-radius: 20px;
+            background: linear-gradient(145deg, #1e40af, #3b82f6 60%, #60a5fa);
+            box-shadow:
+                inset 0 1px 0 rgba(255,255,255,.55),
+                0 16px 30px -14px rgba(37,99,235,.85);
+        }
+        .brand svg { width: 26px; height: 26px; }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(1.85rem, 5.4vw, 2.25rem);
+            font-weight: 700;
+            letter-spacing: -.02em;
+            background: linear-gradient(120deg, #0f172a 10%, #1d4ed8 55%, #0ea5e9 95%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .sub {
+            margin: .55rem 0 0;
+            font-size: .95rem;
+            font-weight: 400;
+            color: #64748b;
+        }
+
+        /* Google alargado (abajo) */
+        .g-wrap { margin: 0; }
+        .g-wrap .sep { margin: 1.6rem 0 1rem; }
+        .g-btn {
+            width: 100%;
+            display: flex; align-items: center; justify-content: center; gap: .7rem;
+            padding: .95rem 1rem;
+            font-family: inherit; font-size: .95rem; font-weight: 600; color: #1e293b;
+            border-radius: 1.15rem;
+            border: 1px solid rgba(255,255,255,.85);
+            background: rgba(255,255,255,.82);
+            box-shadow:
+                inset 0 1px 0 rgba(255,255,255,.95),
+                inset 0 -10px 18px -14px rgba(29,78,216,.35),
+                0 14px 26px -16px rgba(15,23,42,.45);
+            cursor: pointer;
+            position: relative; overflow: hidden;
+            transition: transform .2s cubic-bezier(.22,.8,.3,1), box-shadow .2s ease, background .2s ease;
+        }
+        .g-btn::after { /* brillo de agua */
+            content: "";
+            position: absolute; top: -60%; left: -30%;
+            width: 40%; height: 220%;
+            background: linear-gradient(100deg, transparent, rgba(255,255,255,.8), transparent);
+            transform: rotate(16deg) translateX(-140%);
+            transition: transform .7s ease;
+        }
+        .g-btn:hover {
+            background: rgba(255,255,255,.85);
+            transform: translateY(-2px);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 20px 32px -16px rgba(15,23,42,.55);
+        }
+        .g-btn:hover::after { transform: rotate(16deg) translateX(400%); }
+        .g-btn:active { transform: translateY(0) scale(.99); }
+        .g-btn img { width: 20px; height: 20px; display: block; position: relative; z-index: 1; }
+        .g-btn span { position: relative; z-index: 1; }
+
+        /* separador */
+        .sep {
+            display: flex; align-items: center; gap: 1rem;
+            margin: 1.9rem 0 1.5rem;
+            color: #94a3b8;
+            font-size: .7rem; font-weight: 700; letter-spacing: .18em; text-transform: uppercase;
+        }
+        .sep::before, .sep::after {
+            content: ""; flex: 1; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(100,116,139,.35), transparent);
+        }
+
+        /* campos de vidrio */
+        form { text-align: left; }
+        .field { position: relative; margin-bottom: .85rem; }
+        .field .lead {
+            position: absolute; left: 1.05rem; top: 50%; transform: translateY(-50%);
+            width: 18px; height: 18px; color: #7c8aa5; pointer-events: none;
+        }
+        .glass-input {
+            width: 100%;
+            padding: 1rem 3rem 1rem 2.9rem;
+            font-family: inherit; font-size: .96rem; font-weight: 500; color: #0f172a;
+            border-radius: 1.15rem;
+            border: 1px solid rgba(255,255,255,.8);
+            background: rgba(255,255,255,.82);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 8px 20px -14px rgba(15,23,42,.5);
+            outline: none;
+            transition: box-shadow .2s ease, background .2s ease, transform .2s ease;
+        }
+        .glass-input::placeholder { color: #8fa0b8; font-weight: 400; }
+        .glass-input:focus {
+            background: rgba(255,255,255,.95);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 0 0 4px rgba(59,130,246,.18), 0 12px 26px -16px rgba(29,78,216,.7);
+            transform: translateY(-1px);
+        }
+        .eye {
+            position: absolute; right: .8rem; top: 50%; transform: translateY(-50%);
+            border: 0; background: transparent; color: #7c8aa5; cursor: pointer;
+            padding: .35rem; line-height: 0; border-radius: .6rem;
+        }
+        .eye:hover { color: #1d4ed8; background: rgba(255,255,255,.6); }
+
+        .opts {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: .75rem; margin: .35rem 0 1.4rem;
+            font-size: .84rem;
+        }
+        .opts label { display: flex; align-items: center; gap: .5rem; color: #64748b; font-weight: 500; cursor: pointer; user-select: none; }
+        .opts input[type="checkbox"] { width: 16px; height: 16px; accent-color: #1d4ed8; cursor: pointer; }
+        .opts a { color: #1d4ed8; font-weight: 600; text-decoration: none; }
+        .opts a:hover { text-decoration: underline; }
+
+        .btn {
+            width: 100%;
+            padding: 1.02rem 1rem;
+            font-family: inherit; font-size: 1rem; font-weight: 700; letter-spacing: .01em;
+            color: #fff; border: 0; border-radius: 1.15rem; cursor: pointer;
+            background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #0ea5e9 120%);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 16px 30px -14px rgba(37,99,235,.9);
+            position: relative; overflow: hidden;
+            transition: transform .18s cubic-bezier(.22,.8,.3,1), filter .18s ease;
+        }
+        .btn::before { /* brillo que corre como agua */
+            content: ""; position: absolute; top: -60%; left: -30%;
+            width: 45%; height: 220%;
+            background: linear-gradient(100deg, transparent, rgba(255,255,255,.55), transparent);
+            transform: rotate(18deg) translateX(-120%);
+            transition: transform .7s ease;
+        }
+        .btn:hover { transform: translateY(-2px); filter: brightness(1.05); }
+        .btn:hover::before { transform: rotate(18deg) translateX(360%); }
+        .btn:active { transform: translateY(0) scale(.99); }
+
+        .alert {
+            display: flex; align-items: flex-start; gap: .7rem;
+            padding: .85rem 1rem; margin-bottom: 1rem;
+            border-radius: 1rem; font-size: .87rem; font-weight: 500; line-height: 1.45;
+            color: #b91c1c;
+            background: rgba(254, 226, 226, .97);
+            border: 1px solid rgba(254, 202, 202, .9);
+            text-align: left;
+        }
+        .alert svg { width: 18px; height: 18px; flex: none; margin-top: 1px; }
+
+        .back {
+            display: inline-flex; align-items: center; gap: .45rem;
+            margin-top: 2rem; font-size: .87rem; font-weight: 600;
+            color: #7c8aa5; text-decoration: none;
+            transition: color .2s ease;
+        }
+        .back:hover { color: #1d4ed8; }
+        .back svg { width: 15px; height: 15px; }
+
+        @media (max-width: 420px) {
+            .g-wrap { margin-top: 1.6rem; }
+            .glass-input { font-size: 16px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation: none !important;
+                transition: none !important;
+            }
         }
     </style>
 </head>
-<body class="h-full flex items-center justify-center p-6 relative overflow-hidden">
-    
-    <!-- Decoración de fondo sutil -->
-    <div class="absolute top-0 left-0 w-96 h-96 bg-blue-50 rounded-full -ml-48 -mt-48 blur-3xl"></div>
-    <div class="absolute bottom-0 right-0 w-96 h-96 bg-blue-50 rounded-full -mr-48 -mb-48 blur-3xl"></div>
+<body>
 
-    <div class="w-full max-w-md relative z-10">
-        <div class="login-card-cute p-10 md:p-12">
-            
-            <div class="flex flex-col items-center mb-10">
-                <div class="w-16 h-16 bg-blue-700 rounded-3xl flex items-center justify-center text-white shadow-lg shadow-blue-700/20 mb-4">
-                    <i data-lucide="layout-grid" class="w-10 h-10"></i>
-                </div>
-                <h1 class="text-3xl font-bold tracking-tight text-slate-900">KUDEA</h1>
+    <!-- Fondo agua -->
+    <div class="water" aria-hidden="true">
+        <span class="drop d1"></span>
+        <span class="drop d2"></span>
+        <span class="drop d3"></span>
+    </div>
+
+    <main class="screen">
+
+        <div class="brand">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+                <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+                <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+                <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+            </svg>
+        </div>
+
+        <h1>Bienvenido a KUDEA</h1>
+        <p class="sub">Accede con tu usuario o tu correo electrónico</p>
+
+        <div class="sep">o entra con tu cuenta</div>
+
+        <form method="POST" action="{% url 'account_login' %}">
+            {% csrf_token %}
+            {% if redirect_field_value %}
+                <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
+            {% endif %}
+
+            {% if form.errors %}
+            <div class="alert" role="alert">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span>
+                    {% if form.non_field_errors %}
+                        Usuario o contraseña incorrectos. Revísalos e inténtalo de nuevo.
+                    {% else %}
+                        {% for field in form %}{% for error in field.errors %}{{ error }}{% endfor %}{% endfor %}
+                    {% endif %}
+                </span>
             </div>
-            
-            <!-- Botón de Google (Original POST) -->
+            {% endif %}
+
+            <div class="field">
+                <svg class="lead" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <input type="text" name="login" id="id_login" class="glass-input" placeholder="Usuario o correo electrónico"
+                       value="{{ form.login.value|default:'' }}" autocomplete="username" autofocus required>
+            </div>
+
+            <div class="field">
+                <svg class="lead" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <input type="password" name="password" id="id_password" class="glass-input" placeholder="Contraseña"
+                       autocomplete="current-password" required>
+                <button type="button" class="eye" onclick="togglePassword()" aria-label="Mostrar contraseña">
+                    <svg id="eye-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+            </div>
+
+            <div class="opts">
+                {% if 'remember' in form.fields %}
+                <label>
+                    <input type="checkbox" name="remember">
+                    Recordarme
+                </label>
+                {% else %}
+                <span></span>
+                {% endif %}
+                <a href="{% url 'account_reset_password' %}">¿Olvidaste tu contraseña?</a>
+            </div>
+
+            <button type="submit" class="btn">Entrar</button>
+        </form>
+
+        <!-- Google alargado, abajo -->
+        <div class="g-wrap">
+            <div class="sep">o continúa con</div>
             <form method="post" action="/accounts/google/login/">
                 {% csrf_token %}
-                <button type="submit" class="w-full flex items-center justify-center space-x-3 px-6 py-4 bg-white border-2 border-slate-100 rounded-2xl text-slate-700 font-bold hover:bg-slate-50 transition-all active:scale-[0.98]">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google" width="20">
+                <button type="submit" class="g-btn">
+                    <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><path fill='%23EA4335' d='M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z'/><path fill='%234285F4' d='M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z'/><path fill='%23FBBC05' d='M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z'/><path fill='%2334A853' d='M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z'/></svg>" alt="" width="20" height="20">
                     <span>Continuar con Google</span>
                 </button>
             </form>
-
-            <div class="relative flex items-center my-8">
-                <div class="flex-grow border-t border-slate-100"></div>
-                <span class="flex-shrink mx-4 text-xs font-bold text-slate-300 uppercase tracking-widest">o accede con</span>
-                <div class="flex-grow border-t border-slate-100"></div>
-            </div>
-
-            <!-- Formulario Original -->
-            <form method="POST" action="{% url 'account_login' %}" class="space-y-6">
-                {% csrf_token %}
-                {% if form.errors %}
-                    <div class="p-4 bg-red-50 rounded-2xl border border-red-100 text-red-600 text-sm font-medium flex items-center gap-3">
-                        <i data-lucide="alert-circle" class="w-5 h-5"></i>
-                        <span>Usuario o contraseña incorrectos.</span>
-                    </div>
-                {% endif %}
-                
-                <div class="space-y-2">
-                    <input type="email" name="login" id="id_login" class="w-full px-6 py-4 bg-slate-50 border-transparent rounded-2xl focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-700 transition-all outline-none" placeholder="Correo electrónico" required>
-                </div>
-                
-                <div class="space-y-2">
-                    <input type="password" name="password" id="id_password" class="w-full px-6 py-4 bg-slate-50 border-transparent rounded-2xl focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-700 transition-all outline-none" placeholder="Contraseña" required>
-                </div>
-
-                <button type="submit" class="w-full py-4 bg-blue-700 text-white rounded-2xl font-bold text-lg shadow-lg shadow-blue-700/20 hover:bg-blue-800 transition-all hover:-translate-y-1 active:scale-[0.98]">
-                    Entrar
-                </button>
-            </form>
-
-            <div class="mt-8 text-center">
-                <a href="/" class="inline-flex items-center space-x-2 text-sm font-bold text-slate-400 hover:text-blue-700 transition-colors">
-                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
-                    <span>Volver a la web</span>
-                </a>
-            </div>
         </div>
-    </div>
+
+        <a href="/" class="back">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            Volver a la web
+        </a>
+    </main>
 
     <script>
-        lucide.createIcons();
+        function togglePassword() {
+            const input = document.getElementById('id_password');
+            const svg = document.getElementById('eye-svg');
+            const showing = input.type === 'text';
+            input.type = showing ? 'password' : 'text';
+            svg.innerHTML = showing
+                ? '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>'
+                : '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-8-10-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+        }
     </script>
 </body>
 </html>

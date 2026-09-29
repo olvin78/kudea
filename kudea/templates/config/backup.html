@@ -1,0 +1,120 @@
+{% extends "home/base.html" %}
+
+{% block title %}Backup de la BD | KUDEA{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-10">
+    <span class="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[.14em] text-[#457B9D] bg-white/75 border border-[#A8DADC]/80 px-3.5 py-1.5 rounded-full mb-3">
+        <i class="fas fa-database w-3.5 h-3.5"></i> Datos
+    </span>
+    <h1 class="text-3xl font-black text-[#1D3557] tracking-tight mb-1">Backup de la base de datos</h1>
+    <p class="text-slate-500 font-medium text-sm mb-8">
+        Descarga una copia de <strong>{{ db_nombre }}</strong> ({{ db_tamano|filesizeformat }}) o restaura un backup.
+        Al restaurar, la BD actual se guarda sola como <em>db-previa</em> antes de sustituirse.
+    </p>
+
+    {% if messages %}
+    <div class="mb-6 space-y-2">
+        {% for message in messages %}
+        <div class="rounded-2xl px-4 py-3 text-sm font-bold flex items-center gap-3
+            {% if message.tags == 'success' %}bg-emerald-50 text-emerald-700 border border-emerald-100
+            {% elif message.tags == 'warning' %}bg-amber-50 text-amber-700 border border-amber-100
+            {% else %}bg-red-50 text-red-700 border border-red-100{% endif %}">
+            <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-times-circle{% endif %}"></i>
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <!-- DESCARGAR -->
+        <div class="bg-white/85 backdrop-blur rounded-[2rem] border border-[#A8DADC]/50 p-7 shadow-[0_10px_40px_-18px_rgba(29,53,87,.25)]">
+            <div class="w-11 h-11 rounded-2xl bg-[#1D3557]/10 flex items-center justify-center mb-4">
+                <i class="fas fa-download text-[#1D3557]"></i>
+            </div>
+            <h2 class="text-lg font-black text-[#1D3557] mb-1">Descargar copia</h2>
+            <p class="text-sm text-slate-500 font-medium mb-5">
+                Exporta la BD completa como archivo <code>.sqlite3</code> para guardarla donde quieras.
+            </p>
+            <a href="{% url 'backup_descargar' %}"
+               class="inline-flex items-center gap-2 bg-[#1D3557] hover:bg-slate-800 text-white px-5 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-[#1D3557]/20">
+                <i class="fas fa-file-arrow-down"></i> Descargar backup
+            </a>
+        </div>
+
+        <!-- RESTAURAR SUBIDA -->
+        <div class="bg-white/85 backdrop-blur rounded-[2rem] border border-[#A8DADC]/50 p-7 shadow-[0_10px_40px_-18px_rgba(29,53,87,.25)]">
+            <div class="w-11 h-11 rounded-2xl bg-[#E63946]/10 flex items-center justify-center mb-4">
+                <i class="fas fa-upload text-[#E63946]"></i>
+            </div>
+            <h2 class="text-lg font-black text-[#1D3557] mb-1">Restaurar desde archivo</h2>
+            <p class="text-sm text-slate-500 font-medium mb-5">
+                Sube un <code>.sqlite3</code> previamente descargado. Se validará antes de sustituir la BD actual.
+            </p>
+            <form method="post" action="" enctype="multipart/form-data"
+                  onsubmit="return confirm('¿RESTAURAR este backup? Se sustituirá la base de datos actual (se guardará copia previa automáticamente).')">
+                {% csrf_token %}
+                <input type="hidden" name="accion" value="restaurar_subida">
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <input type="file" name="archivo" accept=".sqlite3,.db,.sqlite" required
+                           class="flex-1 text-xs font-bold text-slate-600 file:mr-3 file:px-4 file:py-2.5 file:rounded-xl file:border-0 file:bg-[#A8DADC]/40 file:text-[#1D3557] file:font-black file:text-[10px] file:uppercase file:tracking-widest file:cursor-pointer">
+                    <button type="submit"
+                            class="bg-[#E63946] hover:bg-red-700 text-white px-5 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-[#E63946]/20">
+                        Restaurar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- HISTORIAL -->
+    <div class="bg-white/85 backdrop-blur rounded-[2rem] border border-[#A8DADC]/50 p-7 shadow-[0_10px_40px_-18px_rgba(29,53,87,.25)]">
+        <h2 class="text-lg font-black text-[#1D3557] mb-1">Historial de backups</h2>
+        <p class="text-sm text-slate-500 font-medium mb-5">
+            Copias guardadas en <code>/backups</code> (las <em>previas</em> se crean solas al restaurar).
+        </p>
+
+        {% if historial %}
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="text-[10px] uppercase tracking-widest text-slate-400">
+                        <th class="text-left py-2 font-black">Archivo</th>
+                        <th class="text-left py-2 font-black">Fecha</th>
+                        <th class="text-right py-2 font-black">Tamaño</th>
+                        <th class="text-right py-2 font-black">Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for b in historial %}
+                    <tr class="border-t border-slate-100">
+                        <td class="py-2.5 font-bold text-slate-700">
+                            <i class="fas {% if b.es_previa %}fa-clock-rotate-left text-amber-500{% else %}fa-box-archive text-[#457B9D]{% endif %} mr-2"></i>{{ b.nombre }}
+                        </td>
+                        <td class="py-2.5 font-bold text-slate-500">{{ b.fecha }}</td>
+                        <td class="py-2.5 text-right font-black text-slate-600">{{ b.tamano|filesizeformat }}</td>
+                        <td class="py-2.5 text-right">
+                            <form method="post" action="" style="display:inline"
+                                  onsubmit="return confirm('¿RESTAURAR «{{ b.nombre }}»? Se sustituirá la BD actual (se guardará copia previa).')">
+                                {% csrf_token %}
+                                <input type="hidden" name="accion" value="restaurar_archivo">
+                                <input type="hidden" name="nombre" value="{{ b.nombre }}">
+                                <button type="submit" class="px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-[#1D3557] hover:border-[#A8DADC] transition-all">
+                                    Restaurar
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="rounded-2xl bg-slate-50 border border-slate-100 px-5 py-6 text-center text-sm font-bold text-slate-400">
+            Todavía no hay backups guardados. Descarga el primero con el botón de arriba.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

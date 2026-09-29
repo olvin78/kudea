@@ -24,3 +24,25 @@ class AperturaCajaForm(forms.ModelForm):
                 'placeholder': 'Observaciones opcionales...',
             }),
         }
+
+
+class CierreCajaForm(forms.Form):
+    """Arqueo al cierre: dinero contado físicamente en el cajón."""
+    efectivo_contado = forms.DecimalField(
+        min_value=0, max_digits=10, decimal_places=2,
+        widget=forms.NumberInput(attrs={
+            'class': 'cierre-input',
+            'placeholder': '0.00',
+            'min': '0',
+            'step': '0.01',
+            'autofocus': True,
+        }),
+    )
+    notas = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': 'cierre-textarea',
+            'rows': 2,
+            'placeholder': 'Incidencias del turno (opcional)...',
+        }),
+    )

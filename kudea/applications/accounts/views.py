@@ -1,3 +1,9 @@
+# =====================================================================
+# 📁 VISTAS · APP 'accounts' — Listado de cuentas
+# =====================================================================
+#   L4     class AccountsListView(TemplateView):
+# =====================================================================
+
 # applications/accounts/views.py
 from django.views.generic import TemplateView
 

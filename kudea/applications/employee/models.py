@@ -1,3 +1,8 @@
+# =====================================================================
+# 📁 MODELOS · APP 'employee'  (RRHH)
+#   · Employee → usuario, rol, salario, tarifa_hora (nómina)
+# =====================================================================
+
 from django.db import models
 from django.contrib.auth.models import User
 import random
@@ -37,6 +42,10 @@ class Employee(models.Model):
     puede_modificar_ventas = models.BooleanField(default=False)
     puede_cambiar_subtotales = models.BooleanField(default=False)
     puede_cambiar_tarifa = models.BooleanField(default=False)
+    tarifa_hora = models.DecimalField(
+        max_digits=6, decimal_places=2, null=True, blank=True,
+        verbose_name="Tarifa por hora (€)",
+    )
 
     # Estado
     esta_de_baja = models.BooleanField(default=False)
@@ -46,6 +55,9 @@ class Employee(models.Model):
     # Auditoría
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     ultima_modificacion = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['id']
 
     def __str__(self):
         return f"{self.nombre} {self.apellidos or ''}".strip()

@@ -1,3 +1,8 @@
+# =====================================================================
+# 📁 MODELOS · APP 'cash'  (CIERRE DE CAJA)
+#   · Caja / AperturaCaja / CierreCaja → cuadre de turno
+# =====================================================================
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -92,3 +97,8 @@ class CierreCaja(models.Model):
 
     def __str__(self):
         return f"Cierre {self.fecha} - {self.total_ventas}€ ventas - {self.usuario.username}"
+
+    @property
+    def diferencia(self):
+        """Contado - Esperado (positivo = sobrante, negativo = faltante)."""
+        return (self.efectivo_retirado or 0) - (self.efectivo_esperado or 0)

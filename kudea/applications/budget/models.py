@@ -1,3 +1,12 @@
+# =====================================================================
+# 📁 MODELOS · APP 'budget'  (PRESUPUESTOS)
+#   · Client     → SU PROPIO modelo de cliente (NO es customer.Cliente)
+#   · Budget     → presupuesto (agente→User, impuestos, estados)
+#   · BudgetItem → líneas del presupuesto
+# HUECO CONOCIDO: sin enlace a factura ni venta; cliente duplicado
+# respecto a TPV/fiado/CRM.
+# =====================================================================
+
 from django.db import models
 from decimal import Decimal
 from django.db.models import Sum  # ✅ IMPORTA SUM AQUÍ

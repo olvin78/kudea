@@ -1,0 +1,116 @@
+{% extends "home/base.html" %}
+
+{% block title %}Usuarios y Roles | KUDEA{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-10">
+    <span class="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[.14em] text-[#457B9D] bg-white/75 border border-[#A8DADC]/80 px-3.5 py-1.5 rounded-full mb-3">
+        <i data-lucide="shield" class="w-3.5 h-3.5"></i> Seguridad
+    </span>
+    <h1 class="text-3xl font-black text-[#1D3557] tracking-tight mb-1">Usuarios y Roles</h1>
+    <p class="text-slate-500 font-medium text-sm mb-8">
+        Asigna quién puede vender, quién ve informes y quién administra todo.
+        Los administradores del sistema tienen siempre acceso completo.
+    </p>
+
+    {% if messages %}
+    <div class="mb-6 space-y-2">
+        {% for message in messages %}
+        <div class="rounded-2xl px-4 py-3 text-sm font-bold flex items-center gap-3
+            {% if message.tags == 'success' %}bg-emerald-50 text-emerald-700 border border-emerald-100
+            {% elif message.tags == 'warning' %}bg-amber-50 text-amber-700 border border-amber-100
+            {% else %}bg-red-50 text-red-700 border border-red-100{% endif %}">
+            <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-times-circle{% endif %}"></i>
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white/85 border border-white rounded-3xl p-4 shadow-sm">
+            <div class="text-[10px] font-black uppercase tracking-widest text-slate-400">Admin</div>
+            <div class="font-extrabold text-[#1D3557]">Todo</div>
+            <div class="text-xs text-slate-500 font-medium">Config, usuarios, finanzas</div>
+        </div>
+        <div class="bg-white/85 border border-white rounded-3xl p-4 shadow-sm">
+            <div class="text-[10px] font-black uppercase tracking-widest text-slate-400">Gerente</div>
+            <div class="font-extrabold text-[#457B9D]">Finanzas</div>
+            <div class="text-xs text-slate-500 font-medium">Informes, compras, anular</div>
+        </div>
+        <div class="bg-white/85 border border-white rounded-3xl p-4 shadow-sm">
+            <div class="text-[10px] font-black uppercase tracking-widest text-slate-400">Cajero</div>
+            <div class="font-extrabold text-[#2A9D8F]">Operativo</div>
+            <div class="text-xs text-slate-500 font-medium">Vender, cobrar, cerrar caja</div>
+        </div>
+        <div class="bg-white/85 border border-white rounded-3xl p-4 shadow-sm">
+            <div class="text-[10px] font-black uppercase tracking-widest text-slate-400">Solo lectura</div>
+            <div class="font-extrabold text-slate-500">Vista</div>
+            <div class="text-xs text-slate-500 font-medium">Mirar paneles, nada más</div>
+        </div>
+    </div>
+
+    <div class="bg-white/85 border border-white rounded-3xl overflow-hidden shadow-sm">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100 bg-slate-50/60">
+                    <th class="text-left px-5 py-3.5">Usuario</th>
+                    <th class="text-left px-5 py-3.5">Rol actual</th>
+                    <th class="text-left px-5 py-3.5">Cambiar rol</th>
+                    <th class="text-right px-5 py-3.5"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in rows %}
+                <tr class="border-b border-slate-50 hover:bg-slate-50/60 transition-colors">
+                    <td class="px-5 py-4">
+                        <div class="font-extrabold text-slate-800">{{ r.u.username }}</div>
+                        <div class="text-xs text-slate-400 font-medium">{{ r.u.email|default:"sin email" }}</div>
+                    </td>
+                    <td class="px-5 py-4">
+                        {% if r.fijo %}
+                        <span class="inline-flex items-center gap-1.5 text-xs font-black bg-[#1D3557] text-white px-3 py-1.5 rounded-full">
+                            <i class="fas fa-crown text-[10px]"></i> Administrador
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center gap-1.5 text-xs font-black px-3 py-1.5 rounded-full border
+                            {% if r.rol == 'gerente' %}bg-blue-50 text-blue-700 border-blue-200
+                            {% elif r.rol == 'cajero' %}bg-emerald-50 text-emerald-700 border-emerald-200
+                            {% else %}bg-slate-100 text-slate-600 border-slate-200{% endif %}">
+                            {{ r.rol|capfirst }}
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-5 py-4">
+                        {% if r.fijo %}
+                        <span class="text-xs text-slate-400 font-medium">—</span>
+                        {% else %}
+                        <form method="post" class="flex items-center gap-2">
+                            {% csrf_token %}
+                            <input type="hidden" name="user_id" value="{{ r.u.id }}">
+                            <select name="rol" class="border border-slate-200 rounded-xl px-3 py-2 text-sm font-bold text-slate-700 bg-white outline-none focus:border-[#457B9D]">
+                                {% for key, label in roles.items %}
+                                <option value="{{ key }}" {% if r.rol == key %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="bg-[#1D3557] hover:bg-[#457B9D] text-white text-xs font-black px-4 py-2 rounded-xl transition-colors">
+                                Guardar
+                            </button>
+                        </form>
+                        {% endif %}
+                    </td>
+                    <td class="px-5 py-4 text-right text-xs text-slate-400 font-bold">
+                        {% if r.u.is_superuser %}superusuario{% elif r.u.is_staff %}staff{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <p class="text-xs text-slate-400 font-medium mt-4">
+        <i class="fas fa-info-circle mr-1"></i>
+        Un usuario sin rol asignado actúa como <b>Cajero</b> por defecto. Los superusuarios/staff de Django siempre son <b>Administrador</b>.
+    </p>
+</div>
+{% endblock %}

@@ -1,3 +1,11 @@
+# =====================================================================
+# 📁 VISTAS · APP 'payments' — Métodos de pago (alta/baja/edición)
+# =====================================================================
+#   L10    class PaymentMethodsView(TemplateView):
+#   L31    class DeletePaymentMethodView(View):
+#   L43    class UpdatePaymentMethodView(View):
+# =====================================================================
+
 from django.views.generic import TemplateView, View
 from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.decorators import method_decorator

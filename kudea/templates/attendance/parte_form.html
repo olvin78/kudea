@@ -1,0 +1,95 @@
+{% extends "home/base.html" %}
+
+{% block title %}Registrar horas - Kudea{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 py-8">
+
+    <a href="{% url 'home_attendance:nomina' %}" class="inline-flex items-center gap-2 text-slate-400 hover:text-dark-blue font-bold text-sm mb-4">
+        <i class="fas fa-arrow-left"></i> Nómina
+    </a>
+
+    <div class="k-card p-8 md:p-10">
+        <span class="k-eyebrow mb-3"><span class="dot"></span> Recursos humanos</span>
+        <h1 class="text-3xl font-black text-slate-800 tracking-tight mt-3 mb-1">Registrar horas</h1>
+        <p class="text-slate-500 font-medium mb-8">Alta de un parte de horas para el cierre de nómina</p>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+            <div class="bg-rose-50 border border-rose-200 text-rose-600 rounded-2xl px-5 py-4 mb-6 text-sm font-bold">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2" for="{{ form.employee.id_for_label }}">
+                        Empleado *
+                    </label>
+                    {{ form.employee }}
+                    {% if form.employee.errors %}<div class="text-rose-500 text-xs font-bold mt-1">{{ form.employee.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2" for="{{ form.fecha.id_for_label }}">
+                        Fecha *
+                    </label>
+                    {{ form.fecha }}
+                    {% if form.fecha.errors %}<div class="text-rose-500 text-xs font-bold mt-1">{{ form.fecha.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2" for="{{ form.horas.id_for_label }}">
+                        Horas *
+                    </label>
+                    {{ form.horas }}
+                    {% if form.horas.errors %}<div class="text-rose-500 text-xs font-bold mt-1">{{ form.horas.errors.0 }}</div>{% endif %}
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2" for="{{ form.tarifa_hora.id_for_label }}">
+                        Tarifa €/h *
+                    </label>
+                    {{ form.tarifa_hora }}
+                    {% if form.tarifa_hora.errors %}<div class="text-rose-500 text-xs font-bold mt-1">{{ form.tarifa_hora.errors.0 }}</div>{% endif %}
+                    <p class="text-xs text-slate-400 mt-1">Se rellena sola con la tarifa del empleado al elegirlo.</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2" for="{{ form.notas.id_for_label }}">
+                        Notas
+                    </label>
+                    {{ form.notas }}
+                    {% if form.notas.errors %}<div class="text-rose-500 text-xs font-bold mt-1">{{ form.notas.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3 mt-8">
+                <button type="submit" class="bg-dark-blue text-white px-7 py-3 rounded-2xl font-bold shadow-lg shadow-dark-blue/20 flex items-center gap-2">
+                    <i class="fas fa-save"></i> Guardar parte
+                </button>
+                <a href="{% url 'home_attendance:nomina' %}" class="bg-white border border-slate-200 text-slate-600 px-6 py-3 rounded-2xl font-bold shadow-sm">
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Al elegir empleado, rellenar la tarifa con la del campo (si no se tocó a mano)
+(function () {
+    const tarifas = {{ tarifas_json|safe }};
+    const sel = document.getElementById('id_employee');
+    const tarifa = document.getElementById('id_tarifa_hora');
+    if (!sel || !tarifa) return;
+    function rellenar() {
+        const t = tarifas[sel.value];
+        if (t && tarifa.dataset.tocado !== '1') tarifa.value = t;
+    }
+    sel.addEventListener('change', rellenar);
+    tarifa.addEventListener('input', function () { tarifa.dataset.tocado = '1'; });
+})();
+</script>
+{% endblock %}

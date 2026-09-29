@@ -1,0 +1,150 @@
+{% extends 'home/base.html' %}
+
+{# ============================================================
+   LISTA DE COMPRAS  →  /compras/
+   Cabecera + KPIs + filtros + tabla de compras
+   ============================================================ #}
+
+{% block title %}KUDEA - Compras{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+  {% include 'purchases/_purchases_styles.html' %}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="k-wrap">
+
+  <!-- ============ CABECERA ============ -->
+  <div class="k-header-section">
+    <div class="k-title-group">
+      <span class="k-eyebrow">
+        <span class="dot {% if compras_borrador > 0 %}warn{% endif %}"></span>
+        Compras · {{ total_compras }} pedidos{% if compras_borrador > 0 %} · {{ compras_borrador }} en borrador{% endif %}
+      </span>
+      <h1>Compras</h1>
+      <p>Pedidos a proveedores, recepción de mercancía y libro de compras.</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="{% url 'purchases_app:informe_compras' %}" class="k-btn-action k-btn-outline">
+        <i class="fas fa-chart-line"></i> Informes
+      </a>
+      <a href="{% url 'purchases_app:proveedor_list' %}" class="k-btn-action k-btn-outline">
+        <i class="fas fa-truck"></i> Proveedores
+      </a>
+      <a href="{% url 'purchases_app:compra_create' %}" class="k-btn-action k-btn-primary">
+        <i class="fas fa-plus"></i> Nueva compra
+      </a>
+    </div>
+  </div>
+
+  <!-- ============ KPIs ============ -->
+  <div class="k-stats-row">
+    <div class="k-stat-card">
+      <i class="fas fa-file-invoice"></i>
+      <span class="k-stat-label">Compras totales</span>
+      <span class="k-stat-value">{{ total_compras }}</span>
+    </div>
+    <div class="k-stat-card">
+      <i class="fas fa-pen-ruler"></i>
+      <span class="k-stat-label">En borrador</span>
+      <span class="k-stat-value">{{ compras_borrador }}</span>
+    </div>
+    <div class="k-stat-card">
+      <i class="fas fa-coins"></i>
+      <span class="k-stat-label">Gasto recibido</span>
+      <span class="k-stat-value">{{ gasto_total|floatformat:2 }} €</span>
+    </div>
+    <div class="k-stat-card">
+      <i class="fas fa-truck"></i>
+      <span class="k-stat-label">Proveedores activos</span>
+      <span class="k-stat-value">{{ proveedores_activos }}</span>
+    </div>
+  </div>
+
+  <!-- ============ FILTROS ============ -->
+  <form method="get" class="k-filter-bar">
+    <input type="text" name="search" value="{{ search_actual }}" class="k-search-input"
+           placeholder="Buscar por nº de compra o proveedor...">
+    <select name="estado" class="k-filter-select">
+      <option value="">Todos los estados</option>
+      <option value="borrador" {% if estado_actual == 'borrador' %}selected{% endif %}>Borradores</option>
+      <option value="recibida" {% if estado_actual == 'recibida' %}selected{% endif %}>Recibidas</option>
+      <option value="cancelada" {% if estado_actual == 'cancelada' %}selected{% endif %}>Canceladas</option>
+    </select>
+    <button type="submit" class="k-btn-action k-btn-primary" style="padding: 10px 25px;">Buscar</button>
+    <a href="{% url 'purchases_app:compra_list' %}" class="k-btn-action k-btn-outline" style="padding: 10px 15px;">Limpiar</a>
+  </form>
+
+  <!-- ============ TABLA DE COMPRAS ============ -->
+  <div class="k-table-card">
+    <table class="k-table">
+      <thead>
+        <tr>
+          <th>Nº</th>
+          <th>Proveedor</th>
+          <th>Fecha</th>
+          <th>Estado</th>
+          <th class="text-end">Base</th>
+          <th class="text-end">IVA</th>
+          <th class="text-end">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in compras %}
+        <tr>
+          <td style="font-weight: 800; color: var(--k-primary);">
+            <a href="{% url 'purchases_app:compra_detail' c.pk %}" style="color: inherit; text-decoration: none;">{{ c.numero }}</a>
+          </td>
+          <td>{{ c.proveedor.nombre }}</td>
+          <td>{{ c.fecha|date:"d/m/Y" }}</td>
+          <td><span class="k-estado k-estado-{{ c.estado }}">{{ c.get_estado_display }}</span>
+            {% if c.estado == 'recibida' %}
+              {% if c.estado_pago == 'pagada' %}
+              <span style="display:inline-block;margin-top:4px;font-size:.68rem;font-weight:800;color:#2A9D8F;background:rgba(42,157,143,.12);border:1px solid rgba(42,157,143,.35);border-radius:999px;padding:2px 8px;">Pagada</span>
+              {% elif c.estado_pago == 'parcial' %}
+              <span style="display:inline-block;margin-top:4px;font-size:.68rem;font-weight:800;color:#b4622a;background:rgba(244,162,97,.15);border:1px solid rgba(244,162,97,.4);border-radius:999px;padding:2px 8px;">Parcial · faltan {{ c.pendiente_pago|floatformat:2 }} €</span>
+              {% else %}
+              <span style="display:inline-block;margin-top:4px;font-size:.68rem;font-weight:800;color:#c22b3c;background:rgba(230,57,70,.1);border:1px solid rgba(230,57,70,.35);border-radius:999px;padding:2px 8px;">Por pagar {{ c.pendiente_pago|floatformat:2 }} €</span>
+              {% endif %}
+            {% endif %}
+          </td>
+          <td class="text-end">{{ c.subtotal|floatformat:2 }} €</td>
+          <td class="text-end">{{ c.iva|floatformat:2 }} €</td>
+          <td class="text-end" style="font-weight: 800; color: var(--k-primary);">{{ c.total|floatformat:2 }} €</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7">
+            <div class="k-empty">
+              <i class="fas fa-file-invoice"></i>
+              <p>No hay compras todavía</p>
+              <div class="k-empty-hint">Crea un proveedor y desde ahí montarás tu primer pedido.</div>
+              <a href="{% url 'purchases_app:proveedor_create' %}" class="k-btn-action k-btn-primary">
+                <i class="fas fa-plus"></i> Crear el primer proveedor
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ============ PAGINACIÓN ============ -->
+  {% if is_paginated %}
+  <div class="d-flex justify-content-center gap-2 mt-4">
+    {% if page_obj.has_previous %}
+      <a class="k-btn-action k-btn-outline" href="?page={{ page_obj.previous_page_number }}&search={{ search_actual }}&estado={{ estado_actual }}">← Anterior</a>
+    {% endif %}
+    <span class="k-btn-action k-btn-outline" style="cursor: default;">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+      <a class="k-btn-action k-btn-outline" href="?page={{ page_obj.next_page_number }}&search={{ search_actual }}&estado={{ estado_actual }}">Siguiente →</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

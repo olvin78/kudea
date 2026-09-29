@@ -1,3 +1,10 @@
+# =====================================================================
+# 📁 MODELOS · APP 'config'
+#   · ConfiguracionFiscal → IVA/normativa.
+#   Los ROLES viven en applications/config/roles.py (role_required)
+#   y los MÓDULOS on/off en home.Modulo.
+# =====================================================================
+
 from django.db import models
 
 

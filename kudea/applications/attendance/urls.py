@@ -1,3 +1,11 @@
+# =====================================================================
+# 📁 RUTAS · APP 'attendance'  (FICHAJES Y NÓMINA)
+# URL base: /attendance/
+#   · Fichaje táctil/QR, historial y reporte mensual (Punch)
+#   · NÓMINA: /attendance/nomina/ (ParteHoras × tarifa_hora, export CSV)
+# SE RELACIONA CON: employee (Employee, tarifa_hora)
+# =====================================================================
+
 from django.urls import path
 from . import views
 from .views import QRListView, FichajeTouchMenuView, QRTokenPunchView, QRScanView, BuscarHistorialView, EmployeeMonthlyReportView, FichajeTouchMenuView, EmployeeListView
@@ -18,4 +26,8 @@ urlpatterns = [
     path('employee/<int:pk>/monthly-report/', EmployeeMonthlyReportView.as_view(), name='employee_monthly_report'),
     path('employees/', EmployeeListView.as_view(), name='employee_list'),
     path('verificar-password/', verificar_password, name='verificar_password'),
+    path('nomina/', views.NominaView, name='nomina'),
+    path('nomina/exportar/', views.exportar_nomina_csv, name='nomina_exportar'),
+    path('nomina/parte/nuevo/', views.parte_nuevo, name='parte_nuevo'),
+    path('nomina/parte/<int:pk>/borrar/', views.parte_borrar, name='parte_borrar'),
 ]

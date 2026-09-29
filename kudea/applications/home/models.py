@@ -1,3 +1,18 @@
+# =====================================================================
+# 📁 MODELOS · APP 'home'  (TPV DE TIENDA)
+#   · Modulo              → on/off de módulos por URL (ModuloActivoMiddleware)
+#   · MetodoPago          → catálogo usado por el TPV RESTAURANTE (tpv/)
+#   · Venta               → venta del TPV → cliente (customer.Cliente),
+#                           metodo_pago (payments.MetodoPago)
+#   · DetalleVenta        → líneas: producto (product.Producto)
+#   · Devolucion/Item     → NC interna de devolución (usa IVA de la venta)
+#   · CajaArqueo          → arqueo del TPV
+#   · ConfiguracionTPV    → datos de la tienda
+#   · Comunicacion        → avisos
+# Al completarse una venta se descuenta stock y se crean movimientos
+# en cashflow (external_ref: tpv:venta:<id>[:efectivo|:tarjeta]).
+# =====================================================================
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
@@ -51,6 +66,12 @@ class Venta(models.Model):
 
     codigo = models.CharField(max_length=20, unique=True)
     usuario = models.ForeignKey(User, on_delete=models.PROTECT)
+    # Cliente de la venta (obligatorio si el pago es a FIADO)
+    cliente = models.ForeignKey(
+        'customer.Cliente', on_delete=models.PROTECT,
+        null=True, blank=True, related_name='ventas',
+        verbose_name="Cliente",
+    )
     metodo_pago = models.ForeignKey(MetodoPago, on_delete=models.PROTECT)
     subtotal = models.DecimalField(max_digits=10, decimal_places=2)
     iva = models.DecimalField(max_digits=10, decimal_places=2)
@@ -74,6 +95,35 @@ class Venta(models.Model):
     @property
     def base_imponible(self):
         return self.total - self.iva
+
+    # --------------------------------------------------------
+    # FIADO: lo que el cliente ya HA PAGADO de este ticket
+    # --------------------------------------------------------
+    @property
+    def pagado_fiado(self):
+        return sum(p.cantidad for p in self.pagos_fiado.all())
+
+    # --------------------------------------------------------
+    # FIADO: lo que queda por cobrar de ESTE ticket
+    # (total menos los pagos a cuenta que ha hecho el cliente,
+    #  menos lo ya devuelto por devoluciones/NC)
+    # --------------------------------------------------------
+    @property
+    def pendiente_fiado(self):
+        return max(0, (self.total or 0) - self.pagado_fiado - self.devuelto_total)
+
+    # --------------------------------------------------------
+    # DEVOLUCIONES (notas de crédito)
+    # --------------------------------------------------------
+    @property
+    def devuelto_total(self):
+        return sum(d.total for d in self.devoluciones.all())
+
+    @property
+    def estado_devolucion(self):
+        if self.devuelto_total <= 0:
+            return "ninguna"
+        return "total" if self.devuelto_total >= (self.total or 0) else "parcial"
 
     def save(self, *args, **kwargs):
         if not self.codigo:
@@ -157,3 +207,57 @@ class Comunicacion(models.Model):
 
     def __str__(self):
         return self.titulo
+
+
+class Devolucion(models.Model):
+    """Nota de crédito (NC): devolución total o parcial de una venta."""
+    venta = models.ForeignKey(Venta, on_delete=models.PROTECT, related_name="devoluciones", verbose_name="Venta")
+    numero = models.CharField(max_length=12, unique=True, blank=True, verbose_name="Nº NC")
+    motivo = models.CharField(max_length=200, verbose_name="Motivo")
+    metodo_reembolso = models.CharField(
+        max_length=20,
+        choices=(("efectivo", "Efectivo"), ("tarjeta", "Tarjeta")),
+        default="efectivo",
+        verbose_name="Reembolso",
+    )
+    usuario = models.ForeignKey(User, on_delete=models.PROTECT, related_name="devoluciones", verbose_name="Usuario")
+    total = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Total devuelto (IVA incl.)")
+    iva = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="IVA devuelto")
+    creado_en = models.DateTimeField(auto_now_add=True, verbose_name="Fecha")
+
+    class Meta:
+        verbose_name = "Devolución"
+        verbose_name_plural = "Devoluciones"
+        ordering = ["-creado_en"]
+
+    def __str__(self):
+        return f"{self.numero} → {self.venta.codigo} ({self.total}€)"
+
+    def save(self, *args, **kwargs):
+        if not self.numero:
+            n = Devolucion.objects.count() + 1
+            self.numero = f"NC-{n:06d}"
+        super().save(*args, **kwargs)
+
+    @property
+    def costo_devuelto(self):
+        """Coste de compra de las unidades devueltan (vuelven a almacén)."""
+        return sum(
+            (i.cantidad * (i.detalle.producto.costo or 0)) for i in self.items.all()
+        )
+
+
+class DevolucionItem(models.Model):
+    """Línea de una devolución: qué producto y cuántas unidades."""
+    devolucion = models.ForeignKey(Devolucion, on_delete=models.CASCADE, related_name="items")
+    detalle = models.ForeignKey(DetalleVenta, on_delete=models.PROTECT, related_name="devoluciones")
+    cantidad = models.IntegerField(validators=[MinValueValidator(1)], verbose_name="Unidades")
+    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Precio ud. (IVA incl.)")
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Subtotal")
+
+    class Meta:
+        verbose_name = "Línea de devolución"
+        verbose_name_plural = "Líneas de devolución"
+
+    def __str__(self):
+        return f"{self.cantidad}x {self.detalle.producto.nombre} ({self.devolucion.numero})"

@@ -1,3 +1,37 @@
+# =====================================================================
+# 📁 VISTAS · APP 'tpv' — TPV RESTAURANTE: mesas, comandas, tickets, empleados (módulo OFF)
+# =====================================================================
+#   L18    class TpvIndexView(TemplateView):
+#   L40    class TpvMesasView(ListView):
+#   L60    class MesaCreateView(CreateView):
+#   L68    class MesaDetailView(DetailView):
+#   L107   class MesaCategoriasView(View):
+#   L124   class MesaProductosPorCategoriaView(TemplateView):
+#   L139   class AgregarProductoAComandaView(View):
+#   L160   class MesaComandaActivaRedirectView(View):
+#   L172   class MesaUpdateView(UpdateView):
+#   L180   class MesaDeleteView(DeleteView):
+#   L188   class ToggleMesaEstadoView(View):
+#   L202   class ComandaCreateView(CreateView):
+#   L218   class ComandaDetailView(DetailView):
+#   L232   class ComandaListView(ListView):
+#   L240   class ComandaCerrarView(View):
+#   L249   class AgregarProductoACamadaView(FormView):
+#   L276   class ComandaDetailView(DetailView):
+#   L291   class ProductFilterView(ListView):
+#   L301   class TpvComandasView(TemplateView):
+#   L306   class TpvCobrosView(TemplateView):
+#   L309   class TpvHistorialView(TemplateView):
+#   L312   class TpvConfigView(TemplateView):
+#   L317   class EmpleadoCreateView(CreateView):
+#   L333   class EmpleadoListView(ListView):
+#   L340   class EmpleadoUpdateView(UpdateView):
+#   L351   class ProductListView(ListView):
+#   L357   class ProductCreateView(CreateView):
+#   L363   class ProductUpdateView(UpdateView):
+#   L381   class ProductDeleteView(DeleteView):
+# =====================================================================
+
 # tpv/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View

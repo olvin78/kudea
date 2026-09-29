@@ -1,3 +1,35 @@
+# =====================================================================
+# 📁 VISTAS · APP 'tpv_shop' — Catálogo/carrito online (módulo tpv_shop OFF por defecto)
+# =====================================================================
+#   L33    class TpvShopIndexView(TemplateView):
+#   L43    class ProductListView(ListView):
+#   L56    class ProductDetailView(DetailView):
+#   L81    class CategoryListView(ListView):
+#   L91    class CategoryDetailView(DetailView):
+#   L105   class ServiceListView(ListView):
+#   L112   class ServiceDetailView(DetailView):
+#   L121   class CartBaseView(LoginRequiredMixin):
+#   L141   class CartView(View):
+#   L175   class AddToCartView(CartBaseView, View):
+#   L189   class RemoveFromCartView(View):
+#   L198   class UpdateCartView(CartBaseView, View):
+#   L233   class CheckoutView(CartBaseView, View):
+#   L264   class FinalizarCompraView(View):
+#   L304   class UpdateCartAjaxView(CartBaseView, View):
+#   L332   class ReceiptSelectionView(FormView):
+#   L349   class EmailFormView(FormView):
+#   L355   class TicketListView(ListView):
+#   L380   class TicketDetailView(DetailView):
+#   L410   class EliminarTicketView(View):
+#   L419   def tickets_del_dia(request):
+#   L446   class CajaArqueoCreateView(CreateView):
+#   L465   class CajaArqueoListView(View):
+#   L472   class CajaArqueoDetailView(DetailView):
+#   L531   class CajaArqueoDeleteView(DeleteView):
+#   L539   class ArqueoAutomaticoView(View):
+#   L589   def guardar_arqueo_auto(request):
+# =====================================================================
+
 # views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View

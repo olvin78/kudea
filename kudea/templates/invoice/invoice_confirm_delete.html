@@ -1,0 +1,32 @@
+{% extends 'home/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center p-5">
+                    <i class="bi bi-exclamation-triangle text-danger" style="font-size: 3rem;"></i>
+                    <h4 class="mt-3 mb-2 text-kudea">¿Eliminar la factura?</h4>
+                    <p class="text-muted mb-1">
+                        Vas a eliminar <strong>{{ object.numero }}</strong> de
+                        <strong>{{ object.cliente_nombre_completo }}</strong>
+                        por <strong>{{ object.total|floatformat:2 }} €</strong>.
+                    </p>
+                    <p class="text-muted small">Esta acción no se puede deshacer.</p>
+                    <form method="post" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger me-2">
+                            <i class="bi bi-trash me-1"></i> Sí, eliminar
+                        </button>
+                    </form>
+                    <a href="{% url 'invoice_app:detalle' object.pk %}" class="btn btn-outline-secondary">
+                        Cancelar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

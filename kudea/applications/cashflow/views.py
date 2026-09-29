@@ -1,3 +1,14 @@
+# =====================================================================
+# 📁 VISTAS · APP 'cashflow' — Lista de movimientos de caja, crear y detalle API
+# =====================================================================
+#   L20    def get_date_range(request):
+#   L67    class CashflowListView(ListView):
+#   L209   def crear_movimiento_ajax(request):
+#   L257   def force_close_register_ajax(request):
+#   L282   def detalle_movimiento_api(request, movimiento_id):
+#   L336   class MovimientoDetailView(DetailView):
+# =====================================================================
+
 from datetime import timedelta
 from decimal import Decimal
 

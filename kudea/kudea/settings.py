@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'applications.invoice',
     'applications.cash',
     'applications.stock',
+    'applications.purchases',
     'applications.reporting',
     'applications.cashflow',
     'applications.payments',
@@ -106,6 +107,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'applications.home.context_processors.modulos_activos',
                 'applications.home.context_processors.moneda_context',
+                'applications.config.context_processors.role_context',
 
             ],
         },
@@ -153,7 +155,7 @@ AUTHENTICATION_BACKENDS = [
 
 # Allauth Settings
 ACCOUNT_LOGOUT_ON_GET = True
-ACCOUNT_LOGIN_METHODS = {'email'}
+ACCOUNT_LOGIN_METHODS = {'username', 'email'}
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 LOGIN_URL = '/accounts/login/'
@@ -193,6 +195,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 # settings.py
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [

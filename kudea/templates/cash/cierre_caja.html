@@ -1,0 +1,383 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block title %}Arqueo y Cierre de Caja | KUDEA{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+    .cash-wrap {
+        position: relative; isolation: isolate;
+        min-height: calc(100vh - 56px);
+        background-color: #f5fafb;
+        background-image:
+            radial-gradient(760px 340px at 8% -4%, rgba(168, 218, 220, .5), transparent 62%),
+            radial-gradient(680px 320px at 96% 0%, rgba(69, 123, 157, .14), transparent 60%),
+            radial-gradient(620px 460px at 62% 106%, rgba(42, 157, 143, .10), transparent 65%),
+            linear-gradient(180deg, #f8fcfd 0%, #f2f7fa 100%);
+        background-repeat: no-repeat;
+    }
+    body { background-color: #f2f7fa; }
+
+    .k-card {
+        background: rgba(255, 255, 255, .82);
+        border: 1px solid rgba(255, 255, 255, .9);
+        border-radius: 26px;
+        box-shadow: 0 18px 40px -32px rgba(29, 53, 87, .5);
+        transition: box-shadow .2s ease, background .2s ease;
+    }
+    .k-card:hover { background: rgba(255, 255, 255, .95); }
+
+    .k-eyebrow {
+        display: inline-flex; align-items: center; gap: 8px;
+        font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
+        color: #457B9D; background: rgba(255, 255, 255, .75);
+        border: 1px solid rgba(168, 218, 220, .8); padding: 6px 14px; border-radius: 999px;
+    }
+    .k-eyebrow .dot { width: 7px; height: 7px; border-radius: 50%; background: #2A9D8F; }
+    .k-eyebrow .dot.off { background: #E63946; }
+    .k-title { font-size: clamp(1.6rem, 2.6vw, 2.1rem); font-weight: 800; color: #1D3557; letter-spacing: -.02em; margin: 14px 0 4px; }
+    .k-sub { color: #64748B; font-weight: 500; font-size: 14px; }
+
+    .sum-row { display: flex; align-items: center; justify-content: space-between; padding: 13px 4px; border-bottom: 1px dashed rgba(148, 163, 184, .3); font-size: 14px; }
+    .sum-row:last-child { border-bottom: none; }
+    .sum-row .lbl { display: flex; align-items: center; gap: 10px; color: #475569; font-weight: 600; }
+    .sum-row .lbl i { width: 30px; height: 30px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 13px; color: #fff; background: linear-gradient(135deg, #457B9D, #A8DADC); flex: none; }
+    .sum-row .val { font-weight: 800; color: #1D3557; font-variant-numeric: tabular-nums; }
+    .sum-row.total { background: rgba(168, 218, 220, .16); border-radius: 16px; padding: 15px 14px; margin-top: 6px; border-bottom: none; }
+    .sum-row.total .val { font-size: 24px; color: #2A9D8F; }
+
+    .cierre-input {
+        width: 100%; border: 2px solid rgba(168, 218, 220, .9); border-radius: 18px;
+        padding: 16px 18px; font-size: 26px; font-weight: 800; color: #1D3557;
+        background: rgba(248, 252, 253, .9); outline: none; font-variant-numeric: tabular-nums;
+        transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    .cierre-input:focus { border-color: #457B9D; box-shadow: 0 0 0 4px rgba(69, 123, 157, .14); }
+    .cierre-textarea {
+        width: 100%; border: 1.5px solid rgba(203, 213, 225, .9); border-radius: 14px;
+        padding: 12px 14px; font-size: 14px; color: #334155; background: rgba(248, 250, 252, .9);
+        outline: none; resize: vertical; transition: border-color .15s ease;
+    }
+    .cierre-textarea:focus { border-color: #457B9D; }
+
+    .dif-box { border-radius: 20px; padding: 16px 18px; text-align: center; transition: all .2s ease; }
+    .dif-box .dif-lbl { font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; opacity: .75; }
+    .dif-box .dif-val { font-size: 30px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+    .dif-ok   { background: rgba(42, 157, 143, .12); border: 1.5px solid rgba(42, 157, 143, .4); color: #1d7a6e; }
+    .dif-sob  { background: rgba(244, 162, 97, .14); border: 1.5px solid rgba(244, 162, 97, .5); color: #b4622a; }
+    .dif-fal  { background: rgba(230, 57, 70, .10); border: 1.5px solid rgba(230, 57, 70, .4); color: #c22b3c; }
+
+    .btn-cierre {
+        width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
+        background: linear-gradient(135deg, #1D3557, #457B9D); color: #fff;
+        padding: 16px; border-radius: 20px; font-weight: 800; font-size: 15px;
+        box-shadow: 0 16px 30px -18px rgba(29, 53, 87, .8); transition: all .18s ease; border: none; cursor: pointer;
+    }
+    .btn-cierre:hover { transform: translateY(-1px); box-shadow: 0 20px 34px -18px rgba(29, 53, 87, .9); }
+    .btn-cierre:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    .hist-scroll { max-height: 260px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: rgba(69, 123, 157, .45) transparent; }
+    .hist-scroll::-webkit-scrollbar { width: 8px; }
+    .hist-scroll::-webkit-scrollbar-track { background: rgba(226, 232, 240, .6); border-radius: 99px; }
+    .hist-scroll::-webkit-scrollbar-thumb { background: rgba(69, 123, 157, .45); border-radius: 99px; }
+
+    .chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 999px; font-size: 11px; font-weight: 800; }
+    .chip.ok   { background: rgba(42, 157, 143, .12); color: #1d7a6e; border: 1px solid rgba(42, 157, 143, .35); }
+    .chip.warn { background: rgba(244, 162, 97, .16); color: #b4622a; border: 1px solid rgba(244, 162, 97, .45); }
+    .chip.bad  { background: rgba(230, 57, 70, .10); color: #c22b3c; border: 1px solid rgba(230, 57, 70, .35); }
+
+    @media print { .cash-wrap { min-height: auto; } .no-print { display: none !important; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cash-wrap">
+<main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- HEADER -->
+    <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-5 mb-8">
+        <div>
+            <span class="k-eyebrow">
+                <span class="dot {% if apertura %}{% else %}off{% endif %}"></span>
+                {% if apertura %}Turno abierto · {{ apertura.usuario.username }}{% else %}Sin turno abierto{% endif %}
+            </span>
+            <h1 class="k-title">Arqueo y Cierre de Caja</h1>
+            <p class="k-sub">Cuenta el efectivo del cajón, cuadra contra lo esperado y cierra el turno · {% now "d/m/Y" %}</p>
+        </div>
+        <div class="flex items-center gap-3 no-print">
+            <a href="{% url 'cash_app:cash_index' %}" class="inline-flex items-center gap-2 bg-white text-slate-700 border border-slate-200 px-5 py-3 rounded-2xl font-bold text-sm hover:bg-slate-50">
+                <i class="fas fa-arrow-left"></i> Panel de Caja
+            </a>
+        </div>
+    </div>
+
+    <!-- MENSAJES -->
+    {% if messages %}
+    <div class="mb-6 space-y-2">
+        {% for message in messages %}
+        <div class="rounded-2xl px-4 py-3 text-sm font-bold flex items-center gap-3
+            {% if message.tags == 'success' %}bg-emerald-50 text-emerald-700 border border-emerald-100
+            {% elif message.tags == 'warning' %}bg-amber-50 text-amber-700 border border-amber-100
+            {% else %}bg-red-50 text-red-700 border border-red-100{% endif %}">
+            <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-times-circle{% endif %}"></i>
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- RESUMEN DEL CIERRE REALIZADO -->
+    {% if cierre_hecho %}
+    <section class="k-card p-6 mb-6" style="background: rgba(236, 253, 245, .9); border-color: rgba(167, 243, 208, .9);">
+        <div class="flex items-start gap-4">
+            <div class="w-12 h-12 bg-emerald-500 text-white rounded-2xl flex items-center justify-center text-xl flex-none shadow-lg shadow-emerald-500/25">
+                <i class="fas fa-lock"></i>
+            </div>
+            <div class="flex-1">
+                <div class="text-emerald-900 font-black uppercase text-xs tracking-widest mb-1">Turno cerrado el {{ cierre_hecho.fecha|date:"d/m/Y" }} a las {{ cierre_hecho.hora_cierre|date:"H:i" }}</div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
+                    <div class="bg-white/70 rounded-xl px-3 py-2">
+                        <div class="text-[10px] font-black uppercase tracking-wider text-slate-400">Ventas</div>
+                        <div class="font-extrabold text-slate-800">{{ cierre_hecho.total_ventas|floatformat:2 }} €</div>
+                    </div>
+                    <div class="bg-white/70 rounded-xl px-3 py-2">
+                        <div class="text-[10px] font-black uppercase tracking-wider text-slate-400">Esperado</div>
+                        <div class="font-extrabold text-slate-800">{{ cierre_hecho.efectivo_esperado|floatformat:2 }} €</div>
+                    </div>
+                    <div class="bg-white/70 rounded-xl px-3 py-2">
+                        <div class="text-[10px] font-black uppercase tracking-wider text-slate-400">Contado</div>
+                        <div class="font-extrabold text-slate-800">{{ cierre_hecho.efectivo_retirado|floatformat:2 }} €</div>
+                    </div>
+                    <div class="bg-white/70 rounded-xl px-3 py-2">
+                        <div class="text-[10px] font-black uppercase tracking-wider text-slate-400">Diferencia</div>
+                        {% if cierre_hecho.diferencia > 0 %}
+                        <div class="font-extrabold text-amber-600">+{{ cierre_hecho.diferencia|floatformat:2 }} €</div>
+                        {% elif cierre_hecho.diferencia < 0 %}
+                        <div class="font-extrabold text-red-600">{{ cierre_hecho.diferencia|floatformat:2 }} €</div>
+                        {% else %}
+                        <div class="font-extrabold text-emerald-600">0,00 €</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="text-sm font-bold text-emerald-800 mt-3"><i class="fas fa-info-circle mr-1"></i>{{ cierre_hecho.notas|default:"Cuadre perfecto" }}</div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    {% if apertura %}
+    <!-- ARQUEO -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+
+        <!-- IZQUIERDA: RESUMEN DEL TURNO -->
+        <section class="k-card p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white" style="background: linear-gradient(135deg, #1D3557, #457B9D);">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+                <div>
+                    <div class="text-xs font-black uppercase tracking-widest text-slate-400">Paso 1 · Revisa</div>
+                    <div class="font-extrabold text-slate-800">Resumen del turno</div>
+                </div>
+            </div>
+
+            <div class="sum-row">
+                <span class="lbl"><i class="fas fa-play"></i> Fondo inicial</span>
+                <span class="val">{{ fondo|floatformat:2 }} €</span>
+            </div>
+            <div class="sum-row">
+                <span class="lbl"><i class="fas fa-shopping-cart"></i> Ventas del día ({{ n_tickets }} tickets)</span>
+                <span class="val">{{ total_ventas|floatformat:2 }} €</span>
+            </div>
+            <div class="sum-row">
+                <span class="lbl"><i class="fas fa-arrow-down"></i> Ingresos en efectivo (Caja)</span>
+                <span class="val">+{{ ingresos_caja|floatformat:2 }} €</span>
+            </div>
+            <div class="sum-row">
+                <span class="lbl"><i class="fas fa-arrow-up"></i> Gastos/retiros de caja</span>
+                <span class="val">−{{ gastos_caja|floatformat:2 }} €</span>
+            </div>
+            <div class="sum-row total">
+                <span class="lbl" style="color:#1D3557;font-weight:800;"><i class="fas fa-calculator" style="background:linear-gradient(135deg,#2A9D8F,#76C7BD);"></i> Efectivo esperado en cajón</span>
+                <span class="val">{{ efectivo_esperado|floatformat:2 }} €</span>
+            </div>
+
+            {% if por_metodo %}
+            <div class="mt-4 pt-4 border-t border-dashed border-slate-200">
+                <div class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Cobros por método (informativo)</div>
+                <div class="flex flex-wrap gap-2">
+                    {% for m in por_metodo %}
+                    <span class="chip {% if 'fectivo' in m.metodo_pago__nombre %}ok{% else %}warn{% endif %}">
+                        {{ m.metodo_pago__nombre }} · {{ m.total|floatformat:2 }} €
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- DERECHA: CUADRE -->
+        <section class="k-card p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white" style="background: linear-gradient(135deg, #2A9D8F, #76C7BD);">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <div>
+                    <div class="text-xs font-black uppercase tracking-widest text-slate-400">Paso 2 · Cuenta y cierra</div>
+                    <div class="font-extrabold text-slate-800">Efectivo contado</div>
+                </div>
+            </div>
+
+            <form method="post" id="formCierre" onsubmit="return confirmarCierre(event);">
+                {% csrf_token %}
+
+                <label class="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Dinero real en el cajón</label>
+                {{ form.efectivo_contado }}
+                {% if form.efectivo_contado.errors %}
+                <div class="text-red-500 text-xs font-bold mt-2">{{ form.efectivo_contado.errors }}</div>
+                {% endif %}
+
+                <!-- DIFERENCIA EN VIVO -->
+                <div class="dif-box dif-ok mt-4" id="difBox">
+                    <div class="dif-lbl" id="difLbl">Diferencia vs esperado</div>
+                    <div class="dif-val" id="difVal">0,00 €</div>
+                </div>
+
+                <label class="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2 mt-4">Incidencias del turno</label>
+                {{ form.notas }}
+
+                <button type="submit" class="btn-cierre mt-5" id="btnCerrar">
+                    <i class="fas fa-lock"></i> Cerrar caja y guardar arqueo
+                </button>
+                <p class="text-[11px] text-slate-400 text-center mt-3">
+                    Se guardará el arqueo en el historial y el turno quedará cerrado.
+                </p>
+            </form>
+        </section>
+    </div>
+
+    {% else %}
+    <!-- SIN APERTURA -->
+    <section class="k-card p-8 mb-8 text-center">
+        <div class="w-16 h-16 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center text-2xl mx-auto mb-4 border-4 border-red-100">
+            <i class="fas fa-lock"></i>
+        </div>
+        <h2 class="text-xl font-black text-slate-800 mb-2">No tienes ninguna caja abierta hoy</h2>
+        {% if apertura_pausada %}
+        <p class="text-slate-500 font-medium mb-5">Tienes un turno en pausa. Reanúdalo desde la apertura de caja (necesitarás el PIN).</p>
+        {% else %}
+        <p class="text-slate-500 font-medium mb-5">Abre caja primero para poder cerrarla al final del turno.</p>
+        {% endif %}
+        <a href="{% url 'cash_app:apertura_caja' %}" class="btn-cierre no-print" style="width:auto; display:inline-flex; padding: 14px 30px;">
+            <i class="fas fa-unlock"></i> Ir a apertura de caja
+        </a>
+    </section>
+    {% endif %}
+
+    <!-- HISTORIAL -->
+    <section class="k-card p-6">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center text-white" style="background: linear-gradient(135deg, #457B9D, #A8DADC);">
+                    <i class="fas fa-history"></i>
+                </div>
+                <div>
+                    <div class="text-xs font-black uppercase tracking-widest text-slate-400">Registro</div>
+                    <div class="font-extrabold text-slate-800">Últimos cierres</div>
+                </div>
+            </div>
+            <span class="chip ok">{{ historial|length }} cierres</span>
+        </div>
+
+        {% if historial %}
+        <div class="hist-scroll">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100">
+                        <th class="text-left py-2.5 px-2">Fecha</th>
+                        <th class="text-right py-2.5 px-2">Ventas</th>
+                        <th class="text-right py-2.5 px-2">Esperado</th>
+                        <th class="text-right py-2.5 px-2">Contado</th>
+                        <th class="text-center py-2.5 px-2">Cuadre</th>
+                        <th class="text-left py-2.5 px-2">Cajero</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in historial %}
+                    <tr class="k-row border-b border-slate-50" style="border-radius:14px;">
+                        <td class="py-3 px-2 font-bold text-slate-700">{{ c.fecha|date:"d/m/Y" }} <span class="text-slate-400 font-medium">{{ c.hora_cierre|date:"H:i" }}</span></td>
+                        <td class="py-3 px-2 text-right font-extrabold text-slate-700">{{ c.total_ventas|floatformat:2 }} €</td>
+                        <td class="py-3 px-2 text-right font-bold text-slate-600">{{ c.efectivo_esperado|floatformat:2 }} €</td>
+                        <td class="py-3 px-2 text-right font-bold text-slate-600">{{ c.efectivo_retirado|floatformat:2 }} €</td>
+                        <td class="py-3 px-2 text-center">
+                            {% if c.diferencia > 0 %}
+                            <span class="chip warn">+{{ c.diferencia|floatformat:2 }} € sobrante</span>
+                            {% elif c.diferencia < 0 %}
+                            <span class="chip bad">{{ c.diferencia|floatformat:2 }} € faltante</span>
+                            {% else %}
+                            <span class="chip ok">Cuadra</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-2 font-bold text-slate-600">{{ c.usuario.username }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-slate-400 text-sm font-medium py-6 text-center">Todavía no hay cierres registrados.</p>
+        {% endif %}
+    </section>
+
+</main>
+</div>
+
+<script>
+(function () {
+    var esperado = parseFloat("{{ efectivo_esperado|floatformat:2 }}".replace(",", ".")) || 0;
+    var input = document.getElementById("id_efectivo_contado") || document.querySelector(".cierre-input");
+    var box = document.getElementById("difBox");
+    var lbl = document.getElementById("difLbl");
+    var val = document.getElementById("difVal");
+
+    function fmt(n) {
+        return n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+    }
+    function actualizar() {
+        if (!input) return;
+        var contado = parseFloat((input.value || "0").replace(",", ".")) || 0;
+        var dif = contado - esperado;
+        val.textContent = (dif > 0 ? "+" : "") + fmt(dif);
+        box.classList.remove("dif-ok", "dif-sob", "dif-fal");
+        if (Math.abs(dif) < 0.005) {
+            box.classList.add("dif-ok");
+            lbl.textContent = "Cuadre perfecto";
+        } else if (dif > 0) {
+            box.classList.add("dif-sob");
+            lbl.textContent = "Sobrante en caja";
+        } else {
+            box.classList.add("dif-fal");
+            lbl.textContent = "Faltante en caja";
+        }
+    }
+    if (input) { input.addEventListener("input", actualizar); actualizar(); }
+
+    window.confirmarCierre = function (e) {
+        var contado = input ? (parseFloat((input.value || "0").replace(",", ".")) || 0) : 0;
+        if (!input || !input.value) {
+            e.preventDefault();
+            alert("Introduce el dinero contado en el cajón.");
+            return false;
+        }
+        var dif = contado - esperado;
+        var txt = dif === 0
+            ? "Cuadre perfecto: " + fmt(contado) + " = esperado.\n\n¿Cerrar la caja?"
+            : (dif > 0 ? "SOBRANTE de " + fmt(dif) : "FALTANTE de " + fmt(Math.abs(dif))) +
+              "\nEsperado: " + fmt(esperado) + " · Contado: " + fmt(contado) +
+              "\n\n¿Cerrar la caja igualmente?";
+        return confirm(txt);
+    };
+})();
+</script>
+{% endblock %}

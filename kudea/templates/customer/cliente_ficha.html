@@ -1,0 +1,169 @@
+{% extends "home/base.html" %}
+
+{% block title %}{{ cliente.nombre }} - Clientes - Kudea{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-8">
+
+    <!-- MIGAS -->
+    <a href="{% url 'customer_app:lista' %}" class="inline-flex items-center gap-2 text-slate-400 hover:text-dark-blue font-bold text-sm mb-4">
+        <i class="fas fa-arrow-left"></i> Clientes
+    </a>
+
+    <!-- FICHA -->
+    <div class="k-card p-8 md:p-10 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div class="flex items-center gap-5">
+            <div class="w-16 h-16 rounded-2xl bg-dark-blue text-white flex items-center justify-center text-2xl font-black shadow-lg shadow-dark-blue/20">
+                {{ cliente.nombre|slice:":1"|upper }}
+            </div>
+            <div>
+                <span class="k-eyebrow mb-2"><span class="dot"></span> Ficha de cliente</span>
+                <h1 class="text-3xl font-black text-slate-800 tracking-tight">{{ cliente.nombre }}</h1>
+                <p class="text-slate-500 font-medium text-sm mt-1">
+                    {% if cliente.dni %}DNI {{ cliente.dni }} · {% endif %}
+                    {% if cliente.telefono %}{{ cliente.telefono }} · {% endif %}
+                    {% if cliente.correo %}{{ cliente.correo }} · {% endif %}
+                    {% if cliente.codigo_postal %}CP {{ cliente.codigo_postal }} · {% endif %}
+                    alta {{ cliente.creado_en|date:"d/m/Y" }}
+                </p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            {% if saldo_fiado > 0 %}
+            <div class="bg-rose-50 border border-rose-200 text-rose-600 px-5 py-3 rounded-2xl font-black flex items-center gap-2">
+                <i class="fas fa-exclamation-circle"></i> Debe {{ saldo_fiado|floatformat:2 }} €
+            </div>
+            {% else %}
+            <div class="bg-emerald-50 border border-emerald-200 text-emerald-600 px-5 py-3 rounded-2xl font-black flex items-center gap-2">
+                <i class="fas fa-check-circle"></i> Sin deuda
+            </div>
+            {% endif %}
+            <a href="{% url 'fiado_cliente_editar' cliente.pk %}" class="bg-white border border-slate-200 text-slate-700 px-5 py-3 rounded-2xl font-bold shadow-sm flex items-center gap-2">
+                <i class="fas fa-pen opacity-60"></i> Editar
+            </a>
+        </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="k-card p-6">
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Compras</div>
+            <div class="text-3xl font-black text-slate-800">{{ n_ventas }}</div>
+        </div>
+        <div class="k-card p-6">
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Total gastado</div>
+            <div class="text-3xl font-black text-slate-800">{{ total_gastado|floatformat:2 }} €</div>
+        </div>
+        <div class="k-card p-6">
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Ticket medio</div>
+            <div class="text-3xl font-black text-slate-800">{{ ticket_medio|floatformat:2 }} €</div>
+        </div>
+        <div class="k-card p-6">
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Última visita</div>
+            <div class="text-3xl font-black text-slate-800 text-xl leading-tight">
+                {% if ultima_visita %}{{ ultima_visita|date:"d/m/Y" }}<div class="text-xs font-bold text-slate-400 mt-1">{{ ultima_visita|date:"H:i" }}</div>{% else %}—{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- HISTORIAL DE VENTAS -->
+        <div class="lg:col-span-2 k-card p-6 md:p-8">
+            <div class="flex items-center justify-between mb-5">
+                <h2 class="text-lg font-black text-slate-800"><i class="fas fa-receipt opacity-40 mr-2"></i>Historial de compras</h2>
+                <span class="text-xs font-bold text-slate-400">{{ n_ventas }} tickets</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="border-b border-slate-100 text-slate-400 text-xs uppercase tracking-wider">
+                            <th class="pb-3 font-bold">Ticket</th>
+                            <th class="pb-3 font-bold">Fecha</th>
+                            <th class="pb-3 font-bold">Pago</th>
+                            <th class="pb-3 font-bold text-right">Total</th>
+                            <th class="pb-3"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for v in ventas_pagina %}
+                        <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+                            <td class="py-3 font-bold text-slate-700 text-sm">{{ v.codigo }}</td>
+                            <td class="py-3 text-sm text-slate-500">{{ v.creado_en|date:"d/m/Y H:i" }}</td>
+                            <td class="py-3 text-sm">
+                                <span class="bg-slate-100 text-slate-600 text-xs font-bold px-2 py-1 rounded-md">{{ v.metodo_pago.nombre }}</span>
+                            </td>
+                            <td class="py-3 text-sm font-black text-slate-800 text-right">{{ v.total|floatformat:2 }} €</td>
+                            <td class="py-3 text-right">
+                                <a href="{% url 'home_app:venta_detalle' v.pk %}" class="text-slate-300 hover:text-dark-blue" title="Ver ticket">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="py-10 text-center text-slate-400 text-sm">Sin compras registradas.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if ventas_pagina.paginator.num_pages > 1 %}
+            <div class="flex justify-center gap-2 mt-5">
+                {% if ventas_pagina.has_previous %}
+                <a href="?pagina={{ ventas_pagina.previous_page_number }}" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-bold text-slate-600">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+                {% endif %}
+                <span class="px-3 py-1.5 rounded-lg bg-dark-blue text-white text-xs font-bold">
+                    {{ ventas_pagina.number }} / {{ ventas_pagina.paginator.num_pages }}
+                </span>
+                {% if ventas_pagina.has_next %}
+                <a href="?pagina={{ ventas_pagina.next_page_number }}" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-bold text-slate-600">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- CUENTA CORRIENTE -->
+        <div class="k-card p-6 md:p-8">
+            <h2 class="text-lg font-black text-slate-800 mb-5"><i class="fas fa-wallet opacity-40 mr-2"></i>Cuenta corriente</h2>
+
+            <div class="rounded-2xl p-5 mb-5 {% if saldo_fiado > 0 %}bg-rose-50 border border-rose-100{% else %}bg-emerald-50 border border-emerald-100{% endif %}">
+                <div class="text-xs font-bold uppercase tracking-wider mb-1 {% if saldo_fiado > 0 %}text-rose-400{% else %}text-emerald-400{% endif %}">Pendiente de cobro</div>
+                <div class="text-3xl font-black {% if saldo_fiado > 0 %}text-rose-600{% else %}text-emerald-600{% endif %}">
+                    {{ saldo_fiado|floatformat:2 }} €
+                </div>
+                {% if pagado_fiado > 0 %}
+                <div class="text-xs font-bold text-slate-400 mt-2">Abonado a la fecha: {{ pagado_fiado|floatformat:2 }} €</div>
+                {% endif %}
+            </div>
+
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Abonos de fiado</div>
+            <div class="space-y-2">
+                {% for p in pagos %}
+                <div class="flex items-center justify-between bg-slate-50 rounded-xl px-4 py-3">
+                    <div>
+                        <div class="text-sm font-bold text-slate-700">{{ p.cantidad|floatformat:2 }} €</div>
+                        <div class="text-xs text-slate-400">{{ p.creado_en|date:"d/m/Y H:i" }}{% if p.metodo_pago %} · {{ p.metodo_pago.nombre }}{% endif %}</div>
+                    </div>
+                    <a href="{% url 'fiado_recibo' p.pk %}" class="text-slate-300 hover:text-dark-blue" title="Ver recibo">
+                        <i class="fas fa-file-invoice"></i>
+                    </a>
+                </div>
+                {% empty %}
+                <p class="text-sm text-slate-400">Sin abonos registrados.</p>
+                {% endfor %}
+            </div>
+
+            {% if saldo_fiado > 0 %}
+            <a href="{% url 'fiado_lista' %}" class="mt-5 w-full bg-rose-500 text-white px-5 py-3 rounded-2xl font-bold shadow-sm flex items-center justify-center gap-2">
+                <i class="fas fa-cash-register"></i> Cobrar en Cuentas por cobrar
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

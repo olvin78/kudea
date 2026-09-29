@@ -1,4 +1,16 @@
+# =====================================================================
+# 📁 MODELOS · APP 'invoice'  (FACTURACIÓN)
+#   · Factura   → serie+número (FAC2026xxxx), estados, IVA %, cliente
+#                 como CAMPOS PLANOS (copiados; NO usa customer.Cliente)
+#   · comanda   → FK opcional a tpv.Comanda (restaurante); con el módulo
+#                 apagado queda vacía — no rompe nada
+#   · ItemFactura → líneas con producto (product.Producto) + tipo_iva
+# La contabilidad NO lee estas facturas: el libro IVA de reporting
+# se calcula sobre home.Venta (no hay doble imputación).
+# =====================================================================
+
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
 from django.core.validators import MinValueValidator, MaxValueValidator
 from applications.tpv.models import Comanda  # Asumiendo que tienes un modelo Comanda
@@ -159,11 +171,24 @@ class Factura(models.Model):
     def cliente_nombre_completo(self):
         return f"{self.cliente_nombre} {self.cliente_apellidos}".strip()
 
+    def get_absolute_url(self):
+        return reverse("invoice_app:detalle", args=[self.pk])
+
     def save(self, *args, **kwargs):
         if not self.numero:
             self.numero = self.generar_numero_factura()
-        self.calcular_totales()
         super().save(*args, **kwargs)
+        # Calcular DESPUÉS de tener PK (calcular_totales usa self.items)
+        # y persistir sin volver a llamar a save() (evita bucles).
+        self.calcular_totales()
+        Factura.objects.filter(pk=self.pk).update(
+            subtotal=self.subtotal,
+            base_imponible=self.base_imponible,
+            total_iva=self.total_iva,
+            total_recargo=self.total_recargo,
+            total_irpf=self.total_irpf,
+            total=self.total,
+        )
 
     def generar_numero_factura(self):
         año = timezone.now().year

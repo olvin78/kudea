@@ -279,10 +279,8 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(15, 23, 42, 0.55);
+    background: rgba(15, 23, 42, 0.72);
     /* Slate 900 translucent */
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -495,7 +493,7 @@
               <div class="p-3 text-center d-flex flex-column h-100 justify-content-between">
                 <div>
                   {% if p.imagen %}
-                  <img src="{{ p.imagen.url }}" class="img-fluid rounded-2xl mb-3 mx-auto d-block"
+                  <img loading="lazy" decoding="async" src="{{ p.imagen.url }}" class="img-fluid rounded-2xl mb-3 mx-auto d-block"
                     style="height:90px; object-fit:contain;">
                   {% else %}
                   <div class="rounded-full d-flex align-items-center justify-content-center mb-3 mx-auto"
@@ -782,6 +780,46 @@
 </div>
 
 <!-- ============================================== -->
+<!-- MODAL FIADO (elegir cliente antes de cobrar) -->
+<!-- ============================================== -->
+<div class="modal fade" id="fiadoClienteModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-[2.5rem] border-0 overflow-hidden shadow-2xl">
+      <div class="modal-header bg-slate-900 text-white px-8 py-6 border-0">
+        <h5 class="modal-title font-black text-lg"><i class="fas fa-user mr-2 text-amber-400"></i> Cliente</h5>
+      </div>
+      <div class="modal-body px-8 py-6">
+        <p class="text-sm text-slate-500 mb-4">
+          El dinero <b>no entra en caja</b> hasta que el cliente paga. ¿A quién se lo lleva?
+        </p>
+
+        <label class="text-xs font-black uppercase tracking-widest text-slate-400">Cliente</label>
+        <select id="fiado-cliente" class="form-select form-select-lg rounded-3xl mt-1"
+                onchange="document.getElementById('fiado-nuevo').classList.toggle('d-none', this.value!=='nuevo')">
+          <option value="">— Selecciona un cliente —</option>
+          {% for c in clientes %}
+          <option value="{{ c.id }}">{{ c.nombre }}{% if c.telefono %} · {{ c.telefono }}{% endif %}</option>
+          {% endfor %}
+          <option value="nuevo">➕ Nuevo cliente…</option>
+        </select>
+
+        <div id="fiado-nuevo" class="mt-4 d-none">
+          <input id="fiado-nombre" class="form-control rounded-3xl mb-2" placeholder="Nombre del cliente *">
+          <input id="fiado-telefono" class="form-control rounded-3xl" placeholder="Teléfono (opcional)">
+        </div>
+
+        <div id="fiado-error" class="text-danger small mt-3 d-none"></div>
+      </div>
+      <div class="px-8 py-5 border-top d-flex gap-3">
+        <button class="btn btn-light flex-fill rounded-3xl font-bold" onclick="TPV.cancelFiado()">Cancelar</button>
+        <button class="btn flex-fill rounded-3xl font-bold text-white" style="background:var(--kudea-medium)"
+                onclick="TPV.confirmFiado()">Continuar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================== -->
 <!-- MODAL PAGO MIXTO (FRACCIONADO) -->
 <!-- ============================================== -->
 <div class="modal fade" id="pagoMixtoModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
@@ -907,6 +945,7 @@
   const TPV = {
     ticket: [],
     metodoPagoSeleccionado: null,
+    clienteSeleccionado: null,
     ultimoRecibido: 0,
     descuento: 0,
     layoutInvertido: false,
@@ -1201,11 +1240,86 @@
 
       if (this.metodoPagoSeleccionado.nombre === "Pago Mixto") {
         this.openPagoMixtoModal();
+      } else if (this.metodoPagoSeleccionado.nombre === "Fiado") {
+        // FIADO: hay que decir a quién se lo lleva
+        this.desgloseMixto = null;
+        this.openFiadoModal();
       } else {
         this.desgloseMixto = null;
         if (!this.metodoPagoSeleccionado.aceptaCambio) {
           document.getElementById("importe").value = this.getTotal().toFixed(2);
         }
+      }
+    },
+
+    // -----------------------------------------------------
+    // FIADO: popup para elegir/crear el cliente
+    // -----------------------------------------------------
+    openFiadoModal() {
+      const error = document.getElementById("fiado-error");
+      error.classList.add("d-none");
+      if (!this.clienteSeleccionado) {
+        document.getElementById("fiado-cliente").value = "";
+        document.getElementById("fiado-nombre").value = "";
+        document.getElementById("fiado-telefono").value = "";
+        document.getElementById("fiado-nuevo").classList.add("d-none");
+      }
+      new bootstrap.Modal(document.getElementById("fiadoClienteModal")).show();
+    },
+
+    cancelFiado() {
+      this.clienteSeleccionado = null;
+      this.deselectPayment();
+      const el = document.getElementById("fiadoClienteModal");
+      const m = bootstrap.Modal.getInstance(el);
+      if (m) m.hide();
+    },
+
+    async confirmFiado() {
+      const sel = document.getElementById("fiado-cliente");
+      const error = document.getElementById("fiado-error");
+      error.classList.add("d-none");
+      let cliente = null;
+
+      if (sel.value === "nuevo") {
+        const nombre = document.getElementById("fiado-nombre").value.trim();
+        if (!nombre) {
+          error.textContent = "Escribe el nombre del nuevo cliente.";
+          error.classList.remove("d-none");
+          return;
+        }
+        const fd = new FormData();
+        fd.append("nombre", nombre);
+        fd.append("telefono", document.getElementById("fiado-telefono").value.trim());
+        try {
+          const res = await fetch("{% url 'cliente_ajax' %}", {
+            method: "POST",
+            headers: { "X-CSRFToken": csrftoken },
+            body: fd
+          });
+          const data = await res.json();
+          if (!data.ok) throw new Error(data.error || "No se pudo crear");
+          cliente = data;
+        } catch (e) {
+          error.textContent = e.message;
+          error.classList.remove("d-none");
+          return;
+        }
+      } else if (sel.value) {
+        cliente = { id: parseInt(sel.value), nombre: sel.options[sel.selectedIndex].text };
+      } else {
+        error.textContent = "Selecciona un cliente (o crea uno nuevo).";
+        error.classList.remove("d-none");
+        return;
+      }
+
+      this.clienteSeleccionado = cliente;
+      const el = document.getElementById("fiadoClienteModal");
+      const m = bootstrap.Modal.getInstance(el);
+      if (m) m.hide();
+      // En el fiado no se entrega dinero: el importe es el total del ticket
+      if (this.metodoPagoSeleccionado && !this.metodoPagoSeleccionado.aceptaCambio) {
+        document.getElementById("importe").value = this.getTotal().toFixed(2);
       }
     },
 
@@ -1407,7 +1521,8 @@
         iva: this.getIVA(),
         total: this.getTotal(),
         recibido: this.ultimoRecibido,
-        desglose_mixto: this.desgloseMixto || null
+        desglose_mixto: this.desgloseMixto || null,
+        cliente_id: this.clienteSeleccionado ? this.clienteSeleccionado.id : null
       };
 
       try {

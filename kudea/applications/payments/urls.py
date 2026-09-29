@@ -1,3 +1,11 @@
+# =====================================================================
+# 📁 RUTAS · APP 'payments'  (FORMAS DE PAGO)
+# URL base: /payments/metodos/
+#   · Catálogo de métodos de pago (efectivo, tarjeta, fiado…)
+# SE RELACIONA CON: home.Venta.metodo_pago, customer.PagoFiado,
+#                   invoice (método en campos planos)
+# =====================================================================
+
 from django.urls import path
 from .views import PaymentMethodsView, DeletePaymentMethodView, UpdatePaymentMethodView
 

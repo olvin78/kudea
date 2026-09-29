@@ -164,6 +164,11 @@
       <a href="{% url 'tpv_app:empleado_create' %}" class="btn btn-sm btn-kudea">
         <i class="fas fa-plus me-1"></i> Nuevo Empleado
       </a>
+      {% if es_admin or user_role == 'gerente' %}
+      <a href="{% url 'home_attendance:nomina' %}" class="btn btn-sm btn-outline-kudea">
+        <i class="fas fa-money-check-alt me-1"></i> Nómina
+      </a>
+      {% endif %}
     </div>
 
 

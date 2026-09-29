@@ -1,3 +1,13 @@
+# =====================================================================
+# 📁 VISTAS · APP 'product' — Vistas de catálogo (compartidas con home)
+# =====================================================================
+#   L16    class HomePageView(TemplateView):
+#   L19    class TPVView(LoginRequiredMixin, TemplateView):
+#   L33    class CrearCategoriaAjaxView(LoginRequiredMixin, View):
+#   L51    class ProductoListView(LoginRequiredMixin, ListView):
+#   L75    class CrearProductoView(LoginRequiredMixin, CreateView):
+# =====================================================================
+
 # Django imports
 from django.shortcuts import render
 from django.http import JsonResponse

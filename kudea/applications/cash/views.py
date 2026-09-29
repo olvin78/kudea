@@ -1,3 +1,12 @@
+# =====================================================================
+# 📁 VISTAS · APP 'cash' — Apertura, pausa y cierre de caja con cuadre
+# =====================================================================
+#   L18    class CashIndexView(LoginRequiredMixin, TemplateView):
+#   L174   class AperturaCajaView(LoginRequiredMixin, View):
+#   L354   class PauseCajaView(LoginRequiredMixin, View):
+#   L380   class CierreCajaView(LoginRequiredMixin, View):
+# =====================================================================
+
 from django.db import models, transaction
 from django.db.models import Sum, Count, F, Avg, ExpressionWrapper, FloatField
 from django.views.generic import TemplateView, View
@@ -7,7 +16,7 @@ from django.contrib import messages
 from django.utils.timezone import localdate
 from datetime import timedelta
 from applications.home.models import Venta, DetalleVenta
-from .models import AperturaCaja, Caja
+from .models import AperturaCaja, Caja, CierreCaja
 from .forms import AperturaCajaForm
 
 
@@ -15,7 +24,7 @@ from .forms import AperturaCajaForm
 # ==================== VISTA PRINCIPAL =======================
 # ============================================================
 
-class CashIndexView(TemplateView):
+class CashIndexView(LoginRequiredMixin, TemplateView):
 
     template_name = "cash/index.html"
 
@@ -158,7 +167,7 @@ class CashIndexView(TemplateView):
 
 
         # ============================================================
-        # ==================== 5️⃣ PERIODO ACTUAL ====================
+        # ==================== 5️⃣ PERÍODO ACTUAL ====================
         # ============================================================
 
         context["apertura_hoy"] = apertura_activa
@@ -229,9 +238,6 @@ class AperturaCajaView(LoginRequiredMixin, View):
                 'monto': str(cierre.efectivo_retirado),
             }
 
-        # Últimos 7 días de cierres para cada caja
-        from applications.cash.models import CierreCaja
-        from datetime import timedelta
         hace_7_dias = localdate() - timedelta(days=7)
         cierres_recientes = CierreCaja.objects.filter(
             fecha__gte=hace_7_dias
@@ -249,9 +255,16 @@ class AperturaCajaView(LoginRequiredMixin, View):
         })
 
     def post(self, request, *args, **kwargs):
-        # Si ya tiene una apertura abierta, no permitir duplicar
+        import logging
+        _log = logging.getLogger("apertura_debug")
+        _log.warning("POST user=%s keys=%s caja_id=%s pin=%s fondo=%s",
+                      request.user, list(request.POST.keys()),
+                      request.POST.get("caja_id"), request.POST.get("pin_apertura"),
+                      request.POST.get("fondo_inicial"))
+
         apertura = self._apertura_hoy(request.user)
         if apertura:
+            _log.warning("ALREADY_OPEN -> redirect tpv_general")
             messages.warning(request, "Ya existe una apertura de caja abierta para hoy.")
             return redirect("home_app:tpv_general")
 
@@ -261,43 +274,43 @@ class AperturaCajaView(LoginRequiredMixin, View):
             caja = Caja.objects.filter(id=caja_id, activa=True).first()
 
         if not caja:
-            messages.error(request, "Selecciona una caja válida.")
+            _log.warning("NO_CAJA_VALID -> redirect apertura_caja")
+            messages.error(request, "Selecciona una caja valida.")
             return redirect("cash_app:apertura_caja")
 
-        # Bloquear si la caja ya tiene una apertura abierta o pausada por OTRO usuario
         apertura_existente = AperturaCaja.objects.filter(
             caja=caja,
             estado__in=['abierta', 'pausada']
         ).exclude(usuario=request.user).first()
         if apertura_existente:
+            _log.warning("CAJA_IN_USE by %s", apertura_existente.usuario.username)
             estado_txt = "abierta" if apertura_existente.estado == "abierta" else "en pausa"
-            messages.error(request, f"La caja '{caja.nombre}' ya está {estado_txt} por {apertura_existente.usuario.username}. No puedes abrirla hasta que se cierre.")
+            messages.error(request, f"La caja '{caja.nombre}' ya esta {estado_txt} por {apertura_existente.usuario.username}. No puedes abrirla hasta que se cierre.")
             return redirect("cash_app:apertura_caja")
 
-        # Reanudar si el mismo usuario tiene una apertura pausada en esta caja
         apertura_pausada = AperturaCaja.objects.filter(
             usuario=request.user,
             caja=caja,
             estado="pausada"
         ).first()
         if apertura_pausada:
-            # Validar PIN también para reanudar
             pin_correcto = caja.pin if caja.pin else "1234"
             pin_usuario = request.POST.get('pin_apertura', '').strip()
             if pin_usuario != pin_correcto:
+                _log.warning("PIN_WRONG_RESUME got=%s expected=%s", pin_usuario, pin_correcto)
                 messages.error(request, f"PIN incorrecto para reanudar '{caja.nombre}'.")
                 return redirect("cash_app:apertura_caja")
             apertura_pausada.estado = "abierta"
             apertura_pausada.save()
+            _log.warning("RESUMED -> redirect tpv_general")
             messages.success(request, f"Turno reanudado en '{caja.nombre}'.")
             return redirect("home_app:tpv_general")
 
-        # Validar PIN contra la caja seleccionada
         pin_correcto = caja.pin if caja.pin else "1234"
         pin_usuario = request.POST.get('pin_apertura', '').strip()
         if pin_usuario != pin_correcto:
+            _log.warning("PIN_WRONG got=%s expected=%s", pin_usuario, pin_correcto)
             messages.error(request, f"El PIN de seguridad para '{caja.nombre}' es incorrecto.")
-            
             form = AperturaCajaForm(request.POST)
             ctx = self._build_error_context(request)
             ctx.update({"form": form, "apertura_activa": None, "apertura_pausada": None})
@@ -312,10 +325,11 @@ class AperturaCajaView(LoginRequiredMixin, View):
             ap.save()
             from applications.home.models import ConfiguracionTPV
             moneda = ConfiguracionTPV.objects.first().moneda if ConfiguracionTPV.objects.exists() else "C$"
+            _log.warning("SUCCESS apertura_id=%s -> redirect tpv_general", ap.id)
             messages.success(request, f"Caja '{caja.nombre}' abierta con fondo inicial de {ap.fondo_inicial} {moneda}")
             return redirect("home_app:tpv_general")
 
-        # Si el form no es válido
+        _log.warning("FORM_INVALID errors=%s", form.errors)
         ctx = self._build_error_context(request)
         ctx.update({"form": form, "apertura_activa": None, "apertura_pausada": None})
         return render(request, self.template_name, ctx)
@@ -360,3 +374,135 @@ class PauseCajaView(LoginRequiredMixin, View):
         caja_nombre = apertura.caja.nombre if apertura.caja else "Caja"
         messages.success(request, f"'{caja_nombre}' pausada. Vuelve a abrir caja para reanudar.")
         return redirect("cash_app:apertura_caja")
+
+
+# ============================================================
+# ============ ARQUEO Y CIERRE DE CAJA (CUADRE) ==============
+# ============================================================
+
+from django.urls import reverse
+from django.utils import timezone as tz
+from applications.cashflow.models import Movimiento
+from .forms import CierreCajaForm
+
+
+class CierreCajaView(LoginRequiredMixin, View):
+    """
+    Arqueo y cierre de turno: calcula el efectivo esperado en el cajón
+    (fondo inicial + ingresos de efectivo - gastos del día), lo compara
+    con lo contado y guarda el cierre cerrando la apertura.
+    """
+    template_name = "cash/cierre_caja.html"
+
+    def _datos(self, request):
+        hoy = localdate()
+        apertura = AperturaCaja.objects.filter(
+            usuario=request.user, fecha=hoy, estado="abierta"
+        ).first()
+        pausada = AperturaCaja.objects.filter(
+            usuario=request.user, estado="pausada"
+        ).first()
+
+        ventas_hoy = Venta.objects.filter(creado_en__date=hoy, estado="completada")
+        total_ventas = ventas_hoy.aggregate(t=Sum("total"))["t"] or 0
+        n_tickets = ventas_hoy.count()
+        por_metodo = ventas_hoy.values(
+            "metodo_pago__nombre"
+        ).annotate(total=Sum("total")).order_by("-total")
+
+        ingresos_caja = Movimiento.objects.filter(
+            cuenta__nombre__icontains="Caja", tipo="ingreso", fecha__date=hoy
+        ).aggregate(t=Sum("cantidad"))["t"] or 0
+        gastos_caja = Movimiento.objects.filter(
+            cuenta__nombre__icontains="Caja", tipo="gasto", fecha__date=hoy
+        ).aggregate(t=Sum("cantidad"))["t"] or 0
+
+        fondo = apertura.fondo_inicial if apertura else 0
+        esperado = (fondo or 0) + (ingresos_caja or 0) - (gastos_caja or 0)
+
+        return {
+            "apertura": apertura,
+            "apertura_pausada": pausada,
+            "total_ventas": total_ventas,
+            "n_tickets": n_tickets,
+            "por_metodo": por_metodo,
+            "fondo": fondo,
+            "ingresos_caja": ingresos_caja,
+            "gastos_caja": gastos_caja,
+            "efectivo_esperado": esperado,
+            "historial": CierreCaja.objects.all()[:7],
+            "moneda": "€",
+        }
+
+    def get(self, request, *args, **kwargs):
+        ctx = self._datos(request)
+        ctx["form"] = CierreCajaForm()
+        ctx["cierre_hecho"] = None
+        if request.GET.get("hecho"):
+            ctx["cierre_hecho"] = CierreCaja.objects.filter(
+                pk=request.GET.get("hecho")
+            ).first()
+        return render(request, self.template_name, ctx)
+
+    def post(self, request, *args, **kwargs):
+        apertura = AperturaCaja.objects.filter(
+            usuario=request.user, fecha=localdate(), estado="abierta"
+        ).first()
+        if not apertura:
+            messages.error(request, "No tienes ninguna caja abierta hoy para cerrar.")
+            return redirect("cash_app:cash_index")
+
+        form = CierreCajaForm(request.POST)
+        if not form.is_valid():
+            ctx = self._datos(request)
+            ctx["form"] = form
+            ctx["cierre_hecho"] = None
+            return render(request, self.template_name, ctx)
+
+        ctx = self._datos(request)
+        esperado = ctx["efectivo_esperado"]
+        contado = form.cleaned_data["efectivo_contado"]
+        diferencia = contado - esperado
+        user_notas = (form.cleaned_data.get("notas") or "").strip()
+
+        if diferencia > 0:
+            rotulo = f"Sobrante de {abs(diferencia):.2f} €"
+        elif diferencia < 0:
+            rotulo = f"Faltante de {abs(diferencia):.2f} €"
+        else:
+            rotulo = "Cuadre perfecto (sin diferencias)"
+        notas = f"{rotulo}. {user_notas}".strip()
+
+        with transaction.atomic():
+            cierre = CierreCaja.objects.create(
+                tipo="diario",
+                fecha_inicio=localdate(),
+                fecha_fin=localdate(),
+                usuario=request.user,
+                caja=apertura.caja,
+                fondo_inicial=apertura.fondo_inicial,
+                efectivo_esperado=esperado,
+                efectivo_retirado=contado,
+                total_ventas=ctx["total_ventas"],
+                notas=notas,
+            )
+            apertura.estado = "cerrada"
+            apertura.hora_cierre = tz.now()
+            apertura.save(update_fields=["estado", "hora_cierre"])
+
+        if diferencia == 0:
+            messages.success(
+                request,
+                f"Caja cerrada con cuadre perfecto: {esperado:.2f} € esperados = {contado:.2f} € contados.",
+            )
+        elif diferencia > 0:
+            messages.warning(
+                request,
+                f"Caja cerrada. SOBRANTE de {diferencia:.2f} € (esperado {esperado:.2f} €, contado {contado:.2f} €).",
+            )
+        else:
+            messages.error(
+                request,
+                f"Caja cerrada. FALTANTE de {abs(diferencia):.2f} € (esperado {esperado:.2f} €, contado {contado:.2f} €).",
+            )
+        return redirect(reverse("cash_app:cierre_caja") + f"?hecho={cierre.pk}")

@@ -1,3 +1,12 @@
+# =====================================================================
+# 📁 MODELOS · APP 'cashflow'  (CAJA UNIFICADA)
+#   · Cuenta     → caja/banco
+#   · Movimiento → entrada/salida; external_ref identifica el origen:
+#       tpv:venta:<id>[:método] · fiado:pago:<id>
+#       compra:<pk>:pago:<pago_pk> · devolucion:<id>
+#   · property venta_pk → pk de la venta (recorta la fracción método)
+# =====================================================================
+
 from decimal import Decimal
 from django.db import models
 from django.utils import timezone
@@ -72,6 +81,21 @@ class Movimiento(models.Model):
 
     def __str__(self):
         return f"{self.get_tipo_display()} - {self.concepto} - {self.cantidad} - {self.get_metodo_pago_display()}"
+
+    @property
+    def venta_pk(self):
+        """ID de venta desde refs 'tpv:venta:78' o 'tpv:venta:78:tarjeta'.
+
+        El sufijo de fracción (:efectivo/:tarjeta) no forma parte del PK,
+        así que se corta en el primer ':' posterior al id.
+        """
+        ref = self.external_ref or ""
+        if ref.startswith("tpv:venta:"):
+            resto = ref[len("tpv:venta:"):]
+            posible = resto.split(":")[0]
+            if posible.isdigit():
+                return int(posible)
+        return None
 
     def signed_amount(self) -> Decimal:
         """

@@ -1,3 +1,16 @@
+# =====================================================================
+# 📁 VISTAS · APP 'budget' — CRUD de presupuestos y sus líneas (con client propio)
+# =====================================================================
+#   L16    class BudgetMainView(TemplateView):
+#   L21    class BudgetCreateView(CreateView):
+#   L56    def delete_budget_item(request, item_id):
+#   L64    def add_client(request):
+#   L82    def budget_success(request, pk):
+#   L91    class BudgetUpdateView(UpdateView):
+#   L132   class BudgetListView(ListView):
+#   L150   class BudgetDetailView(DetailView):
+# =====================================================================
+
 from django.views.generic import TemplateView, DetailView, ListView, UpdateView, ListView, CreateView
 from django.db.models import Q
 from django.shortcuts import render
@@ -55,8 +68,9 @@ class BudgetCreateView(CreateView):
 
 def delete_budget_item(request, item_id):
     item = get_object_or_404(BudgetItem, id=item_id)
+    pk = item.presupuesto_id
     item.delete()
-    return redirect('create_budget') 
+    return redirect('budget_app:budget_detail', pk=pk)
 
 
 
@@ -65,7 +79,7 @@ def add_client(request):
         form = ClientForm(request.POST)
         if form.is_valid():
             form.save()  # ✅ Guarda el cliente en la base de datos
-            return redirect('budget_app:crear.html')  # ✅ Redirige tras guardar
+            return redirect('budget_app:budget_main')  # ✅ Redirige al panel de presupuestos
     else:
         form = ClientForm()
 

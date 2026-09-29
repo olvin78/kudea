@@ -1,3 +1,10 @@
+# =====================================================================
+# 📁 RUTAS · APP 'employee'  (EMPLEADOS / RRHH)
+# URL base: /employees/
+#   · Alta/baja/lista de empleados, campos de permisos y tarifa_hora
+# SE RELACIONA CON: attendance (fichajes y nómina sobre Employee)
+# =====================================================================
+
 from django.urls import path
 from .views import EmployeeListView, EmployeeCreateView, EmployeeUpdateView
 

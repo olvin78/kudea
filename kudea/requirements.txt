@@ -42,3 +42,4 @@ zopfli==0.2.3.post1
 django-allauth==65.4.1
 pyjwt>=2.8.0
 django-cotton==2.6.2
+gunicorn==23.0.0

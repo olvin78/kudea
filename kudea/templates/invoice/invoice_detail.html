@@ -1,0 +1,161 @@
+{% extends 'home/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+
+    <!-- Encabezado -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="mb-1">
+                <i class="bi bi-receipt me-2 text-primary"></i>
+                <span class="text-kudea">Factura {{ factura.numero }}</span>
+            </h2>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <span class="badge
+                    {% if factura.estado == 'pagada' %}kudea-badge-success
+                    {% elif factura.estado == 'anulada' %}bg-danger
+                    {% elif factura.estado == 'emitida' or factura.estado == 'enviada' %}bg-primary
+                    {% else %}kudea-badge-warning{% endif %}">
+                    {{ factura.get_estado_display }}
+                </span>
+                <span class="badge bg-light text-dark border">{{ factura.get_tipo_display }}</span>
+                <small class="text-muted">Emitida el {{ factura.fecha_emision|date:"d/m/Y" }}{% if factura.fecha_vencimiento %} · vence {{ factura.fecha_vencimiento|date:"d/m/Y" }}{% endif %}</small>
+            </div>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{% url 'invoice_app:invoice_list' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Volver
+            </a>
+            <a href="{% url 'invoice_app:editar' factura.pk %}" class="btn btn-sm btn-kudea">
+                <i class="bi bi-pencil me-1"></i> Editar
+            </a>
+            {% if factura.estado != 'anulada' %}
+            <form method="post" action="{% url 'invoice_app:anular' factura.pk %}" style="display:inline"
+                  onsubmit="return confirm('¿Anular la factura {{ factura.numero }}?')">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-warning">
+                    <i class="bi bi-slash-circle me-1"></i> Anular
+                </button>
+            </form>
+            {% endif %}
+            <a href="{% url 'invoice_app:eliminar' factura.pk %}" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-trash me-1"></i> Eliminar
+            </a>
+        </div>
+    </div>
+
+    <!-- Emisor / Cliente -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3 mb-md-0">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-uppercase text-muted small fw-bold mb-2">Emisor</div>
+                    <div class="fw-bold">{{ factura.emisor_nombre }}</div>
+                    {% if factura.emisor_nif %}<div>NIF/CIF: {{ factura.emisor_nif }}</div>{% endif %}
+                    {% if factura.emisor_direccion %}<div>{{ factura.emisor_direccion|linebreaksbr }}</div>{% endif %}
+                    <div>{{ factura.emisor_codigo_postal }} {{ factura.emisor_ciudad }}{% if factura.emisor_provincia %} ({{ factura.emisor_provincia }}){% endif %}</div>
+                    <div>{{ factura.emisor_pais }}</div>
+                    {% if factura.emisor_telefono %}<div>Tel: {{ factura.emisor_telefono }}</div>{% endif %}
+                    {% if factura.emisor_email %}<div>{{ factura.emisor_email }}</div>{% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-uppercase text-muted small fw-bold mb-2">Cliente</div>
+                    <div class="fw-bold">{% if factura.cliente_empresa %}{{ factura.cliente_empresa }} · {% endif %}{{ factura.cliente_nombre_completo }}</div>
+                    {% if factura.cliente_nif %}<div>NIF/CIF: {{ factura.cliente_nif }}</div>{% endif %}
+                    <div>{{ factura.cliente_direccion|linebreaksbr }}</div>
+                    <div>{{ factura.cliente_codigo_postal }} {{ factura.cliente_ciudad }}{% if factura.cliente_provincia %} ({{ factura.cliente_provincia }}){% endif %}</div>
+                    <div>{{ factura.cliente_pais }}</div>
+                    {% if factura.cliente_telefono %}<div>Tel: {{ factura.cliente_telefono }}</div>{% endif %}
+                    {% if factura.cliente_email %}<div>{{ factura.cliente_email }}</div>{% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Líneas -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="kudea-table-header">
+                        <tr>
+                            <th>Descripción</th>
+                            <th class="text-end">Cant.</th>
+                            <th class="text-end">Precio</th>
+                            <th class="text-end">Dto %</th>
+                            <th class="text-end">IVA %</th>
+                            <th class="text-end">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in factura.items.all %}
+                        <tr class="kudea-table-row">
+                            <td>
+                                {{ item.descripcion }}
+                                {% if item.referencia %}<br><small class="text-muted">Ref: {{ item.referencia }}</small>{% endif %}
+                                {% if item.notas %}<br><small class="text-muted">{{ item.notas }}</small>{% endif %}
+                            </td>
+                            <td class="text-end">{{ item.cantidad|floatformat:3 }} {{ item.unidad_medida }}</td>
+                            <td class="text-end">{{ item.precio_unitario|floatformat:2 }} €</td>
+                            <td class="text-end">{{ item.descuento|floatformat:2 }}</td>
+                            <td class="text-end">{{ item.tipo_iva|floatformat:0 }}</td>
+                            <td class="text-end fw-semibold">{{ item.total_bruto|floatformat:2 }} €</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6" class="text-center text-muted py-4">Esta factura no tiene líneas.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Totales -->
+    <div class="d-flex justify-content-end mb-4">
+        <div class="card border-0 shadow-sm" style="min-width: 320px;">
+            <div class="card-body">
+                <div class="d-flex justify-content-between py-1"><span class="text-muted">Subtotal</span><strong>{{ factura.subtotal|floatformat:2 }} €</strong></div>
+                {% if factura.descuento_global %}
+                <div class="d-flex justify-content-between py-1"><span class="text-muted">Descuento global</span><strong class="text-danger">−{{ factura.descuento_global|floatformat:2 }} €</strong></div>
+                {% endif %}
+                <div class="d-flex justify-content-between py-1"><span class="text-muted">Base imponible</span><strong>{{ factura.base_imponible|floatformat:2 }} €</strong></div>
+                {% if factura.exenta_iva %}
+                <div class="d-flex justify-content-between py-1"><span class="text-muted">IVA</span><strong>Exenta</strong></div>
+                {% else %}
+                <div class="d-flex justify-content-between py-1"><span class="text-muted">IVA ({{ factura.iva|floatformat:0 }}%)</span><strong>{{ factura.total_iva|floatformat:2 }} €</strong></div>
+                {% endif %}
+                {% if factura.total_recargo %}
+                <div class="d-flex justify-content-between py-1"><span class="text-muted">Recargo eq. ({{ factura.recargo_equivalencia|floatformat:0 }}%)</span><strong>{{ factura.total_recargo|floatformat:2 }} €</strong></div>
+                {% endif %}
+                {% if factura.total_irpf %}
+                <div class="d-flex justify-content-between py-1"><span class="text-muted">IRPF ({{ factura.irpf|floatformat:0 }}%)</span><strong class="text-danger">−{{ factura.total_irpf|floatformat:2 }} €</strong></div>
+                {% endif %}
+                <div class="d-flex justify-content-between pt-2 mt-2 border-top border-2 border-dark">
+                    <span class="fw-bold">TOTAL</span>
+                    <span class="fw-bold fs-5 text-primary">{{ factura.total|floatformat:2 }} €</span>
+                </div>
+                <div class="text-muted small mt-2">Método de pago: {{ factura.get_metodo_pago_display }}</div>
+                {% if factura.condiciones_pago %}<div class="text-muted small">{{ factura.condiciones_pago }}</div>{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Leyenda / notas -->
+    {% if factura.leyenda_factura %}
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body text-muted small">{{ factura.leyenda_factura|linebreaksbr }}</div>
+    </div>
+    {% endif %}
+    {% if factura.notas_internas %}
+    <div class="alert alert-warning mb-0">
+        <strong>Notas internas:</strong> {{ factura.notas_internas|linebreaksbr }}
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

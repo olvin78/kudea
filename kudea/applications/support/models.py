@@ -1,3 +1,8 @@
+# =====================================================================
+# 📁 MODELOS · APP 'support'
+#   · TipoTicket / Ticket → soporte técnico
+# =====================================================================
+
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -33,6 +38,8 @@ class Ticket(models.Model):
     descripcion = models.TextField(null=True, blank=True)
     archivo = models.FileField(upload_to='support/archivos/', null=True, blank=True)
 
+    class Meta:
+        ordering = ['-creado', '-id']
 
     def __str__(self):
         return f"{self.identificador} - {self.asunto}"

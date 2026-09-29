@@ -1,0 +1,153 @@
+{% extends 'home/base.html' %}
+
+{# ============================================================
+   CREAR COMPRA  →  /compras/nueva/
+   Cabecera (proveedor/fecha/notas) + tabla de líneas de compra
+   ============================================================ #}
+
+{% block title %}KUDEA - Nueva compra{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+  {% include 'purchases/_purchases_styles.html' %}
+  /* Tabla de líneas de compra */
+  .k-lineas td, .k-lineas th { padding: 10px 8px; }
+  .k-lineas .k-form-input { padding: 9px 12px; border-radius: 12px; }
+  .k-linea-precio { width: 130px; }
+  .k-linea-cant { width: 90px; }
+  .k-linea-iva { width: 110px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="k-wrap">
+
+  <!-- ============ CABECERA ============ -->
+  <div class="k-header-section">
+    <div class="k-title-group">
+      <span class="k-eyebrow"><span class="dot"></span> Compras · Nueva</span>
+      <h1>Nueva compra</h1>
+      <p>Elige el proveedor y añade las líneas. Quedará en <strong>borrador</strong> hasta que la recibas.</p>
+    </div>
+    <a href="{% url 'purchases_app:compra_list' %}" class="k-btn-action k-btn-outline">
+      <i class="fas fa-arrow-left"></i> Volver
+    </a>
+  </div>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    <!-- ============ ERRORES GENERALES ============ -->
+    {% if form.non_field_errors or formset.non_field_errors %}
+    <div class="k-estado k-estado-cancelada" style="margin-bottom: 18px; display: block; text-align: left;">
+      {{ form.non_field_errors|join:" · " }} {{ formset.non_field_errors|join:" · " }}
+    </div>
+    {% endif %}
+
+    <!-- ============ 1) CABECERA DE LA COMPRA ============ -->
+    <div class="k-form-card" style="margin-bottom: 22px;">
+      <div class="k-form-grid">
+        <div class="k-form-field">
+          <label class="k-form-label" for="{{ form.proveedor.id_for_label }}">Proveedor *</label>
+          {{ form.proveedor }}
+          {{ form.proveedor.errors }}
+        </div>
+        <div class="k-form-field">
+          <label class="k-form-label" for="{{ form.fecha.id_for_label }}">Fecha del pedido / factura</label>
+          {{ form.fecha }}
+          {{ form.fecha.errors }}
+        </div>
+        <div class="k-form-field full">
+          <label class="k-form-label" for="{{ form.notas.id_for_label }}">Notas (nº de factura, referencia...)</label>
+          {{ form.notas }}
+          {{ form.notas.errors }}
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 2) LÍNEAS DE LA COMPRA ============ -->
+    <div class="k-form-card">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 style="margin: 0; font-size: 1.15rem; color: var(--k-primary);">
+          <i class="fas fa-boxes-stacked"></i> Productos de la compra
+        </h2>
+        <button type="button" id="add-linea" class="k-btn-action k-btn-outline" style="padding: 8px 16px;">
+          <i class="fas fa-plus"></i> Añadir línea
+        </button>
+      </div>
+
+      {{ formset.management_form }}
+
+      <table class="k-table k-lineas">
+        <thead>
+          <tr>
+            <th style="width: 40%;">Producto</th>
+            <th class="k-linea-cant text-center">Cant.</th>
+            <th class="k-linea-precio text-end">Precio compra (sin IVA)</th>
+            <th class="k-linea-iva text-center">% IVA</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in formset %}
+          <tr class="linea">
+            <td>
+              {{ f.producto }}
+              {{ f.producto.errors }}
+            </td>
+            <td class="text-center">
+              {{ f.cantidad }}
+              {{ f.cantidad.errors }}
+            </td>
+            <td class="text-end">
+              {{ f.precio_unitario }}
+              {{ f.precio_unitario.errors }}
+            </td>
+            <td class="text-center">
+              {{ f.porcentaje_iva }}
+              {{ f.porcentaje_iva.errors }}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <p style="font-size: .85rem; color: var(--k-muted); margin-top: 14px;">
+        <i class="fas fa-info-circle"></i>
+        Deja las filas vacías en blanco. El % IVA se toma del producto si lo dejas en blanco.
+        Precio con IVA incluido en el <strong>total de la compra</strong> = base + IVA.
+      </p>
+
+      <!-- ============ ACCIONES ============ -->
+      <div class="k-form-actions">
+        <a href="{% url 'purchases_app:compra_list' %}" class="k-btn-action k-btn-outline">Cancelar</a>
+        <button type="submit" class="k-btn-action k-btn-primary">
+          <i class="fas fa-save"></i> Guardar borrador
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- ============ JS: AÑADIR FILA ============ -->
+<script>
+  document.getElementById('add-linea').addEventListener('click', function () {
+    var tbody = document.querySelector('.k-lineas tbody');
+    var total = document.querySelector('#id_items-TOTAL_FORMS');
+    var i = parseInt(total.value, 10);
+    var ultima = tbody.querySelector('tr.linea:last-of-type');
+    if (!ultima) return;
+    var clon = ultima.cloneNode(true);
+    clon.querySelectorAll('input, select, textarea').forEach(function (el) {
+      if (el.name) el.name = el.name.replace(/items-\d+-/, 'items-' + i + '-');
+      if (el.id) el.id = el.id.replace(/items-\d+-/, 'items-' + i + '-');
+      if (el.tagName === 'SELECT') { el.selectedIndex = 0; }
+      else if (el.type !== 'hidden') { el.value = ''; }
+    });
+    // Quitar errores visibles de la fila clonada
+    clon.querySelectorAll('ul.errorlist').forEach(function (e) { e.remove(); });
+    tbody.appendChild(clon);
+    total.value = i + 1;
+  });
+</script>
+{% endblock %}

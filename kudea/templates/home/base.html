@@ -50,8 +50,7 @@
     .topbar { 
         position: relative;
         z-index: 1000;
-        background-color: rgba(253, 253, 253, 0.9) !important; 
-        backdrop-filter: blur(12px); 
+        background-color: rgba(253, 253, 253, 0.96) !important; 
         border-bottom: none !important; /* Eliminamos la línea horizontal */
     }
     .topbar .avatar { background-color: #1D3557; border-radius: 12px; }
@@ -63,6 +62,62 @@
 
     /* Estilo para módulos inactivos (Original) */
     .disabled-module { opacity: 0.5 !important; cursor: not-allowed !important; }
+
+    /* ── Notificaciones KUDEA (campana + toasts) ──────────── */
+    .k-notif-btn { position: relative; }
+    .k-notif-btn .k-badge {
+        position: absolute; top: -6px; right: -9px; min-width: 17px; height: 17px;
+        padding: 0 4px; border-radius: 9px; background: #e63946; color: #fff;
+        font-size: 10px; font-weight: 800; display: none; align-items: center;
+        justify-content: center; border: 2px solid #fff;
+    }
+    .k-notif-btn .k-badge.on { display: flex; }
+    .k-notif-panel {
+        position: absolute; right: 0; top: calc(100% + 12px); width: 320px;
+        max-height: 60vh; overflow: auto; background: #fff; border: 1px solid #e2e8f0;
+        border-radius: 14px; box-shadow: 0 18px 40px rgba(15, 23, 42, .18);
+        display: none; z-index: 9999;
+    }
+    .k-notif-panel.open { display: block; }
+    .k-notif-panel .k-head {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 10px 14px; border-bottom: 1px solid #eef2f7; font-weight: 800;
+        font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: #1D3557;
+    }
+    .k-notif-panel .k-head a { font-size: 11px; text-transform: none; color: #e63946; }
+    .k-notif-item {
+        display: flex; gap: 10px; padding: 10px 14px; border-bottom: 1px solid #f1f5f9;
+        font-size: 13px; color: #334155;
+    }
+    .k-notif-item:last-child { border-bottom: 0; }
+    .k-notif-item i { color: #2a9d8f; margin-top: 2px; }
+    .k-notif-item small { display: block; color: #94a3b8; font-size: 11px; margin-top: 2px; }
+    .k-notif-empty { padding: 20px 14px; text-align: center; color: #94a3b8; font-size: 13px; }
+    .k-toasts {
+        position: fixed; top: 14px; right: 14px; z-index: 10000;
+        display: flex; flex-direction: column; gap: 8px;
+        width: min(340px, calc(100vw - 28px));
+    }
+    .k-toast {
+        display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px;
+        border-radius: 14px; background: #fff; border: 1px solid #e2e8f0;
+        box-shadow: 0 14px 34px rgba(15, 23, 42, .16); font-size: 13px; color: #334155;
+        animation: kToastIn .25s ease both;
+    }
+    .k-toast.ok { border-left: 4px solid #2a9d8f; }
+    .k-toast.warn { border-left: 4px solid #f4a261; }
+    .k-toast.err { border-left: 4px solid #e63946; }
+    .k-toast .k-ic { font-size: 16px; line-height: 1.2; }
+    .k-toast.ok .k-ic { color: #2a9d8f; }
+    .k-toast.warn .k-ic { color: #f4a261; }
+    .k-toast.err .k-ic { color: #e63946; }
+    .k-toast strong { display: block; font-size: 12px; font-weight: 800; color: #0f172a; margin-bottom: 2px; }
+    .k-toast .k-x {
+        margin-left: auto; background: none; border: 0; color: #94a3b8;
+        cursor: pointer; font-size: 16px; line-height: 1; padding: 0;
+    }
+    @keyframes kToastIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+    @media (max-width: 767px) { .k-toasts { top: 8px; right: 8px; } }
   </style>
 
   {% block head %}
@@ -116,7 +171,8 @@
     <i data-lucide="credit-card"></i> Caja
   </a>
 
-  <a href="#"
+  <!-- Clientes / Fiado (cuentas por cobrar) -->
+  <a href="{% url 'fiado_lista' %}"
      class="{% if not MODULOS.clientes %}disabled-module{% endif %}">
     <i data-lucide="users"></i> Clientes
   </a>
@@ -143,6 +199,7 @@
   </a>
 
   <!-- SECCIÓN TERCIARIA (CONSULTAS/INFORMES) -->
+  {% if es_reportero %}
   <a href="{% url 'reporting_app:dashboard_informes' %}"
      class="{% if not MODULOS.informes %}disabled-module{% endif %}">
     <i data-lucide="bar-chart-3"></i> Informes
@@ -152,6 +209,7 @@
      class="{% if not MODULOS.movimientos_caja %}disabled-module{% endif %}">
     <i data-lucide="repeat"></i> Movimientos de caja
   </a>
+  {% endif %}
 
   <a href="{% url 'support_app:ticket_list' %}"
      class="{% if not MODULOS.soporte %}disabled-module{% endif %}">
@@ -184,10 +242,15 @@
     <i data-lucide="list"></i> Orden de registros
   </a>
 
+  {% if es_admin %}
   <a href="{% url 'configuraciones' %}"
      class="{% if not MODULOS.configuracion %}disabled-module{% endif %}">
     <i data-lucide="settings"></i> Configuración
   </a>
+  <a href="{% url 'usuarios_roles' %}">
+    <i data-lucide="user-cog"></i> Usuarios y roles
+  </a>
+  {% endif %}
 
   <!-- ÚLTIMOS ELEMENTOS (ACCIONES FINALES) -->
   <a href="{% url 'home_app:ayuda' %}">
@@ -200,7 +263,7 @@
 
   <a href="{% url 'home_app:acerca_version' %}"><i data-lucide="info"></i> Acerca de...</a>
 
-  <a href="#"><i data-lucide="log-out"></i> Cerrar sesión</a>
+  <a href="{% url 'account_logout' %}"><i data-lucide="log-out"></i> Cerrar sesión</a>
 
   <a href="#" class="d-md-none d-flex align-items-center gap-2">
     <i data-lucide="mail"></i> Mensajes
@@ -216,6 +279,18 @@
   </div>
 
   <div class="profile dropdown d-flex align-items-center gap-3">
+    <div class="relative cursor-pointer k-notif-btn" id="kNotifBtn" title="Notificaciones">
+      <i data-lucide="bell" class="text-dark"></i>
+      <span class="k-badge" id="kNotifBadge">0</span>
+      <div class="k-notif-panel" id="kNotifPanel">
+        <div class="k-head">
+          <span>Notificaciones</span>
+          <a href="#" id="kNotifClear">Marcar leídas</a>
+        </div>
+        <div id="kNotifList"></div>
+      </div>
+    </div>
+
     <div class="relative cursor-pointer d-none d-md-flex" data-bs-toggle="modal" data-bs-target="#commsModal">
         <i data-lucide="mail" class="text-dark"></i>
         {% if unread_comms > 0 %}
@@ -232,11 +307,28 @@
     <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3">
       <li><a class="dropdown-item py-2" href="#">Crear Ticket</a></li>
       <li><a class="dropdown-item py-2" href="{% url 'configuraciones' %}">Configuración</a></li>
+      {% if es_admin %}<li><a class="dropdown-item py-2" href="{% url 'usuarios_roles' %}">Usuarios y roles</a></li>{% endif %}
+                    {% if es_admin %}<li><a class="dropdown-item py-2" href="{% url 'backup_datos' %}">Backup de la BD</a></li>{% endif %}
       <li><hr class="dropdown-divider"></li>
-      <li><a class="dropdown-item py-2 text-danger" href="#">Cerrar sesión</a></li>
+      <li><a class="dropdown-item py-2 text-danger" href="{% url 'account_logout' %}">Cerrar sesión</a></li>
     </ul>
   </div>
 </div>
+
+{% if messages %}
+<div class="k-toasts" id="kToasts">
+  {% for message in messages %}
+  <div class="k-toast {% if message.tags == 'error' %}err{% elif message.tags == 'warning' %}warn{% else %}ok{% endif %}" data-msg="{{ message }}">
+    <span class="k-ic"><i class="fas {% if message.tags == 'error' %}fa-circle-exclamation{% elif message.tags == 'warning' %}fa-triangle-exclamation{% else %}fa-check-circle{% endif %}"></i></span>
+    <div>
+      <strong>{% if message.tags == 'error' %}Atención{% elif message.tags == 'warning' %}Aviso{% else %}Operación realizada{% endif %}</strong>
+      <span>{{ message }}</span>
+    </div>
+    <button class="k-x" type="button" aria-label="Cerrar">&times;</button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
 
 <div id="main-content" class="main-content collapsed">
   {% block content %}
@@ -482,6 +574,85 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
     }
+</script>
+
+<script>
+/* ── Notificaciones: toasts (6s) + campana con historial ── */
+(function () {
+  const MAX_TOASTS = 3, MAX_HIST = 12, KEY = 'kudeaNotifs', UNREAD = 'kudeaNotifsUnread';
+
+  const hist = () => { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { return []; } };
+  const save = (a) => localStorage.setItem(KEY, JSON.stringify(a.slice(0, MAX_HIST)));
+
+  // 1) Guardar mensajes del servidor en el historial (sin duplicar el anterior)
+  const toasts = document.querySelectorAll('#kToasts .k-toast');
+  let lista = hist();
+  toasts.forEach((t) => {
+    const txt = (t.dataset.msg || '').trim();
+    if (!txt) return;
+    if (!lista.length || lista[0].t !== txt) lista.unshift({ t: txt, ts: Date.now() });
+  });
+  if (toasts.length) {
+    save(lista);
+    localStorage.setItem(UNREAD, String((parseInt(localStorage.getItem(UNREAD)) || 0) + toasts.length));
+  }
+
+  // 2) Toasts: como mucho 3 a la vez, se cierran solos a los 6s
+  const cont = document.getElementById('kToasts');
+  if (cont) {
+    const items = Array.from(cont.querySelectorAll('.k-toast'));
+    items.forEach((el, i) => {
+      if (i >= MAX_TOASTS) el.remove();
+      const cerrar = () => { el.style.opacity = '0'; setTimeout(() => el.remove(), 200); };
+      el.querySelector('.k-x')?.addEventListener('click', cerrar);
+      setTimeout(cerrar, 6000);
+    });
+    if (!cont.querySelector('.k-toast')) cont.remove();
+  }
+
+  // 3) Campana
+  const btn = document.getElementById('kNotifBtn'),
+        panel = document.getElementById('kNotifPanel'),
+        badge = document.getElementById('kNotifBadge'),
+        list = document.getElementById('kNotifList'),
+        clear = document.getElementById('kNotifClear');
+  if (!btn) return;
+
+  const hora = (ts) => {
+    const d = new Date(ts), hoy = new Date();
+    const hm = d.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
+    return d.toDateString() === hoy.toDateString() ? 'Hoy ' + hm : d.toLocaleDateString('es') + ' ' + hm;
+  };
+
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  function pintar() {
+    const items = hist();
+    list.innerHTML = items.length
+      ? items.map((n) => `<div class="k-notif-item"><i class="fas fa-check-circle"></i><div>${esc(n.t)}<small>${hora(n.ts)}</small></div></div>`).join('')
+      : '<div class="k-notif-empty">Sin notificaciones</div>';
+    const u = parseInt(localStorage.getItem(UNREAD)) || 0;
+    badge.textContent = u > 9 ? '9+' : String(u);
+    badge.classList.toggle('on', u > 0);
+  }
+
+  btn.addEventListener('click', (e) => {
+    if (e.target.closest('#kNotifClear')) return;
+    panel.classList.toggle('open');
+    if (panel.classList.contains('open')) {
+      localStorage.setItem(UNREAD, '0');
+      pintar();
+    }
+  });
+  clear.addEventListener('click', (e) => {
+    e.preventDefault();
+    localStorage.setItem(UNREAD, '0');
+    pintar();
+  });
+  document.addEventListener('click', (e) => { if (!btn.contains(e.target)) panel.classList.remove('open'); });
+
+  pintar();
+})();
 </script>
 
 </body>

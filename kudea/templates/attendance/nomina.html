@@ -1,0 +1,154 @@
+{% extends "home/base.html" %}
+
+{% block title %}Nómina - Kudea{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-8">
+
+    <!-- HEADER -->
+    <div class="k-card p-8 md:p-10 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+            <span class="k-eyebrow mb-3"><span class="dot"></span> Recursos humanos · Mes {{ mes }}</span>
+            <h1 class="text-3xl font-black text-slate-800 tracking-tight mt-3 mb-1">Nómina</h1>
+            <p class="text-slate-500 font-medium">Horas registradas por empleado y coste del mes</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="{% url 'home_attendance:nomina_exportar' %}?mes={{ mes }}"
+               class="bg-white border border-slate-200 text-slate-700 px-5 py-3 rounded-2xl font-bold shadow-sm flex items-center gap-2">
+                <i class="fas fa-file-csv opacity-60"></i> Exportar CSV
+            </a>
+            <a href="{% url 'home_attendance:parte_nuevo' %}"
+               class="bg-dark-blue text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-dark-blue/20 flex items-center gap-2">
+                <i class="fas fa-plus"></i> Registrar horas
+            </a>
+        </div>
+    </div>
+
+    <!-- SELECTOR DE MES -->
+    <div class="k-card p-4 mb-6 flex items-center justify-center gap-4">
+        <a href="?mes={{ mes_ant }}"
+           class="bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 hover:border-dark-blue/40 transition-all">
+            <i class="fas fa-chevron-left"></i> {{ mes_ant }}
+        </a>
+        <span class="bg-dark-blue text-white px-6 py-2 rounded-xl font-black">{{ mes }}</span>
+        <a href="?mes={{ mes_sig }}"
+           class="bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 hover:border-dark-blue/40 transition-all">
+            {{ mes_sig }} <i class="fas fa-chevron-right"></i>
+        </a>
+    </div>
+
+    <!-- TOTALES -->
+    <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+        <div class="k-card p-6">
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Horas del mes</div>
+            <div class="text-3xl font-black text-slate-800">{{ total_horas|floatformat:2 }} h</div>
+        </div>
+        <div class="k-card p-6">
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Coste estimado</div>
+            <div class="text-3xl font-black text-slate-800">{{ total_importe|floatformat:2 }} €</div>
+        </div>
+        <div class="k-card p-6">
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Empleados con horas</div>
+            <div class="text-3xl font-black text-slate-800">{{ filas|length }}</div>
+        </div>
+    </div>
+
+    {% if hay_empleados_sin_tarifa %}
+    <div class="bg-amber-50 border border-amber-200 rounded-3xl p-5 mb-6 flex items-center gap-4">
+        <div class="w-10 h-10 bg-amber-500 text-white rounded-xl flex items-center justify-center shrink-0">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="text-sm text-amber-700 font-medium">
+            <b>Hay horas sin tarifa asociada.</b> Define la tarifa por hora en la ficha del empleado (o en el parte) para completar el cálculo.
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- RESUMEN POR EMPLEADO -->
+    <div class="k-card p-6 md:p-8 mb-8">
+        <h2 class="text-lg font-black text-slate-800 mb-5"><i class="fas fa-users opacity-40 mr-2"></i>Resumen por empleado</h2>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="border-b border-slate-100 text-slate-400 text-xs uppercase tracking-wider">
+                        <th class="pb-3 font-bold">Empleado</th>
+                        <th class="pb-3 font-bold text-right">Horas</th>
+                        <th class="pb-3 font-bold text-right">Tarifa media €/h</th>
+                        <th class="pb-3 font-bold text-right">Importe</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in filas %}
+                    <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+                        <td class="py-3 font-bold text-slate-700">
+                            {{ f.employee__nombre }} {{ f.employee__apellidos|default:"" }}
+                        </td>
+                        <td class="py-3 text-sm text-slate-600 text-right">{{ f.horas|floatformat:2 }} h</td>
+                        <td class="py-3 text-sm text-slate-500 text-right">
+                            {% if f.employee__tarifa_hora %}{{ f.employee__tarifa_hora|floatformat:2 }} €{% else %}—{% endif %}
+                        </td>
+                        <td class="py-3 font-black text-slate-800 text-right">
+                            {% if f.importe %}{{ f.importe|floatformat:2 }} €{% else %}—{% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="py-10 text-center text-slate-400">
+                            <i class="fas fa-clock text-2xl mb-3 block opacity-40"></i>
+                            Sin horas registradas en {{ mes }}.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- PARTES -->
+    <div class="k-card p-6 md:p-8">
+        <div class="flex items-center justify-between mb-5">
+            <h2 class="text-lg font-black text-slate-800"><i class="fas fa-clipboard-list opacity-40 mr-2"></i>Partes de horas</h2>
+            <span class="text-xs font-bold text-slate-400">{{ partes|length }} registros</span>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="border-b border-slate-100 text-slate-400 text-xs uppercase tracking-wider">
+                        <th class="pb-3 font-bold">Fecha</th>
+                        <th class="pb-3 font-bold">Empleado</th>
+                        <th class="pb-3 font-bold text-right">Horas</th>
+                        <th class="pb-3 font-bold text-right">€/h</th>
+                        <th class="pb-3 font-bold text-right">Importe</th>
+                        <th class="pb-3 font-bold">Notas</th>
+                        <th class="pb-3"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in partes %}
+                    <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+                        <td class="py-3 text-sm text-slate-600">{{ p.fecha|date:"d/m/Y" }}</td>
+                        <td class="py-3 text-sm font-bold text-slate-700">{{ p.employee.nombre }}</td>
+                        <td class="py-3 text-sm text-slate-600 text-right">{{ p.horas|floatformat:2 }} h</td>
+                        <td class="py-3 text-sm text-slate-500 text-right">{{ p.tarifa_hora|floatformat:2 }} €</td>
+                        <td class="py-3 text-sm font-black text-slate-800 text-right">{{ p.importe|floatformat:2 }} €</td>
+                        <td class="py-3 text-sm text-slate-400">{{ p.notas|default:"—" }}</td>
+                        <td class="py-3 text-right">
+                            <form method="post" action="{% url 'home_attendance:parte_borrar' p.pk %}"
+                                  onsubmit="return confirm('¿Eliminar este parte de horas?');" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="text-slate-300 hover:text-rose-500 transition-colors" title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="py-8 text-center text-slate-400 text-sm">Sin partes en {{ mes }}.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

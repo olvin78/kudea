@@ -1,3 +1,11 @@
+# =====================================================================
+# 📁 RUTAS · APP 'budget'  (PRESUPUESTOS)
+# URL base: /budget/
+#   · Presupuestos con sus líneas, impuestos y estados
+#   · USA SU PROPIO MODELO DE CLIENTE (budget.Client) — NO customer.Cliente
+#   · No se convierte todavía en factura ni venta (hueco conocido)
+# =====================================================================
+
 from django.urls import path
 from . import views
 

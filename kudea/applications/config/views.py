@@ -1,3 +1,18 @@
+# =====================================================================
+# 📁 VISTAS · APP 'config' — Pantallas: configuración, usuarios/roles y backups
+# =====================================================================
+#   L18    class ConfiguracionesView(LoginRequiredMixin, View):
+#   L304   class RefreshPinView(LoginRequiredMixin, View):
+#   L316   class UsuariosRolesView(LoginRequiredMixin, View):
+#   L380   def _db_path():
+#   L384   def _backups_dir():
+#   L390   def _es_sqlite(ruta):
+#   L398   def _historial():
+#   L412   def _restaurar_desde(ruta_origen, request):
+#   L439   class BackupView(LoginRequiredMixin, View):
+#   L485   def backup_descargar(request):
+# =====================================================================
+
 import os
 import random
 from django.shortcuts import render, redirect
@@ -119,6 +134,21 @@ class ConfiguracionesView(LoginRequiredMixin, View):
                     messages.warning(request, f"La categoría '{cat_nombre}' ya existe en el sistema.")
             return redirect('configuraciones')
 
+        # ── Valores previos: para poder decir en la notificación QUÉ cambió ──
+        def _vals(obj, *campos):
+            return tuple(getattr(obj, c, None) for c in campos) if obj else None
+
+        _campos_tpv = ('nombre_tienda', 'moneda', 'imprimir_tickets', 'mostrar_stock', 'pin_apertura', 'iva_por_defecto')
+        _campos_fiscal = ('iva_general', 'fondo_caja_defecto')
+        prev = {
+            'tpv': _vals(config_tpv, *_campos_tpv),
+            'fiscal': _vals(config_fiscal, *_campos_fiscal),
+            'modulos': {m.id: m.activo for m in Modulo.objects.all()},
+            'metodos': {m.id: (m.activo, m.acepta_cambio) for m in MetodoPago.objects.all()},
+            'categorias': {c.id: c.porcentaje_iva for c in Categoria.objects.all()},
+            'empleados': {e.id: (e.es_administrador, e.puede_realizar_salidas, e.puede_cambiar_subtotales, e.esta_de_baja) for e in Empleado.objects.all()},
+        }
+
         # 2. Guardar Configuración General & TPV
         if config_tpv:
             config_tpv.nombre_tienda = request.POST.get('nombre_tienda', config_tpv.nombre_tienda)
@@ -223,11 +253,65 @@ class ConfiguracionesView(LoginRequiredMixin, View):
             except ValueError:
                 pass
 
-        if acciones_lote:
-            mensaje_completo = "Configuraciones globales actualizadas con éxito. Acciones en lote: " + " | ".join(acciones_lote)
-            messages.success(request, mensaje_completo)
+        # ── Resumen de lo que REALMENTE ha cambiado ──
+        if config_tpv:
+            config_tpv.refresh_from_db()
+        if config_fiscal:
+            config_fiscal.refresh_from_db()
+
+        cambios = []
+
+        def _fmt(v):
+            if isinstance(v, bool):
+                return 'ON' if v else 'OFF'
+            return str(v)
+
+        if config_tpv and prev['tpv']:
+            etiquetas = ['Nombre de tienda', 'Moneda', 'Auto-imprimir tickets', 'Mostrar stock', 'PIN de apertura', 'IVA por defecto']
+            for etiqueta, antes, ahora in zip(etiquetas, prev['tpv'], _vals(config_tpv, *_campos_tpv)):
+                if antes != ahora:
+                    cambios.append(f"{etiqueta}: {_fmt(antes)} → {_fmt(ahora)}")
+
+        if config_fiscal and prev['fiscal']:
+            etiquetas = ['IVA general', 'Fondo de caja por defecto']
+            for etiqueta, antes, ahora in zip(etiquetas, prev['fiscal'], _vals(config_fiscal, *_campos_fiscal)):
+                if antes != ahora:
+                    cambios.append(f"{etiqueta}: {_fmt(antes)} → {_fmt(ahora)}")
+
+        for m in Modulo.objects.all():
+            antes = prev['modulos'].get(m.id)
+            if antes is not None and antes != m.activo:
+                cambios.append(f"Módulo '{m.nombre}': {_fmt(m.activo)}")
+
+        for mp in MetodoPago.objects.all():
+            antes = prev['metodos'].get(mp.id)
+            if antes is not None and antes != (mp.activo, mp.acepta_cambio):
+                estado = _fmt(mp.activo) + (', admite cambio' if mp.acepta_cambio else '')
+                cambios.append(f"Método '{mp.nombre}': {estado}")
+
+        for cat in Categoria.objects.all():
+            antes = prev['categorias'].get(cat.id)
+            if antes is not None and antes != cat.porcentaje_iva:
+                cambios.append(f"IVA de '{cat.nombre}': {antes}% → {cat.porcentaje_iva}%")
+
+        for emp in Empleado.objects.all():
+            antes = prev['empleados'].get(emp.id)
+            if antes is not None and antes != (emp.es_administrador, emp.puede_realizar_salidas, emp.puede_cambiar_subtotales, emp.esta_de_baja):
+                permisos = [n for n, v in zip(
+                    ('administrador', 'salidas', 'subtotales'),
+                    (emp.es_administrador, emp.puede_realizar_salidas, emp.puede_cambiar_subtotales),
+                ) if v]
+                cambios.append(f"Permisos de {emp.nombre}: {', '.join(permisos) if permisos else 'ninguno'}")
+
+        if cambios:
+            resumen = "Guardado → " + "; ".join(cambios)
         else:
-            messages.success(request, "Configuraciones globales actualizadas con éxito.")
+            resumen = "Ajustes guardados (ningún valor cambió)."
+
+        if acciones_lote:
+            resumen += " · Lote: " + " | ".join(acciones_lote)
+
+        messages.success(request, resumen)
 
         return redirect('configuraciones')
 
@@ -242,3 +326,186 @@ class RefreshPinView(LoginRequiredMixin, View):
         caja.save()
         messages.success(request, f"PIN de '{caja.nombre}' actualizado a {nuevo_pin}")
         return redirect('configuraciones')
+
+
+class UsuariosRolesView(LoginRequiredMixin, View):
+    """Gestión de usuarios y roles (solo admin — la URL ya va envuelta)."""
+    template_name = 'config/usuarios.html'
+
+    def get(self, request):
+        from django.contrib.auth import get_user_model
+        from .roles import ROLES, get_role
+        U = get_user_model()
+        rows = []
+        for u in U.objects.filter(is_active=True).order_by('username'):
+            fijo = bool(u.is_superuser or u.is_staff)
+            rows.append({'u': u, 'rol': get_role(u), 'fijo': fijo})
+        return render(request, self.template_name, {'rows': rows, 'roles': ROLES})
+
+    def post(self, request):
+        from django.contrib.auth import get_user_model
+        from django.contrib.auth.models import Group
+        from .roles import ROLES, ensure_groups
+        U = get_user_model()
+        ensure_groups()
+
+        uid = request.POST.get('user_id')
+        rol = request.POST.get('rol')
+        if not uid or rol not in ROLES:
+            messages.error(request, 'Selección no válida.')
+            return redirect('usuarios_roles')
+
+        u = U.objects.filter(id=uid, is_active=True).first()
+        if not u:
+            messages.error(request, 'Usuario no encontrado.')
+            return redirect('usuarios_roles')
+        if u.is_superuser or u.is_staff:
+            messages.warning(request, f'{u.username} es administrador del sistema; su rol no se puede cambiar.')
+            return redirect('usuarios_roles')
+        if u == request.user:
+            messages.warning(request, 'No puedes cambiar tu propio rol.')
+            return redirect('usuarios_roles')
+
+        u.groups.remove(*u.groups.filter(name__in=list(ROLES.keys())))
+        g, _ = Group.objects.get_or_create(name=rol)
+        u.groups.add(g)
+        messages.success(request, f'Rol de {u.username} actualizado a «{ROLES[rol]}».')
+        return redirect('usuarios_roles')
+
+
+# ============================================================
+# BACKUP Y RESTAURACIÓN DE LA BASE DE DATOS (solo admin)
+# ------------------------------------------------------------
+#  · GET  /configuraciones/backup/            panel + historial
+#  · GET  /configuraciones/backup/descargar/  descarga db.sqlite3
+#  · POST /configuraciones/backup/            restaurar (subida
+#         o archivo del historial, con previa automática)
+# ============================================================
+import shutil
+import time
+from pathlib import Path
+
+from django.conf import settings
+from django.db import connections
+from django.http import FileResponse, Http404
+
+MAGIC_SQLITE = b"SQLite format 3\x00"
+
+
+def _db_path():
+    return Path(settings.DATABASES["default"]["NAME"])
+
+
+def _backups_dir():
+    d = Path(settings.BASE_DIR) / "backups"
+    d.mkdir(exist_ok=True)
+    return d
+
+
+def _es_sqlite(ruta):
+    try:
+        with open(ruta, "rb") as f:
+            return f.read(16) == MAGIC_SQLITE
+    except OSError:
+        return False
+
+
+def _historial():
+    items = []
+    for f in _backups_dir().glob("*.sqlite3"):
+        stat = f.stat()
+        items.append({
+            "nombre": f.name,
+            "tamano": stat.st_size,
+            "fecha": time.strftime("%d/%m/%Y %H:%M:%S", time.localtime(stat.st_mtime)),
+            "es_previa": f.name.startswith("db-previa-"),
+        })
+    items.sort(key=lambda x: x["nombre"], reverse=True)
+    return items
+
+
+def _restaurar_desde(ruta_origen, request):
+    """Copia la BD actual al historial y sustituye por la de ruta_origen."""
+    if not _es_sqlite(ruta_origen):
+        messages.error(request, "El archivo no es una base de datos SQLite válida.")
+        return False
+
+    db = _db_path()
+    ts = time.strftime("%Y%m%d-%H%M%S")
+    connections.close_all()
+
+    # Copia de seguridad de lo que había ANTES de restaurar
+    shutil.copy2(db, _backups_dir() / f"db-previa-{ts}.sqlite3")
+
+    # Sustitución atómica
+    tmp = db.with_name(db.name + ".nuevo")
+    shutil.copy2(ruta_origen, tmp)
+    os.replace(tmp, db)
+
+    # Conservar sólo las 30 previas más recientes
+    previas = sorted(_backups_dir().glob("db-previa-*.sqlite3"))
+    for vieja in previas[:-30]:
+        vieja.unlink()
+
+    messages.success(request, f"Base de datos restaurada correctamente. Copia de seguridad de la anterior guardada en /backups (db-previa-{ts}.sqlite3).")
+    return True
+
+
+class BackupView(LoginRequiredMixin, View):
+    template_name = "config/backup.html"
+
+    def get(self, request):
+        return render(request, self.template_name, {
+            "db_nombre": _db_path().name,
+            "db_tamano": _db_path().stat().st_size if _db_path().exists() else 0,
+            "historial": _historial(),
+        })
+
+    def post(self, request):
+        accion = request.POST.get("accion")
+
+        if accion == "restaurar_subida":
+            archivo = request.FILES.get("archivo")
+            if not archivo:
+                messages.error(request, "Selecciona un archivo de backup (.sqlite3).")
+                return redirect("backup_datos")
+
+            tmp = _backups_dir() / f"subida-{time.strftime('%Y%m%d-%H%M%S')}.tmp"
+            with open(tmp, "wb") as dest:
+                for chunk in archivo.chunks():
+                    dest.write(chunk)
+
+            if not _es_sqlite(tmp):
+                tmp.unlink()
+                messages.error(request, "El archivo subido no es una base de datos SQLite válida.")
+                return redirect("backup_datos")
+
+            ok = _restaurar_desde(tmp, request)
+            tmp.unlink(missing_ok=True)
+            if ok:
+                return redirect("backup_datos")
+
+        elif accion == "restaurar_archivo":
+            nombre = os.path.basename(request.POST.get("nombre", ""))
+            ruta = _backups_dir() / nombre
+            if not nombre.endswith(".sqlite3") or not ruta.is_file():
+                messages.error(request, "Archivo de backup no encontrado.")
+                return redirect("backup_datos")
+            if _restaurar_desde(ruta, request):
+                return redirect("backup_datos")
+
+        return redirect("backup_datos")
+
+
+def backup_descargar(request):
+    """Descarga la base de datos actual (solo admin, la URL ya lo exige)."""
+    db = _db_path()
+    if not db.exists():
+        raise Http404
+    connections.close_all()
+    ts = time.strftime("%Y%m%d-%H%M%S")
+    return FileResponse(
+        open(db, "rb"),
+        as_attachment=True,
+        filename=f"kudea_backup_{ts}.sqlite3",
+    )

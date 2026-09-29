@@ -3,10 +3,14 @@ from django.contrib import admin
 
 # path crea rutas, include mete las urls de cada app
 from django.urls import path, include
+from applications.config.roles import role_required
 
 # Para servir archivos media cuando DEBUG=True
 from django.conf import settings
 from django.conf.urls.static import static
+
+# Vistas de fiado (cuenta corriente de cliente)
+from applications.customer import views as customer_views
 
 
 
@@ -38,7 +42,23 @@ urlpatterns = [
     path('tpv_shop/', include('applications.tpv_shop.urls')),
 
     # Gestión de clientes
+    # (ojo: el alta rápida debe ir ANTES del include, si no nunca se llega)
+    path('clientes/nuevo-ajax/', customer_views.cliente_ajax, name='cliente_ajax'),
     path('clientes/', include('applications.customer.urls')),
+
+    # ===============================
+    # FIADO (cuenta corriente de cliente)
+    # ===============================
+    # /fiado/                 → deudores, saldo y cobrar
+    # /fiado/cobrar/<venta>/  → el cliente paga (total o parcial)
+    # /fiado/recibo/<pago>/   → recibo imprimible
+    path('fiado/', customer_views.fiado_lista, name='fiado_lista'),
+    path('fiado/cobrar/<int:venta_id>/', customer_views.fiado_cobrar, name='fiado_cobrar'),
+    path('fiado/recibo/<int:pago_id>/', customer_views.fiado_recibo, name='fiado_recibo'),
+    # Alta de cliente independiente (no usa la plantilla de tpv_shop)
+    path('fiado/cliente/nuevo/', customer_views.fiado_cliente_nuevo, name='fiado_cliente_nuevo'),
+    path('fiado/cliente/<int:cliente_id>/editar/', role_required('gerente')(customer_views.fiado_cliente_editar), name='fiado_cliente_editar'),
+    path('fiado/cliente/<int:cliente_id>/eliminar/', role_required('gerente')(customer_views.fiado_cliente_eliminar), name='fiado_cliente_eliminar'),
 
     # Registro de horas
     path('attendance/', include('applications.attendance.urls')),
@@ -51,6 +71,9 @@ urlpatterns = [
 
     # Gestión de stock
     path('stock/', include('applications.stock.urls')),
+
+    # Compras y proveedores (módulo purchases)
+    path('compras/', include('applications.purchases.urls')),
 
     # Facturación
     path('invoices/', include('applications.invoice.urls')),

@@ -1,0 +1,145 @@
+{% extends "home/base.html" %}
+
+{% block title %}{{ producto.nombre }} - Inventario - Kudea{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-8">
+
+    <!-- MIGAS -->
+    <a href="{% url 'home_app:lista_productos' %}" class="inline-flex items-center gap-2 text-slate-400 hover:text-dark-blue font-bold text-sm mb-4">
+        <i class="fas fa-arrow-left"></i> Inventario
+    </a>
+
+    <!-- FICHA -->
+    <div class="k-card p-8 md:p-10 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+            <span class="k-eyebrow mb-2">
+                <span class="dot {% if sin_costo %}warn{% elif not producto.activo %}warn{% endif %}"></span>
+                {% if not producto.activo %}Inactivo{% else %}Producto{% endif %}
+                {% if producto.categoria %} · {{ producto.categoria.nombre }}{% endif %}
+            </span>
+            <h1 class="text-3xl font-black text-slate-800 tracking-tight">{{ producto.nombre }}</h1>
+            <p class="text-slate-500 font-medium text-sm mt-1">
+                {% if producto.codigo_barras %}Código {{ producto.codigo_barras }} · {% endif %}
+                {% if producto.proveedor %}Proveedor {{ producto.proveedor.nombre }} · {% endif %}
+                IVA {{ producto.porcentaje_iva|floatformat:0 }}%
+                {% if producto.descuento %} · Descuento {{ producto.descuento|floatformat:0 }}%{% endif %}
+            </p>
+        </div>
+        <div class="flex items-center gap-3">
+            {% if producto.slug %}
+            <a href="{% url 'tpv_shop:product_detail' producto.slug %}" class="bg-white border border-slate-200 text-slate-700 px-5 py-3 rounded-2xl font-bold shadow-sm flex items-center gap-2">
+                <i class="fas fa-eye opacity-60"></i> Ver ficha pública
+            </a>
+            {% endif %}
+            <a href="{% url 'tpv_app:product_update' producto.pk %}" class="bg-dark-blue text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-dark-blue/20 flex items-center gap-2">
+                <i class="fas fa-pen"></i> Editar
+            </a>
+        </div>
+    </div>
+
+    {% if sin_costo %}
+    <div class="bg-amber-50 border border-amber-200 rounded-3xl p-5 mb-8 flex items-center gap-4">
+        <div class="w-10 h-10 bg-amber-500 text-white rounded-xl flex items-center justify-center shrink-0">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="text-sm text-amber-700 font-medium">
+            <b>Sin coste definido.</b> No se puede calcular el margen ni el beneficio.
+            Rellena el coste aquí o masivamente con <a href="{% url 'home_app:exportar_productos_csv' %}" class="underline font-bold">el CSV del inventario</a>.
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- KPIs -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="k-card p-6">
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Precio / Coste</div>
+            <div class="text-2xl font-black text-slate-800">{{ producto.precio|floatformat:2 }} €</div>
+            <div class="text-sm font-bold {% if sin_costo %}text-amber-500{% else %}text-slate-400{% endif %} mt-1">
+                {% if sin_costo %}sin coste{% else %}{{ producto.costo|floatformat:2 }} €{% endif %}
+            </div>
+        </div>
+        <div class="k-card p-6">
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Margen</div>
+            {% if margen_ud is not None %}
+            <div class="text-2xl font-black {% if margen_ud >= 0 %}text-emerald-600{% else %}text-rose-600{% endif %}">
+                {{ margen_ud|floatformat:2 }} €
+            </div>
+            <div class="text-sm font-bold text-slate-400 mt-1">{{ margen_pct|floatformat:1 }} %</div>
+            {% else %}
+            <div class="text-2xl font-black text-slate-300">—</div>
+            {% endif %}
+        </div>
+        <div class="k-card p-6">
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Stock</div>
+            <div class="text-2xl font-black {% if producto.stock <= 0 %}text-rose-600{% elif producto.stock <= producto.stock_minimo %}text-amber-500{% else %}text-slate-800{% endif %}">
+                {{ producto.stock }}
+            </div>
+            <div class="text-sm font-bold text-slate-400 mt-1">
+                mín. {{ producto.stock_minimo }}
+                {% if valor_stock is not None %} · {{ valor_stock|floatformat:2 }} € valorados{% endif %}
+            </div>
+        </div>
+        <div class="k-card p-6">
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Vendido</div>
+            <div class="text-2xl font-black text-slate-800">{{ unidades }} ud.</div>
+            <div class="text-sm font-bold text-slate-400 mt-1">{{ ingresos|floatformat:2 }} € en {{ n_ventas }} líneas</div>
+        </div>
+    </div>
+
+    {% if beneficio is not None %}
+    <div class="k-card p-6 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">Beneficio estimado histórico</div>
+            <div class="text-sm text-slate-500 font-medium mt-1">
+                {{ ingresos|floatformat:2 }} € ingresados − {{ coste_vendido|floatformat:2 }} € coste de lo vendido
+            </div>
+        </div>
+        <div class="text-4xl font-black {% if beneficio >= 0 %}text-emerald-600{% else %}text-rose-600{% endif %}">
+            {{ beneficio|floatformat:2 }} €
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- HISTORIAL -->
+    <div class="k-card p-6 md:p-8">
+        <div class="flex items-center justify-between mb-5">
+            <h2 class="text-lg font-black text-slate-800"><i class="fas fa-history opacity-40 mr-2"></i>Últimas ventas</h2>
+            <span class="text-xs font-bold text-slate-400">{{ n_ventas }} líneas de venta</span>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="border-b border-slate-100 text-slate-400 text-xs uppercase tracking-wider">
+                        <th class="pb-3 font-bold">Ticket</th>
+                        <th class="pb-3 font-bold">Fecha</th>
+                        <th class="pb-3 font-bold text-center">Cant.</th>
+                        <th class="pb-3 font-bold text-right">Precio ud.</th>
+                        <th class="pb-3 font-bold text-right">Total</th>
+                        <th class="pb-3"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in ultimos %}
+                    <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+                        <td class="py-3 font-bold text-slate-700 text-sm">{{ d.venta.codigo }}</td>
+                        <td class="py-3 text-sm text-slate-500">{{ d.venta.creado_en|date:"d/m/Y H:i" }}</td>
+                        <td class="py-3 text-sm text-center font-bold">{{ d.cantidad }}</td>
+                        <td class="py-3 text-sm text-slate-500 text-right">{{ d.precio_unitario|floatformat:2 }} €</td>
+                        <td class="py-3 text-sm font-black text-slate-800 text-right">{{ d.total|floatformat:2 }} €</td>
+                        <td class="py-3 text-right">
+                            <a href="{% url 'home_app:venta_detalle' d.venta.pk %}" class="text-slate-300 hover:text-dark-blue" title="Ver ticket">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="py-10 text-center text-slate-400 text-sm">Todavía no se ha vendido este producto.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

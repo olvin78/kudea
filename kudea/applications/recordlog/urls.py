@@ -1,3 +1,9 @@
+# =====================================================================
+# 📁 RUTAS · APP 'recordlog'  (AUDITORÍA)
+# URL base: /recordlog/
+#   · Registro de acciones (LogEntry) con plantilla de pedido
+# =====================================================================
+
 # applications/recordlog/urls.py
 from django.urls import path
 from .views import RecordOrderView  # Asegúrate de que exista esta vista

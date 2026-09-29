@@ -1,7 +1,30 @@
+# =====================================================================
+# 📁 VISTAS · APP 'attendance' — Fichajes (táctil/QR), historial mensual y NÓMINA
+# =====================================================================
+#   L24    class EmployeeListView(ListView):
+#   L46    class EmployeeDetailView(DetailView):
+#   L51    class PunchCreateView(CreateView):
+#   L63    class PunchView(View):
+#   L96    class QRListView(TemplateView):
+#   L105   class QRScanView(TemplateView):
+#   L108   class QRTokenPunchView(View):
+#   L126   class FichajeTouchMenuView(TemplateView):
+#   L129   class BuscarHistorialView(View):
+#   L141   class EmployeeMonthlyReportView(TemplateView):
+#   L250   def verificar_password(request):
+#   L280   def _rango_mes(mes):
+#   L301   def _filas_nomina(desde, hasta):
+#   L332   def NominaView(request):
+#   L359   def exportar_nomina_csv(request):
+#   L378   def parte_nuevo(request):
+#   L410   def parte_borrar(request, pk):
+# =====================================================================
+
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, TemplateView
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
+from django.utils.timezone import localdate
 from django.utils import timezone
 from django.contrib import messages
 
@@ -255,3 +278,162 @@ def verificar_password(request):
             if user_auth:
                 return JsonResponse({'success': True})
         return JsonResponse({'success': False})
+
+
+# ============================================================
+#  NÓMINA LIGERA — partes de horas × tarifa
+#    · GET  /attendance/nomina/?mes=YYYY-MM  → resumen del mes
+#    · GET  /attendance/nomina/exportar/     → CSV
+#    · GET/POST /attendance/nomina/parte/nuevo/
+#    · POST /attendance/nomina/parte/<pk>/borrar/
+# ============================================================
+import csv as _csv
+from datetime import date
+
+from django.http import HttpResponse
+from django.db.models import Sum, F
+from django.contrib import messages
+
+from applications.config.roles import role_required
+from .models import ParteHoras
+from .forms import ParteHorasForm
+
+
+def _rango_mes(mes):
+    """'YYYY-MM' → (desde, hasta_exclusivo, etiqueta_mes_siguiente, etiqueta_mes_anterior)."""
+    hoy = localdate()
+    try:
+        year, month = (int(x) for x in mes.split("-"))
+        if not 1 <= month <= 12:
+            raise ValueError
+    except Exception:
+        year, month = hoy.year, hoy.month
+    desde = date(year, month, 1)
+    if month == 12:
+        hasta, ny, nm = date(year + 1, 1, 1), year + 1, 1
+    else:
+        hasta, ny, nm = date(year, month + 1, 1), year, month + 1
+    if month == 1:
+        pa = f"{year - 1:04d}-12"
+    else:
+        pa = f"{year:04d}-{month - 1:02d}"
+    return desde, hasta, f"{ny:04d}-{nm:02d}", pa
+
+
+def _filas_nomina(desde, hasta):
+    """Horas e importe por empleado; el importe usa la tarifa congelada de cada parte."""
+    from decimal import Decimal
+
+    grupos = (
+        ParteHoras.objects.filter(fecha__gte=desde, fecha__lt=hasta)
+        .values(
+            "employee_id", "employee__nombre", "employee__apellidos",
+            "employee__tarifa_hora", "tarifa_hora",
+        )
+        .annotate(horas=Sum("horas"))
+    )
+    por_emp = {}
+    for g in grupos:
+        e = por_emp.get(g["employee_id"])
+        if e is None:
+            e = por_emp[g["employee_id"]] = {
+                "employee_id": g["employee_id"],
+                "employee__nombre": g["employee__nombre"],
+                "employee__apellidos": g["employee__apellidos"],
+                "employee__tarifa_hora": g["employee__tarifa_hora"],
+                "horas": Decimal("0"),
+                "importe": Decimal("0"),
+            }
+        horas = g["horas"] or Decimal("0")
+        e["horas"] += horas
+        e["importe"] += horas * (g["tarifa_hora"] or Decimal("0"))
+    return sorted(por_emp.values(), key=lambda x: x["employee__nombre"] or "")
+
+
+@role_required("gerente")
+def NominaView(request):
+    mes = request.GET.get("mes") or localdate().strftime("%Y-%m")
+    desde, hasta, mes_sig, mes_ant = _rango_mes(mes)
+    partes = (
+        ParteHoras.objects.filter(fecha__gte=desde, fecha__lt=hasta)
+        .select_related("employee")
+        .order_by("fecha", "id")
+    )
+    filas = _filas_nomina(desde, hasta)
+    total_horas = sum(f["horas"] or 0 for f in filas)
+    total_importe = sum(f["importe"] or 0 for f in filas)
+    context = {
+        "mes": mes,
+        "mes_sig": mes_sig,
+        "mes_ant": mes_ant,
+        "filas": filas,
+        "partes": partes[:60],
+        "total_horas": total_horas,
+        "total_importe": total_importe,
+        "hay_empleados_sin_tarifa": any(
+            f["employee__tarifa_hora"] is None for f in filas
+        ),
+    }
+    return render(request, "attendance/nomina.html", context)
+
+
+@role_required("gerente")
+def exportar_nomina_csv(request):
+    mes = request.GET.get("mes") or localdate().strftime("%Y-%m")
+    desde, hasta, _, _ = _rango_mes(mes)
+    resp = HttpResponse(content_type="text/csv; charset=utf-8")
+    resp["Content-Disposition"] = f'attachment; filename="kudea_nomina_{mes}.csv"'
+    resp.write("\ufeff")
+    w = _csv.writer(resp, delimiter=";")
+    w.writerow(["empleado", "horas", "importe"])
+    total_h = total_i = 0
+    for f in _filas_nomina(desde, hasta):
+        nombre = f"{f['employee__nombre']} {f['employee__apellidos'] or ''}".strip()
+        w.writerow([nombre, f["horas"], f["importe"]])
+        total_h += f["horas"] or 0
+        total_i += f["importe"] or 0
+    w.writerow(["TOTAL", total_h, total_i])
+    return resp
+
+
+@role_required("gerente")
+def parte_nuevo(request):
+    if request.method == "POST":
+        form = ParteHorasForm(request.POST)
+        if form.is_valid():
+            parte = form.save(commit=False)
+            if parte.tarifa_hora is None and parte.employee.tarifa_hora is not None:
+                parte.tarifa_hora = parte.employee.tarifa_hora
+            parte.save()
+            messages.success(
+                request,
+                f"Parte registrado: {parte.horas} h de {parte.employee} el {parte.fecha}.",
+            )
+            return redirect(
+                reverse("home_attendance:nomina")
+                + f"?mes={parte.fecha.strftime('%Y-%m')}"
+            )
+    else:
+        form = ParteHorasForm(initial={"fecha": localdate().isoformat()})
+    from applications.employee.models import Employee
+    import json
+    tarifas = {
+        str(e.pk): str(e.tarifa_hora)
+        for e in Employee.objects.filter(tarifa_hora__isnull=False)
+    }
+    return render(
+        request,
+        "attendance/parte_form.html",
+        {"form": form, "tarifas_json": json.dumps(tarifas)},
+    )
+
+
+@role_required("gerente")
+def parte_borrar(request, pk):
+    parte = get_object_or_404(ParteHoras, pk=pk)
+    if request.method == "POST":
+        mes = parte.fecha.strftime("%Y-%m")
+        parte.delete()
+        messages.success(request, "Parte de horas eliminado.")
+        return redirect(f"{reverse('home_attendance:nomina')}?mes={mes}")
+    return redirect("home_attendance:nomina")

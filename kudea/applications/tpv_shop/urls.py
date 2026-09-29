@@ -1,3 +1,12 @@
+# =====================================================================
+# 📁 RUTAS · APP 'tpv_shop'  (CATÁLOGO/CARRITO ONLINE)
+# URL base: /tpv_shop/
+#   · Listado de productos, detalle público, carrito y tickets
+#   · MÓDULO 'tpv_shop' (apagado por defecto)
+# SE RELACIONA CON:
+#   · product (CartItem→Producto, Service→Categoría)
+# =====================================================================
+
 from django.urls import path
 from . import views
 from .views import FinalizarCompraView, EliminarTicketView, CajaArqueoCreateView, CajaArqueoListView, CajaArqueoDetailView, CajaArqueoDeleteView, ArqueoAutomaticoView

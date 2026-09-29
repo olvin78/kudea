@@ -1,0 +1,883 @@
+{% extends "home/base.html" %}
+{% load static %}
+
+{% block title %}Dashboard | KUDEA Intelligence{% endblock %}
+
+{% block head %}
+{{ block.super }}
+<script defer src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<!-- Google Fonts: Outfit -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    'primary-blue': '#499ecf',
+                    'dark-blue': '#1D3557',
+                    'emerald-light': '#ecfdf5',
+                    'rose-light': '#fff1f2',
+                },
+                fontFamily: {
+                    'outfit': ['Outfit', 'sans-serif'],
+                }
+            }
+        }
+    }
+</script>
+
+<style>
+    body { font-family: 'Outfit', sans-serif; background: #f8fafc; }
+    .bg-mesh {
+        background-color: #f8fafc;
+        background-image: 
+            radial-gradient(at 0% 0%, rgba(73, 158, 207, 0.05) 0px, transparent 50%),
+            radial-gradient(at 100% 100%, rgba(29, 53, 87, 0.03) 0px, transparent 50%);
+    }
+    .glass-card {
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(73, 158, 207, 0.2);
+        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.03);
+    }
+    .btn-filter-active {
+        background: #1D3557;
+        color: white;
+        box-shadow: 0 10px 15px -3px rgba(29, 53, 87, 0.2);
+    }
+    .ticker-anim {
+        
+    }
+    @keyframes ticker {
+        0% { transform: translateX(100%); }
+        100% { transform: translateX(-100%); }
+    }
+    .soul-table th { @apply px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50/50; }
+    .soul-table td { @apply px-6 py-4 text-sm text-slate-600 border-b border-slate-50; }
+
+    /* ── Secciones del informe con scroll: nº fijo de filas visibles, el resto con scroll ── */
+    .rep-scroll { overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: rgba(73, 158, 207, .5) transparent; }
+    .rep-scroll::-webkit-scrollbar { width: 8px; }
+    .rep-scroll::-webkit-scrollbar-track { background: rgba(226, 232, 240, .5); border-radius: 99px; }
+    .rep-scroll::-webkit-scrollbar-thumb { background: rgba(73, 158, 207, .5); border-radius: 99px; }
+    .rep-scroll::-webkit-scrollbar-thumb:hover { background: rgba(29, 53, 87, .7); }
+    .rep-table-scroll thead th { position: sticky; top: 0; z-index: 2; background: #f8fafc; box-shadow: inset 0 -2px 0 rgba(73, 158, 207, .18); }
+    @media print { .rep-scroll { max-height: none !important; overflow: visible !important; } }
+
+    /* ── Cementerio de stock: fichas en cuadrícula con barra de scroll rose ── */
+    .cem-scroll { scrollbar-color: rgba(244, 63, 94, .45) transparent; }
+    .cem-scroll::-webkit-scrollbar-track { background: rgba(226, 232, 240, .5); }
+    .cem-scroll::-webkit-scrollbar-thumb { background: rgba(244, 63, 94, .45); }
+    .cem-scroll::-webkit-scrollbar-thumb:hover { background: rgba(244, 63, 94, .7); }
+    .cem-tile { background: rgba(255, 255, 255, .7); border: 1px solid #fee2e2; transition: all .18s ease; }
+    .cem-tile:hover { background: #fff1f2; border-color: #fecaca; box-shadow: 0 10px 24px -18px rgba(225, 29, 72, .6); }
+
+    /* ── Punto "?" de ayuda en la esquina de cada tarjeta: qué representa ── */
+    .info-dot {
+        width: 22px; height: 22px; border-radius: 50%;
+        border: 1.5px solid #cbd5e1; background: #fff; color: #94a3b8;
+        font-size: 12px; font-weight: 800; line-height: 1;
+        display: inline-flex; align-items: center; justify-content: center;
+        cursor: help; flex: none; padding: 0;
+        transition: all .15s ease; position: relative;
+    }
+    .info-dot:hover, .info-dot:focus-visible { border-color: #499ecf; color: #499ecf; transform: scale(1.1); outline: none; }
+    .info-dot-corner { position: absolute; top: 26px; right: 26px; z-index: 30; }
+    .info-dot::after {
+        content: attr(data-tip);
+        position: absolute; top: -4px; right: calc(100% + 10px);
+        width: 250px; padding: 10px 12px;
+        background: #0f172a; color: #e2e8f0;
+        font-size: 11px; font-weight: 600; line-height: 1.55;
+        letter-spacing: normal; text-transform: none; text-align: left;
+        border-radius: 12px; box-shadow: 0 14px 30px -14px rgba(15, 23, 42, .55);
+        opacity: 0; visibility: hidden; transform: translateY(-4px);
+        transition: all .15s ease; z-index: 60; pointer-events: none;
+    }
+    .info-dot:hover::after, .info-dot:focus-visible::after { opacity: 1; visibility: visible; transform: none; }
+    @media print { .info-dot { display: none; } }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Datos para JS -->
+{{ dias_labels|json_script:"dias-data" }}
+{{ ventas_30_dias|json_script:"ventas-data" }}
+{{ mix_pagos|json_script:"mix-pagos-data" }}
+{{ mix_categorias|json_script:"mix-categorias-data" }}
+
+<div class="bg-mesh min-h-screen p-4 md:p-8">
+    <div class="max-w-[1600px] mx-auto">
+
+        <!-- ===== SECCIÓN 1 · CABECERA Y TICKER ===== Título del dashboard, chips de IVA/estado y ticker de novedades en tiempo real. ===== -->
+        <header class="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div class="space-y-2">
+                <div class="flex items-center gap-3">
+                    <span class="bg-primary-blue/10 text-primary-blue text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">Retail Intelligence v3.5</span>
+                    <span id="fecha-actual" class="text-xs font-bold text-slate-400 uppercase"></span>
+                </div>
+                <h1 class="text-4xl font-black text-slate-900 tracking-tight">El Alma de <span class="text-primary-blue">Kudea</span></h1>
+                <p class="text-slate-500 font-medium">Control estratégico y operativo en tiempo real</p>
+                
+                <div class="flex gap-4 pt-2">
+                    <div class="flex items-center gap-2 bg-white px-4 py-2 rounded-2xl border border-slate-100 shadow-sm">
+                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">IVA</span>
+                        <span class="text-sm font-black text-slate-800">{{ iva_actual }}%</span>
+                    </div>
+                <div class="flex items-center gap-2 bg-{{ health_color }}-50 px-4 py-2 rounded-2xl border border-{{ health_color }}-100 shadow-sm transition-all">
+                        <span class="text-[10px] font-black text-{{ health_color }}-600 uppercase tracking-widest">Estado</span>
+                        <span class="text-sm font-black text-{{ health_color }}-700">{{ health_status }}</span>
+                    </div>
+                </div>
+            </div>
+
+            {% if ticker_eventos %}
+            <div class="flex-1 max-w-xl bg-slate-900 rounded-3xl p-4 overflow-hidden relative group">
+                <div class="flex gap-10 whitespace-nowrap ticker-anim hover:pause">
+                    {% for evento in ticker_eventos %}
+                    <div class="flex items-center gap-3">
+                        <span class="w-2 h-2 rounded-full {% if evento.tipo == 'peligro' %}bg-rose-500 shadow-[0_0_10px_#f43f5e]{% elif evento.tipo == 'exito' %}bg-emerald-500 shadow-[0_0_10px_#10b981]{% else %}bg-primary-blue shadow-[0_0_10px_#499ecf]{% endif %}"></span>
+                        <span class="text-xs font-bold text-white uppercase tracking-widest">{{ evento.texto }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </header>
+
+        <!-- ===== SECCIÓN 2 · FILTROS GLOBALES ===== Selector de periodo (Hoy/Ayer/7D/Mes/Año) y rango personalizado; re filtra todo el informe. ===== -->
+        <div class="relative glass-card rounded-[2.5rem] p-3 pr-10 mb-10 flex flex-wrap items-center justify-between gap-4">
+            <button type="button" class="info-dot info-dot-corner" data-tip="Filtra TODOS los datos del informe por periodo: hoy, ayer, últimos 7 días, mes, año o rango de fechas a medida.">?</button>
+            <div class="flex items-center gap-4 px-4">
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Filtrar Periodo:</span>
+                <form method="get" action="." class="flex gap-1.5">
+                    <button type="submit" name="rango" value="hoy" 
+                            class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all {% if rango_activo == 'hoy' %}btn-filter-active{% else %}bg-white text-slate-400 hover:text-primary-blue border border-slate-100 shadow-sm{% endif %}">
+                        HOY
+                    </button>
+                    <button type="submit" name="rango" value="ayer" 
+                            class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all {% if rango_activo == 'ayer' %}btn-filter-active{% else %}bg-white text-slate-400 hover:text-primary-blue border border-slate-100 shadow-sm{% endif %}">
+                        AYER
+                    </button>
+                    <button type="submit" name="rango" value="semana" 
+                            class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all {% if rango_activo == 'semana' %}btn-filter-active{% else %}bg-white text-slate-400 hover:text-primary-blue border border-slate-100 shadow-sm{% endif %}">
+                        7D
+                    </button>
+                    <button type="submit" name="rango" value="mes" 
+                            class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all {% if rango_activo == 'mes' %}btn-filter-active{% else %}bg-white text-slate-400 hover:text-primary-blue border border-slate-100 shadow-sm{% endif %}">
+                        MES
+                    </button>
+                    <button type="submit" name="rango" value="anio" 
+                            class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all {% if rango_activo == 'anio' %}btn-filter-active{% else %}bg-white text-slate-400 hover:text-primary-blue border border-slate-100 shadow-sm{% endif %}">
+                        AÑO
+                    </button>
+                    <button type="button" onclick="document.getElementById('custom-dates').classList.toggle('hidden')" 
+                            class="w-10 h-10 rounded-xl bg-white border border-slate-100 text-slate-400 hover:text-primary-blue flex items-center justify-center transition-all shadow-sm">
+                        <i data-lucide="calendar" class="w-4"></i>
+                    </button>
+                </form>
+            </div>
+            <!-- Exportar el periodo visible a Excel / CSV -->
+            <div class="flex items-center gap-1.5">
+                <a href="{% url 'reporting_app:contabilidad' %}"
+                   class="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-dark-blue text-white hover:bg-slate-800 shadow-md transition-all flex items-center gap-1.5"
+                   title="Cuenta de resultados y libro de IVA del periodo">
+                    <i data-lucide="scale" class="w-3.5"></i> Contabilidad
+                </a>
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Exportar:</span>
+                <a href="{% url 'reporting_app:exportar' 'ventas' %}?rango={{ rango_activo|urlencode }}{% if rango_activo == 'personalizado' %}&amp;fecha_inicio={{ f_filtro_inicio|date:'Y-m-d' }}&amp;fecha_fin={{ f_filtro_fin|date:'Y-m-d' }}{% endif %}&amp;fmt=xlsx"
+                   class="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-white border border-slate-100 text-slate-500 hover:text-primary-blue hover:border-primary-blue/30 shadow-sm transition-all flex items-center gap-1.5"
+                   title="Descargar las ventas del periodo en Excel (.xlsx)">
+                    <i data-lucide="file-spreadsheet" class="w-3.5"></i> Ventas
+                </a>
+                <a href="{% url 'reporting_app:exportar' 'ventas' %}?rango={{ rango_activo|urlencode }}{% if rango_activo == 'personalizado' %}&amp;fecha_inicio={{ f_filtro_inicio|date:'Y-m-d' }}&amp;fecha_fin={{ f_filtro_fin|date:'Y-m-d' }}{% endif %}&amp;fmt=csv"
+                   class="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-white border border-slate-100 text-slate-500 hover:text-primary-blue hover:border-primary-blue/30 shadow-sm transition-all flex items-center gap-1.5"
+                   title="Descargar las ventas del periodo en CSV">
+                    <i data-lucide="file-text" class="w-3.5"></i> CSV
+                </a>
+                <a href="{% url 'reporting_app:exportar' 'movimientos' %}?rango={{ rango_activo|urlencode }}{% if rango_activo == 'personalizado' %}&amp;fecha_inicio={{ f_filtro_inicio|date:'Y-m-d' }}&amp;fecha_fin={{ f_filtro_fin|date:'Y-m-d' }}{% endif %}&amp;fmt=xlsx"
+                   class="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-white border border-slate-100 text-slate-500 hover:text-primary-blue hover:border-primary-blue/30 shadow-sm transition-all flex items-center gap-1.5"
+                   title="Descargar los movimientos de caja del periodo en Excel (.xlsx)">
+                    <i data-lucide="landmark" class="w-3.5"></i> Caja
+                </a>
+                <a href="{% url 'reporting_app:exportar' 'movimientos' %}?rango={{ rango_activo|urlencode }}{% if rango_activo == 'personalizado' %}&amp;fecha_inicio={{ f_filtro_inicio|date:'Y-m-d' }}&amp;fecha_fin={{ f_filtro_fin|date:'Y-m-d' }}{% endif %}&amp;fmt=csv"
+                   class="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-white border border-slate-100 text-slate-500 hover:text-primary-blue hover:border-primary-blue/30 shadow-sm transition-all flex items-center gap-1.5"
+                   title="Descargar los movimientos de caja del periodo en CSV">
+                    <i data-lucide="receipt" class="w-3.5"></i> CSV
+                </a>
+            </div>
+            <div class="bg-primary-blue text-white px-6 py-3 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-primary-blue/20">
+                {% if rango_activo == 'hoy' %}HOY
+                {% elif rango_activo == 'ayer' %}AYER
+                {% elif rango_activo == 'semana' %}ÚLTIMOS 7 DÍAS
+                {% elif rango_activo == 'mes' %}ESTE MES
+                {% elif rango_activo == 'anio' %}ESTE AÑO
+                {% else %}{{ f_filtro_inicio|date:"d M" }} - {{ f_filtro_fin|date:"d M" }}{% endif %}
+            </div>
+        </div>
+
+        <!-- Custom Dates Panel -->
+        <div id="custom-dates" class="glass-card rounded-[2.5rem] p-8 mb-10 {% if rango_activo != 'personalizado' %}hidden{% endif %}">
+            <form method="get" action="." class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                <input type="hidden" name="rango" value="personalizado">
+                <div>
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-4">Fecha Inicio</label>
+                    <input type="date" name="fecha_inicio" class="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-slate-700 font-bold focus:ring-2 focus:ring-primary-blue/20 outline-none" value="{{ f_filtro_inicio|date:'Y-m-d' }}">
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 ml-4">Fecha Fin</label>
+                    <input type="date" name="fecha_fin" class="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-slate-700 font-bold focus:ring-2 focus:ring-primary-blue/20 outline-none" value="{{ f_filtro_fin|date:'Y-m-d' }}">
+                </div>
+                <button type="submit" class="bg-primary-blue hover:bg-dark-blue text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-primary-blue/20">
+                    APLICAR FILTRO
+                </button>
+            </form>
+        </div>
+
+        <!-- ===== SECCIÓN 3 · ALERTAS E INCIDENCIAS ===== Qué revisar hoy (stock, fiado, IVA, descuentos): cada alerta enlaza a su sitio. A la derecha, resumen del FIADO pendiente con antigüedad de la deuda. ===== -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+            <!-- Incidencias detectadas -->
+            <div class="relative glass-card rounded-[3rem] p-8 lg:col-span-2">
+                <button type="button" class="info-dot info-dot-corner" data-tip="Lista automática de lo que necesita atención hoy: sin stock, fiado por cobrar, IVA fuera de norma o descuentos. Cada alerta enlaza a su sitio.">?</button>
+                <div class="flex items-center justify-between mb-6 pr-9">
+                    <h3 class="text-lg font-black text-slate-800 uppercase tracking-widest flex items-center gap-3">
+                        <i data-lucide="siren" class="text-rose-500"></i> Alertas e Incidencias
+                    </h3>
+                    <span class="text-[10px] font-black px-3 py-1 rounded-lg uppercase tracking-widest {% if alertas %}bg-rose-500 text-white{% else %}bg-emerald-100 text-emerald-600{% endif %}">
+                        {% if alertas %}{{ alertas|length }} pendiente{{ alertas|length|pluralize }}{% else %}Todo en orden{% endif %}
+                    </span>
+                </div>
+                {% if alertas %}
+                <div class="space-y-3">
+                    {% for a in alertas %}
+                    <a href="{{ a.url }}" class="flex items-center gap-4 p-4 rounded-2xl border transition-all {% if a.nivel == 'crit' %}bg-rose-50/50 border-rose-100 hover:bg-rose-50{% elif a.nivel == 'warn' %}bg-amber-50/50 border-amber-100 hover:bg-amber-50{% else %}bg-blue-50/50 border-blue-100 hover:bg-blue-50{% endif %}">
+                        <span class="w-11 h-11 rounded-xl flex items-center justify-center flex-none {% if a.nivel == 'crit' %}bg-rose-100 text-rose-600{% elif a.nivel == 'warn' %}bg-amber-100 text-amber-600{% else %}bg-blue-100 text-blue-600{% endif %}">
+                            <i data-lucide="{{ a.icono }}" class="w-5"></i>
+                        </span>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-black text-slate-800">{{ a.titulo }}</p>
+                            <p class="text-[11px] font-bold text-slate-400 mt-0.5">{{ a.texto }}</p>
+                        </div>
+                        <span class="text-[10px] font-black uppercase tracking-widest flex-none {% if a.nivel == 'crit' %}text-rose-500{% elif a.nivel == 'warn' %}text-amber-600{% else %}text-blue-500{% endif %}">{{ a.accion }} →</span>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="flex flex-col items-center justify-center py-8 text-emerald-500">
+                    <i data-lucide="shield-check" class="w-10 h-10 mb-3"></i>
+                    <p class="text-xs font-black uppercase tracking-widest">Sin incidencias — todo controlado</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Fiado pendiente -->
+            <div class="relative glass-card rounded-[3rem] p-8 border-l-8 border-amber-500/30 flex flex-col">
+                <button type="button" class="info-dot info-dot-corner" data-tip="Dinero de las ventas a fiado que aún no se ha cobrado, con su antigüedad (0-30 / 31-60 / +60 días) y acceso directo al cobro.">?</button>
+                <div class="flex items-center justify-between mb-5 pr-9">
+                    <h3 class="text-lg font-black text-slate-800 uppercase tracking-widest flex items-center gap-3">
+                        <i data-lucide="wallet" class="text-amber-500"></i> Fiado
+                    </h3>
+                    {% if fiado_vencido > 0 %}
+                    <span class="text-[10px] font-black bg-rose-500 text-white px-3 py-1 rounded-lg uppercase tracking-widest">+30 días</span>
+                    {% endif %}
+                </div>
+                {% if fiado_pendiente > 0 %}
+                <p class="text-3xl font-black text-slate-800 mb-1">€{{ fiado_pendiente|floatformat:2 }}</p>
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+                    {{ fiado_tickets_abiertos }} ticket{{ fiado_tickets_abiertos|pluralize }} · {{ fiado_clientes_n }} cliente{{ fiado_clientes_n|pluralize }}
+                </p>
+                {% if fiado_vencido > 0 %}
+                <p class="text-[11px] font-black text-rose-500 mb-3">Vencido (+30 días): €{{ fiado_vencido|floatformat:2 }}</p>
+                {% endif %}
+                <div class="space-y-3 my-3">
+                    {% for b in fiado_aging %}
+                    <div>
+                        <div class="flex justify-between text-[10px] font-black uppercase tracking-widest mb-1">
+                            <span class="text-slate-400">{{ b.rango }}</span>
+                            <span class="text-slate-700">€{{ b.total|floatformat:2 }} · {{ b.pct }}%</span>
+                        </div>
+                        <div class="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                            <div class="h-full rounded-full {% if forloop.counter == 1 %}bg-amber-400{% elif forloop.counter == 2 %}bg-orange-500{% else %}bg-rose-500{% endif %}" style="width: {{ b.pct }}%"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <a href="{% url 'fiado_lista' %}" class="mt-auto inline-flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-amber-500/20">
+                    Ir a cobrar <i data-lucide="arrow-right" class="w-4"></i>
+                </a>
+                {% else %}
+                <div class="flex-1 flex flex-col items-center justify-center py-6 text-emerald-500">
+                    <i data-lucide="badge-check" class="w-10 h-10 mb-3"></i>
+                    <p class="text-xs font-black uppercase tracking-widest text-center">Sin deuda pendiente</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- ===== SECCIÓN 4 · KPIs PRINCIPALES ===== Margen neto del periodo, ingresos en estantería y rentabilidad operativa (con comparativa vs periodo anterior). ===== -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+            <div class="relative glass-card rounded-[2.5rem] p-8 pr-14 flex items-center justify-between group hover:border-emerald-200 transition-all">
+                <button type="button" class="info-dot info-dot-corner" data-tip="Beneficio real del periodo: lo que vendiste menos IVA y menos coste de lo vendido. Es lo que de verdad queda para ti.">?</button>
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Margen Neto (Periodo)</p>
+                    <h3 class="text-3xl font-black text-slate-800 tracking-tight group-hover:text-emerald-600 transition-colors">€{{ beneficio_periodo|floatformat:2 }}</h3>
+                    {% if delta_beneficio is not None %}
+                    <p class="text-[11px] font-black mt-1 {% if delta_beneficio >= 0 %}text-emerald-500{% else %}text-rose-500{% endif %}">
+                        {% if delta_beneficio >= 0 %}▲{% else %}▼{% endif %} {{ delta_beneficio|floatformat:1 }}% <span class="text-slate-400 font-bold">vs. periodo anterior</span>
+                    </p>
+                    {% endif %}
+                </div>
+                <div class="w-14 h-14 bg-emerald-50 text-emerald-500 rounded-[1.5rem] flex items-center justify-center text-2xl group-hover:bg-emerald-500 group-hover:text-white transition-all">
+                    <i data-lucide="trending-up"></i>
+                </div>
+            </div>
+            <div class="relative glass-card rounded-[2.5rem] p-8 pr-14 flex items-center justify-between group hover:border-primary-blue/30 transition-all">
+                <button type="button" class="info-dot info-dot-corner" data-tip="Valor de tu inventario a precio de venta: lo que valdría el stock si lo vendieras todo a precio público.">?</button>
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Ingresos en Estantería</p>
+                    <h3 class="text-3xl font-black text-slate-800 tracking-tight group-hover:text-primary-blue transition-colors">€{{ valor_venta_potencial|floatformat:2 }}</h3>
+                </div>
+                <div class="w-14 h-14 bg-blue-50 text-primary-blue rounded-[1.5rem] flex items-center justify-center text-2xl group-hover:bg-primary-blue group-hover:text-white transition-all">
+                    <i data-lucide="box"></i>
+                </div>
+            </div>
+            <div class="relative glass-card rounded-[2.5rem] p-8 pr-14 flex items-center justify-between group hover:border-dark-blue/30 transition-all">
+                <button type="button" class="info-dot info-dot-corner" data-tip="Beneficio como % de las ventas: por cada 100€ cobrados, cuánto queda para ti después de IVA y costes.">?</button>
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Rentabilidad Operativa</p>
+                    <h3 class="text-3xl font-black text-slate-800 tracking-tight group-hover:text-dark-blue transition-colors">{{ margen_periodo }}%</h3>
+                    {% if delta_margen_pp is not None %}
+                    <p class="text-[11px] font-black mt-1 {% if delta_margen_pp >= 0 %}text-emerald-500{% else %}text-rose-500{% endif %}">
+                        {% if delta_margen_pp >= 0 %}▲{% else %}▼{% endif %} {{ delta_margen_pp|floatformat:1 }} p.p. <span class="text-slate-400 font-bold">vs. periodo anterior</span>
+                    </p>
+                    {% endif %}
+                </div>
+                <div class="w-14 h-14 bg-slate-100 text-dark-blue rounded-[1.5rem] flex items-center justify-center text-2xl group-hover:bg-dark-blue group-hover:text-white transition-all">
+                    <i data-lucide="pie-chart"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== SECCIÓN 5 · KPIs SECUNDARIOS ===== Recaudación del periodo, ticket medio, ventas del mes y valoración del stock (con comparativas). ===== -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+            <div class="relative glass-card rounded-3xl p-6 border-l-4 border-primary-blue">
+                <button type="button" class="info-dot info-dot-corner" data-tip="Dinero total cobrado en el periodo seleccionado (solo ventas completadas).">?</button>
+                <div class="flex items-center justify-between mb-4 pr-9">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Recaudación Periodo</span>
+                    <i data-lucide="wallet" class="w-4 text-primary-blue"></i>
+                </div>
+                <h4 class="text-2xl font-black text-slate-800 mb-1">€{{ total_periodo|floatformat:2 }}</h4>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{{ tickets_periodo }} transacciones</p>
+                {% if delta_periodo is not None %}
+                <p class="text-[10px] font-black mt-1 {% if delta_periodo >= 0 %}text-emerald-500{% else %}text-rose-500{% endif %}">
+                    {% if delta_periodo >= 0 %}▲{% else %}▼{% endif %} {{ delta_periodo|floatformat:1 }}% <span class="text-slate-400 font-bold">vs. periodo anterior</span>
+                </p>
+                {% endif %}
+            </div>
+            <div class="relative glass-card rounded-3xl p-6">
+                <button type="button" class="info-dot info-dot-corner" data-tip="Promedio por ticket: lo cobrado en el periodo dividido entre el número de ventas.">?</button>
+                <div class="flex items-center justify-between mb-4 pr-9">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ticket Medio</span>
+                    <i data-lucide="receipt" class="w-4 text-slate-300"></i>
+                </div>
+                <h4 class="text-2xl font-black text-slate-800 mb-1">€{{ ticket_promedio_periodo|floatformat:2 }}</h4>
+                <p class="text-[10px] font-bold text-primary-blue uppercase tracking-tighter">Promedio filtrado</p>
+                {% if delta_ticket is not None %}
+                <p class="text-[10px] font-black mt-1 {% if delta_ticket >= 0 %}text-emerald-500{% else %}text-rose-500{% endif %}">
+                    {% if delta_ticket >= 0 %}▲{% else %}▼{% endif %} {{ delta_ticket|floatformat:1 }}% <span class="text-slate-400 font-bold">vs. periodo anterior</span>
+                </p>
+                {% endif %}
+            </div>
+            <div class="relative glass-card rounded-3xl p-6">
+                <button type="button" class="info-dot info-dot-corner" data-tip="Ventas del mes en curso, con la variación respecto al mes anterior.">?</button>
+                <div class="flex items-center justify-between mb-4 pr-9">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ventas Mes</span>
+                    <i data-lucide="calendar" class="w-4 text-slate-300"></i>
+                </div>
+                <h4 class="text-2xl font-black text-slate-800 mb-1">€{{ total_mes_actual|floatformat:2 }}</h4>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Referencia mensual</p>
+                {% if total_mes_anterior > 0 %}
+                <p class="text-[10px] font-black mt-1 {% if crecimiento >= 0 %}text-emerald-500{% else %}text-rose-500{% endif %}">
+                    {% if crecimiento >= 0 %}▲{% else %}▼{% endif %} {{ crecimiento|floatformat:1 }}% <span class="text-slate-400 font-bold">vs mes anterior</span>
+                </p>
+                {% endif %}
+            </div>
+            <div class="relative glass-card rounded-3xl p-6">
+                <button type="button" class="info-dot info-dot-corner" data-tip="Valor de tu inventario a coste de compra: lo que te ha costado tener ese stock en almacén.">?</button>
+                <div class="flex items-center justify-between mb-4 pr-9">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Patrimonio Stock</span>
+                    <i data-lucide="database" class="w-4 text-slate-300"></i>
+                </div>
+                <h4 class="text-2xl font-black text-slate-800 mb-1">€{{ valor_total_inventario|floatformat:2 }}</h4>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Valoración costo</p>
+            </div>
+        </div>
+
+        <!-- ===== SECCIÓN 6 · DISTRIBUCIÓN (DONUTS) ===== Mix de ventas del periodo: reparto por método de pago y por categoría, con % sobre el total. ===== -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-10">
+            <!-- Donut: ventas por método de pago -->
+            <div class="relative glass-card rounded-[3rem] p-8">
+                <button type="button" class="info-dot info-dot-corner" data-tip="Reparto de las ventas del periodo por forma de cobro: efectivo, tarjeta, bizum o fiado, con su % sobre el total.">?</button>
+                <div class="flex items-center justify-between mb-8 pr-9">
+                    <h3 class="text-lg font-black text-slate-800 uppercase tracking-widest flex items-center gap-3">
+                        <i data-lucide="circle-dollar-sign" class="text-primary-blue"></i> Venta por Método de Pago
+                    </h3>
+                    <span class="text-[10px] font-black bg-slate-100 text-slate-500 px-3 py-1 rounded-lg uppercase tracking-widest">Periodo</span>
+                </div>
+                {% if mix_pagos %}
+                <div class="flex flex-col sm:flex-row items-center gap-8">
+                    <div class="relative w-44 h-44 flex-none mx-auto">
+                        <canvas id="donutPagos"></canvas>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total</span>
+                            <span class="text-lg font-black text-slate-800">€{{ total_periodo|floatformat:2 }}</span>
+                        </div>
+                    </div>
+                    <div class="flex-1 w-full space-y-3">
+                        {% for m in mix_pagos %}
+                        <div class="flex items-center gap-3 text-sm">
+                            <span class="w-3 h-3 rounded-full flex-none" style="background: {{ m.color }};"></span>
+                            <span class="flex-1 font-bold text-slate-600 truncate">{{ m.nombre }}</span>
+                            <span class="font-black text-slate-800">{{ m.pct }}%</span>
+                            <span class="text-slate-400 font-bold w-20 text-right">€{{ m.total|floatformat:2 }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="flex flex-col items-center justify-center py-10 text-slate-300">
+                    <i data-lucide="pie-chart" class="w-10 h-10 mb-3"></i>
+                    <p class="text-xs font-black uppercase tracking-widest">Sin ventas en este periodo</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Donut: ventas por categoría -->
+            <div class="relative glass-card rounded-[3rem] p-8">
+                <button type="button" class="info-dot info-dot-corner" data-tip="Qué peso tiene cada categoría de producto sobre las ventas del periodo, con % e importe.">?</button>
+                <div class="flex items-center justify-between mb-8 pr-9">
+                    <h3 class="text-lg font-black text-slate-800 uppercase tracking-widest flex items-center gap-3">
+                        <i data-lucide="layers" class="text-dark-blue"></i> Venta por Categoría
+                    </h3>
+                    <span class="text-[10px] font-black bg-slate-100 text-slate-500 px-3 py-1 rounded-lg uppercase tracking-widest">Periodo</span>
+                </div>
+                {% if mix_categorias %}
+                <div class="flex flex-col sm:flex-row items-center gap-8">
+                    <div class="relative w-44 h-44 flex-none mx-auto">
+                        <canvas id="donutCategorias"></canvas>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total</span>
+                            <span class="text-lg font-black text-slate-800">€{{ total_periodo|floatformat:2 }}</span>
+                        </div>
+                    </div>
+                    <div class="flex-1 w-full space-y-3">
+                        {% for c in mix_categorias %}
+                        <div class="flex items-center gap-3 text-sm">
+                            <span class="w-3 h-3 rounded-full flex-none" style="background: {{ c.color }};"></span>
+                            <span class="flex-1 font-bold text-slate-600 truncate">{{ c.nombre }}</span>
+                            <span class="font-black text-slate-800">{{ c.pct }}%</span>
+                            <span class="text-slate-400 font-bold w-20 text-right">€{{ c.total|floatformat:2 }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="flex flex-col items-center justify-center py-10 text-slate-300">
+                    <i data-lucide="layers" class="w-10 h-10 mb-3"></i>
+                    <p class="text-xs font-black uppercase tracking-widest">Sin ventas en este periodo</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- ===== SECCIÓN 7 · ANALÍTICA ===== Gráfico de proyección a 30 días + rendimiento por operador (3 filas visibles, resto con scroll). ===== -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-10">
+            <!-- Gráfico: proyección de ventas a 30 días -->
+            <div class="relative glass-card rounded-[3rem] p-8 flex flex-col">
+                <button type="button" class="info-dot info-dot-corner" data-tip="Ventas de los últimos 30 día a día: la tendencia te ayuda a prever cómo vendrás el próximo mes.">?</button>
+                <div class="flex items-center justify-between mb-8">
+                    <h3 class="text-lg font-black text-slate-800 uppercase tracking-widest flex items-center gap-3">
+                        <i data-lucide="activity" class="text-primary-blue"></i> Proyección 30 Días
+                    </h3>
+                </div>
+                <div class="flex-1 min-h-[300px]">
+                    <canvas id="salesChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Operadores del periodo: 3 filas visibles, resto con scroll -->
+            <div class="relative glass-card rounded-[3rem] p-8">
+                <button type="button" class="info-dot info-dot-corner" data-tip="Ranking de cada operador por lo vendido en el periodo: total cobrado y número de tickets.">?</button>
+                <div class="flex items-center justify-between mb-8 pr-9">
+                    <h3 class="text-lg font-black text-slate-800 uppercase tracking-widest flex items-center gap-3">
+                        <i data-lucide="users" class="text-primary-blue"></i> Rendimiento Operadores
+                    </h3>
+                    <span class="text-[10px] font-black bg-slate-900 text-white px-3 py-1 rounded-lg uppercase tracking-widest">Cuota de Ventas</span>
+                </div>
+                <div class="space-y-4 pr-4 rep-scroll" data-rep-rows="3" data-rep-gap="16">
+                    {% for u in ventas_usuario %}
+                    <div data-rep-row class="flex items-center justify-between p-4 bg-white/50 border border-slate-50 rounded-2xl hover:bg-white transition-all shadow-sm">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-primary-blue text-white flex items-center justify-center font-black text-lg shadow-lg shadow-primary-blue/20">
+                                {{ u.usuario__username|first|upper }}
+                            </div>
+                            <div>
+                                <h5 class="text-sm font-black text-slate-800">{% if u.usuario__first_name %}{{ u.usuario__first_name }}{% else %}{{ u.usuario__username }}{% endif %}</h5>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{{ u.n }} tickets operados</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-lg font-black text-primary-blue">€{{ u.total|floatformat:2 }}</p>
+                            <p class="text-[10px] font-black text-emerald-500 uppercase">Ventas Activas</p>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-20 text-slate-300 italic uppercase text-xs font-bold tracking-widest">Sin actividad registrada</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== SECCIÓN 8 · PRODUCTOS Y STOCK ===== Reposición urgente + SKU de alta rotación (3 productos visibles por tarjeta, resto con scroll). ===== -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-10">
+            <!-- Productos por debajo del stock mínimo: 3 visibles, resto con scroll -->
+            <div class="relative glass-card rounded-[3rem] p-8 border-l-8 border-rose-500/30">
+                <button type="button" class="info-dot info-dot-corner" data-tip="Productos que han llegado a su stock mínimo o por debajo: conviene reponerlos antes de que se agoten.">?</button>
+                <div class="flex items-center justify-between mb-8 pr-9">
+                    <h3 class="text-lg font-black text-slate-800 uppercase tracking-widest flex items-center gap-3">
+                        <i data-lucide="alert-triangle" class="text-rose-500"></i> Reposición Urgente
+                    </h3>
+                    <span class="bg-rose-500 text-white text-[10px] font-black px-3 py-1 rounded-lg uppercase tracking-widest">Bajo Mínimo</span>
+                </div>
+                <div class="space-y-4 pr-2 rep-scroll" data-rep-rows="3" data-rep-gap="16">
+                    {% for p in productos_stock_bajo %}
+                    <div data-rep-row class="flex items-center justify-between p-4 bg-rose-50/30 border border-rose-100 rounded-2xl">
+                        <div>
+                            <h5 class="text-sm font-black text-slate-800">{{ p.nombre }}</h5>
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">
+                                Stock: <span class="text-rose-600 font-black">{{ p.stock }}</span> / {{ p.stock_minimo }} min.
+                            </p>
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest {% if p.stock == 0 %}bg-rose-500 text-white shadow-lg shadow-rose-500/20{% else %}bg-rose-100 text-rose-600{% endif %}">
+                            {% if p.stock == 0 %}AGOTADO{% else %}BAJO MÍNIMO{% endif %}
+                        </span>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-20">
+                        <i data-lucide="check-circle" class="w-12 h-12 text-emerald-500 mx-auto mb-4"></i>
+                        <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Todo el stock bajo control</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Productos más vendidos del periodo: 3 visibles, resto con scroll -->
+            <div class="relative glass-card rounded-[3rem] p-8 border-l-8 border-amber-500/30">
+                <button type="button" class="info-dot info-dot-corner" data-tip="Los productos más vendidos por unidades en el periodo seleccionado (los que más rotan).">?</button>
+                <div class="flex items-center justify-between mb-8">
+                    <h3 class="text-lg font-black text-slate-800 uppercase tracking-widest flex items-center gap-3">
+                        <i data-lucide="crown" class="text-amber-500"></i> SKU Alta Rotación
+                    </h3>
+                </div>
+                <div class="space-y-4 pr-2 rep-scroll" data-rep-rows="3" data-rep-gap="16">
+                    {% for p in productos_top %}
+                    <div data-rep-row class="flex items-center justify-between p-4 bg-amber-50/30 border border-amber-100 rounded-2xl">
+                        <div class="flex items-center gap-4">
+                            <span class="w-8 h-8 rounded-full bg-amber-400 text-amber-950 flex items-center justify-center font-black text-xs">{{ forloop.counter }}</span>
+                            <h5 class="text-sm font-black text-slate-800">{{ p.producto__nombre }}</h5>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm font-black text-slate-800">{{ p.total_vendido }} u.</p>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">Vendidas</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== SECCIÓN 9 · CEMENTERIO DE STOCK ===== Productos sin rotación este mes en formato de fichas (2×2 visibles, resto con scroll): nombre, unidades, € estancados y peso relativo. ===== -->
+        <div class="relative glass-card rounded-[3rem] p-8 mb-10 overflow-hidden">
+            <button type="button" class="info-dot info-dot-corner" data-tip="Productos con stock que no se han vendido este mes: dinero parado en almacén (capital estancado).">?</button>
+            <!-- Cabecera -->
+            <div class="flex flex-wrap items-center justify-between gap-4 mb-7 pr-9">
+                <h3 class="text-lg font-black text-slate-800 uppercase tracking-widest flex items-center gap-3">
+                    <i data-lucide="skull" class="text-slate-400"></i> Cementerio de Stock
+                    <span class="text-[10px] font-black bg-slate-100 text-slate-500 px-3 py-1 rounded-lg uppercase tracking-widest">Sin rotación este mes</span>
+                </h3>
+                <div class="flex items-center gap-3">
+                    <span class="text-[10px] font-black bg-rose-50 text-rose-500 border border-rose-100 px-3 py-1.5 rounded-xl uppercase tracking-widest">€{{ stock_muerto_total|floatformat:2 }} estancados</span>
+                    <span class="text-[10px] font-black bg-slate-100 text-slate-500 px-3 py-1.5 rounded-xl uppercase tracking-widest">{{ stock_muerto_n }} producto{{ stock_muerto_n|pluralize }}</span>
+                </div>
+            </div>
+
+            <!-- Fichas en cuadrícula: 4 visibles (2×2), resto con scroll -->
+            {% if stock_muerto %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 rep-scroll cem-scroll" data-rep-rows="2" data-rep-gap="16">
+                {% for p in stock_muerto %}
+                <div data-rep-row class="cem-tile rounded-2xl p-4">
+                    <div class="flex items-start justify-between gap-3 mb-3">
+                        <p class="text-sm font-black text-slate-800 leading-snug">{{ p.nombre }}</p>
+                        <span class="w-8 h-8 rounded-lg bg-rose-50 border border-rose-100 text-rose-400 flex items-center justify-center flex-none">
+                            <i data-lucide="ghost" class="w-4"></i>
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between mb-2.5">
+                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ p.stock }} uni.</span>
+                        <span class="text-base font-black text-rose-500">€{{ p.valor_estancado|floatformat:2 }}</span>
+                    </div>
+                    <div class="h-1.5 rounded-full bg-rose-100 overflow-hidden">
+                        <div class="h-full rounded-full bg-rose-400" style="width: {{ p.cuota_pct }}%"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="flex flex-col items-center justify-center py-10 text-emerald-500">
+                <i data-lucide="check-circle" class="w-10 h-10 mb-3"></i>
+                <p class="text-xs font-black uppercase tracking-widest">¡Todo tu stock está rotando!</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ===== SECCIÓN 10 · BENEFICIOS Y PÉRDIDAS ===== Motores de beneficio y fugas de capital (4 filas visibles por tabla, resto con scroll). ===== -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-10">
+            <!-- Productos que más beneficio generan (4 filas visibles, resto con scroll) -->
+            <div class="relative glass-card rounded-[3rem] p-8">
+                <button type="button" class="info-dot info-dot-corner" data-tip="Productos que más beneficio te dejan: lo que vendiste de ellos menos su coste de compra.">?</button>
+                <div class="flex items-center justify-between mb-8">
+                    <h3 class="text-lg font-black text-slate-800 uppercase tracking-widest flex items-center gap-3">
+                        <i data-lucide="trending-up" class="text-emerald-500"></i> Motores de Beneficio
+                    </h3>
+                </div>
+                <div class="overflow-x-auto rep-scroll rep-table-scroll" data-rep-rows="4">
+                    <table class="w-full soul-table">
+                        <thead>
+                            <tr><th class="text-left">Producto</th><th class="text-center">Ventas</th><th class="text-right">Margen</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for p in productos_ganancia %}
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="px-6 py-4 font-black text-slate-700">{{ p.producto__nombre|truncatechars:18 }}</td>
+                                <td class="px-6 py-4 text-center font-bold text-slate-500">{{ p.unidades_vendidas }}</td>
+                                <td class="px-6 py-4 text-right font-black text-emerald-600">€{{ p.total_beneficio|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Productos con más pérdidas (4 filas visibles, resto con scroll) -->
+            <div class="relative glass-card rounded-[3rem] p-8">
+                <button type="button" class="info-dot info-dot-corner" data-tip="Productos que te cuestan más de lo que te dejan: lo que estás perdiendo con ellos.">?</button>
+                <div class="flex items-center justify-between mb-8">
+                    <h3 class="text-lg font-black text-slate-800 uppercase tracking-widest flex items-center gap-3">
+                        <i data-lucide="trending-down" class="text-rose-500"></i> Fugas de Capital
+                    </h3>
+                </div>
+                <div class="overflow-x-auto rep-scroll rep-table-scroll" data-rep-rows="4">
+                    <table class="w-full soul-table">
+                        <thead>
+                            <tr><th class="text-left">Producto</th><th class="text-center">Coste</th><th class="text-right">Pérdida</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for p in productos_perdida %}
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="px-6 py-4 font-black text-slate-700">{{ p.producto__nombre|truncatechars:18 }}</td>
+                                <td class="px-6 py-4 text-center font-bold text-slate-400">€{{ p.producto__costo|floatformat:2 }}</td>
+                                <td class="px-6 py-4 text-right font-black text-rose-500">€{{ p.total_beneficio|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3" class="px-6 py-10 text-center text-emerald-500 font-black uppercase tracking-widest text-xs">Sin fugas detectadas</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== SECCIÓN 11 · ECONOMÍA POR DEPARTAMENTO ===== Ventas agrupadas por categoría: 4 filas visibles, resto con scroll. ===== -->
+        <div class="relative glass-card rounded-[3rem] p-8 mb-10 overflow-hidden">
+            <button type="button" class="info-dot info-dot-corner" data-tip="Ventas agrupadas por categoría o departamento para ver en qué secciones vive tu negocio.">?</button>
+            <div class="flex items-center justify-between mb-8">
+                <h3 class="text-lg font-black text-slate-800 uppercase tracking-widest flex items-center gap-3">
+                    <i data-lucide="pie-chart" class="text-primary-blue"></i> Economía por Departamento
+                </h3>
+            </div>
+            <div class="overflow-x-auto rep-scroll rep-table-scroll" data-rep-rows="4">
+                <table class="w-full soul-table">
+                    <thead>
+                        <tr><th class="text-left">Categoría</th><th class="text-center">Nº SKUs</th><th class="text-right">Ventas Mes</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for cat in categoria_stats %}
+                        <tr class="hover:bg-slate-50/50 transition-colors">
+                            <td class="px-6 py-5 font-black text-slate-700 uppercase tracking-widest text-xs">{{ cat.producto__categoria__nombre|default:"General" }}</td>
+                            <td class="px-6 py-5 text-center font-bold text-slate-400">{{ cat.n_articulos }} artículos</td>
+                            <td class="px-6 py-5 text-right font-black text-dark-blue">€{{ cat.total_ventas|floatformat:2 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ===== SECCIÓN 12 · AUDITORÍA DE VENTAS E IVA ===== Descuentos aplicados y excepciones de IVA (4 filas visibles por tabla, resto con scroll). Anclaje: #seccion-auditoria ===== -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-10" id="seccion-auditoria">
+            <!-- Tickets con descuento aplicado (4 filas visibles, resto con scroll) -->
+            <div class="relative glass-card rounded-[3rem] p-8 border-l-8 border-indigo-500/30">
+                <button type="button" class="info-dot info-dot-corner" data-tip="Tickets que llevaron descuento en el periodo y cuánto se ha descontado en total.">?</button>
+                <div class="flex items-center justify-between mb-8 pr-9">
+                    <h3 class="text-lg font-black text-slate-800 uppercase tracking-widest flex items-center gap-3">
+                        <i data-lucide="percent" class="text-indigo-500"></i> Auditoría de Descuentos
+                    </h3>
+                    <div class="text-right">
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Descontado</p>
+                        <p class="text-xl font-black text-indigo-600">-€{{ total_descuentos_periodo|floatformat:2 }}</p>
+                    </div>
+                </div>
+                <div class="overflow-x-auto rep-scroll rep-table-scroll" data-rep-rows="4">
+                    <table class="w-full soul-table">
+                        <thead>
+                            <tr><th class="text-left">Ticket</th><th class="text-center">Total</th><th class="text-right">Descuento</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for v in ventas_con_descuento %}
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="px-6 py-4 font-black text-slate-700">#{{ v.codigo }}</td>
+                                <td class="px-6 py-4 text-center font-bold text-slate-500">€{{ v.total }}</td>
+                                <td class="px-6 py-4 text-right font-black text-indigo-500">-€{{ v.descuento }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3" class="px-6 py-10 text-center text-slate-300 font-bold uppercase text-xs">Sin descuentos aplicados</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tickets con IVA distinto al estándar (4 filas visibles, resto con scroll) -->
+            <div class="relative glass-card rounded-[3rem] p-8 border-l-8 border-cyan-500/30">
+                <button type="button" class="info-dot info-dot-corner" data-tip="Tickets con un IVA efectivo distinto al configurado: detecta errores de cálculo de impuestos.">?</button>
+                <div class="flex items-center justify-between mb-8 pr-9">
+                    <h3 class="text-lg font-black text-slate-800 uppercase tracking-widest flex items-center gap-3">
+                        <i data-lucide="shield-alert" class="text-cyan-500"></i> Excepciones de IVA
+                    </h3>
+                    <span class="text-[10px] font-black bg-cyan-100 text-cyan-600 px-3 py-1 rounded-lg uppercase tracking-widest">Distinto al {{ iva_actual }}%</span>
+                </div>
+                <div class="overflow-x-auto rep-scroll rep-table-scroll" data-rep-rows="4">
+                    <table class="w-full soul-table">
+                        <thead>
+                            <tr><th class="text-left">Ticket</th><th class="text-center">Total</th><th class="text-right">IVA Aplicado</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for exc in excepciones_iva %}
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="px-6 py-4 font-black text-slate-700">#{{ exc.codigo }}</td>
+                                <td class="px-6 py-4 text-center font-bold text-slate-500">€{{ exc.total }}</td>
+                                <td class="px-6 py-4 text-right font-black text-cyan-600">{{ exc.iva_aplicado }}%</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3" class="px-6 py-10 text-center text-emerald-500 font-bold uppercase text-xs">Todos los tickets al {{ iva_actual }}%</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ===== Scroll de secciones: nº fijo de filas visibles (data-rep-rows), el resto con scroll ===== -->
+<script>
+(function () {
+    function ajustar(box) {
+        var n = parseInt(box.getAttribute("data-rep-rows"), 10);
+        if (!n) return;
+        var esTabla = box.classList.contains("rep-table-scroll");
+        var filas, altura;
+        if (esTabla) {
+            var thead = box.querySelector("thead");
+            if (!thead) return;
+            filas = box.querySelectorAll("tbody tr:not([colspan])");
+            if (filas.length <= n) { box.style.maxHeight = ""; return; }
+            altura = thead.getBoundingClientRect().height + filas[0].getBoundingClientRect().height * n;
+        } else {
+            filas = box.querySelectorAll("[data-rep-row]");
+            if (filas.length <= n) { box.style.maxHeight = ""; return; }
+            var gap = parseInt(box.getAttribute("data-rep-gap") || "16", 10);
+            altura = filas[0].getBoundingClientRect().height * n + gap * (n - 1);
+        }
+        box.style.maxHeight = Math.ceil(altura) + "px";
+    }
+    function ajustarTodo() {
+        document.querySelectorAll("[data-rep-rows]").forEach(ajustar);
+    }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", ajustarTodo);
+    else ajustarTodo();
+    window.addEventListener("load", ajustarTodo);
+    window.addEventListener("resize", ajustarTodo);
+    setTimeout(ajustarTodo, 300);   /* ajuste tras cargar tipografías */
+    setTimeout(ajustarTodo, 1200);
+})();
+</script>
+
+<!-- ===== Donuts: mix por método de pago y por categoría (datos del servidor) ===== -->
+<script>
+(function () {
+    function leer(id) {
+        var el = document.getElementById(id);
+        if (!el) return [];
+        try { return JSON.parse(el.textContent); } catch (e) { return []; }
+    }
+    function pintar(canvasId, items) {
+        var el = document.getElementById(canvasId);
+        if (!el || !items.length || typeof Chart === "undefined") return;
+        new Chart(el, {
+            type: "doughnut",
+            data: {
+                labels: items.map(function (i) { return i.nombre; }),
+                datasets: [{
+                    data: items.map(function (i) { return i.total; }),
+                    backgroundColor: items.map(function (i) { return i.color; }),
+                    borderWidth: 0,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                cutout: "72%",
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function (ctx) {
+                                var it = items[ctx.dataIndex];
+                                return " " + it.nombre + ": €" + Number(it.total).toFixed(2) + " (" + it.pct + "%)";
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    function init() {
+        pintar("donutPagos", leer("mix-pagos-data"));
+        pintar("donutCategorias", leer("mix-categorias-data"));
+    }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+    else init();
+})();
+</script>
+
+<script src="{% static 'js/dashboard_principal.js' %}"></script>
+
+{% endblock %}

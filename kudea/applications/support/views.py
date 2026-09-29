@@ -1,3 +1,14 @@
+# =====================================================================
+# 📁 VISTAS · APP 'support' — CRUD de tickets de soporte
+# =====================================================================
+#   L13    class CrearTicketView(CreateView):
+#   L26    class SelectTicketCategoryView(TemplateView):
+#   L30    class TicketListView(ListView):
+#   L49    class TicketDetailView(DetailView):
+#   L60    class TicketUpdateView(UpdateView):
+#   L72    class TicketDeleteView(DeleteView):
+# =====================================================================
+
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404, redirect
 from django.http import HttpResponse

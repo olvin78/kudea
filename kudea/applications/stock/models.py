@@ -1,3 +1,9 @@
+# =====================================================================
+# 📁 MODELOS · APP 'stock'  (ALMACÉN)
+#   · Movement → entrada/salida de stock sobre product.Producto;
+#                rellena coste en recepciones de compras
+# =====================================================================
+
 from django.db import models
 from django.utils import timezone
 from django.db import transaction

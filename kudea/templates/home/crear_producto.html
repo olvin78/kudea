@@ -296,6 +296,18 @@
                   <input type="number" name="stock_minimo" value="{{ form.stock_minimo.value|default:'5' }}" class="k-form-input" min="0">
                 </div>
               </div>
+
+              <!-- PROVEEDOR HABITUAL (opcional): agrupa el PDF de pedido de reposición -->
+              <div class="row g-4 mb-4">
+                <div class="col-12">
+                  <label class="k-form-label">Proveedor habitual (opcional)</label>
+                  <select name="proveedor" class="k-form-input">
+                    {% for value, text in form.fields.proveedor.choices %}
+                    <option value="{{ value }}" {% if form.proveedor.value|stringformat:'s' == value|stringformat:'s' %}selected{% endif %}>{{ text }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
             </div>
 
             <!-- COLUMNA DERECHA: CONFIGURACIÓN Y MEDIA -->

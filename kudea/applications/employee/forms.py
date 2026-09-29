@@ -21,7 +21,7 @@ class EmployeeForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if self.instance and self.instance.user:
+        if self.instance and getattr(self.instance, 'user_id', None):
             self.fields['email'].initial = self.instance.user.email
 
 

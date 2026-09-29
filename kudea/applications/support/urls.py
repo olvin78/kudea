@@ -1,3 +1,9 @@
+# =====================================================================
+# 📁 RUTAS · APP 'support'  (SOPORTE / TICKETS)
+# URL base: /support/
+#   · Tickets con tipos, estados y seguimiento (módulo 'soporte')
+# =====================================================================
+
 from django.urls import path,include
 from . import views  # Asegúrate de importar views correctamente
 from .views import CrearTicketView, TemplateView, SelectTicketCategoryView,TicketListView,TicketDetailView, TicketUpdateView, TicketDeleteView # Importar la vista CrearTicketView

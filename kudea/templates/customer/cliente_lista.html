@@ -1,0 +1,115 @@
+{% extends "home/base.html" %}
+
+{% block title %}Clientes - Kudea{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+
+    <!-- HEADER -->
+    <div class="k-card p-8 md:p-10 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+            <span class="k-eyebrow mb-3"><span class="dot"></span> CRM · {{ page_obj.paginator.count|default:0 }} clientes</span>
+            <h1 class="text-3xl font-black text-slate-800 tracking-tight mt-3 mb-1">Cartera de Clientes</h1>
+            <p class="text-slate-500 font-medium">Historial de compras, gasto total y cuenta corriente</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="{% url 'fiado_lista' %}" class="bg-white border border-slate-200 text-slate-700 px-5 py-3 rounded-2xl font-bold shadow-sm flex items-center gap-2 hover:border-rose-300 transition-all">
+                <i class="fas fa-wallet opacity-60"></i> Cuentas por cobrar
+            </a>
+            <a href="{% url 'fiado_cliente_nuevo' %}" class="bg-dark-blue text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-dark-blue/20 flex items-center gap-2">
+                <i class="fas fa-user-plus"></i> Nuevo Cliente
+            </a>
+        </div>
+    </div>
+
+    <!-- BUSCADOR -->
+    <form method="get" class="k-card p-4 mb-6 flex flex-col sm:flex-row gap-3">
+        <input type="text" name="q" value="{{ q }}" placeholder="Buscar por nombre, DNI, correo o teléfono…"
+               class="form-control flex-1 rounded-xl border-slate-200" autocomplete="off">
+        <button type="submit" class="bg-dark-blue text-white px-6 py-3 rounded-xl font-bold shadow-sm flex items-center gap-2 justify-center">
+            <i class="fas fa-search"></i> Buscar
+        </button>
+        {% if q %}
+        <a href="{% url 'customer_app:lista' %}" class="bg-white border border-slate-200 text-slate-700 px-5 py-3 rounded-xl font-bold flex items-center gap-2 justify-center">
+            <i class="fas fa-times"></i> Limpiar
+        </a>
+        {% endif %}
+    </form>
+
+    <!-- TABLA -->
+    <div class="k-card overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="border-b border-slate-100 bg-slate-50/60 text-slate-500 text-xs uppercase tracking-wider">
+                        <th class="px-6 py-4 font-bold">Cliente</th>
+                        <th class="px-6 py-4 font-bold">Contacto</th>
+                        <th class="px-6 py-4 font-bold text-center">Compras</th>
+                        <th class="px-6 py-4 font-bold text-right">Total gastado</th>
+                        <th class="px-6 py-4 font-bold">Última visita</th>
+                        <th class="px-6 py-4"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in clientes %}
+                    <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+                        <td class="px-6 py-4">
+                            <a href="{% url 'customer_app:ficha' c.pk %}" class="font-bold text-slate-800 hover:text-dark-blue">
+                                {{ c.nombre }}
+                            </a>
+                            {% if c.dni %}<div class="text-xs text-slate-400">{{ c.dni }}</div>{% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-slate-500">
+                            {% if c.telefono %}<div><i class="fas fa-phone opacity-40 w-4"></i> {{ c.telefono }}</div>{% endif %}
+                            {% if c.correo %}<div><i class="fas fa-envelope opacity-40 w-4"></i> {{ c.correo }}</div>{% endif %}
+                            {% if not c.telefono and not c.correo %}<span class="text-slate-300">—</span>{% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="bg-slate-100 text-slate-600 text-xs font-black px-2.5 py-1 rounded-lg">{{ c.n_ventas|default:0 }}</span>
+                        </td>
+                        <td class="px-6 py-4 text-right font-black text-slate-800">
+                            {{ c.total_gastado|default:0|floatformat:2 }} €
+                        </td>
+                        <td class="px-6 py-4 text-sm text-slate-500">
+                            {% if c.ultima_visita %}{{ c.ultima_visita|date:"d/m/Y H:i" }}{% else %}<span class="text-slate-300">—</span>{% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <a href="{% url 'customer_app:ficha' c.pk %}" class="text-slate-400 hover:text-dark-blue" title="Ver ficha">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-14 text-center text-slate-400">
+                            <i class="fas fa-users text-3xl mb-3 block opacity-40"></i>
+                            {% if q %}Ningún cliente coincide con «{{ q }}».{% else %}Aún no hay clientes dados de alta.{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- PAGINACIÓN -->
+    {% if page_obj and page_obj.paginator.num_pages > 1 %}
+    <div class="flex justify-center gap-2 mt-6">
+        {% if page_obj.has_previous %}
+        <a href="?q={{ q }}&pagina={{ page_obj.previous_page_number }}" class="px-4 py-2 rounded-xl bg-white border border-slate-200 font-bold text-slate-600">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+        {% endif %}
+        <span class="px-4 py-2 rounded-xl bg-dark-blue text-white font-bold">
+            {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+        </span>
+        {% if page_obj.has_next %}
+        <a href="?q={{ q }}&pagina={{ page_obj.next_page_number }}" class="px-4 py-2 rounded-xl bg-white border border-slate-200 font-bold text-slate-600">
+            <i class="fas fa-chevron-right"></i>
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

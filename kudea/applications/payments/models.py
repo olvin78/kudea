@@ -1,3 +1,9 @@
+# =====================================================================
+# 📁 MODELOS · APP 'payments'
+#   · MetodoPago → catálogo del TPV TIENDA (home.Venta.metodo_pago,
+#                  customer.PagoFiado). El restaurante usa home.MetodoPago.
+# =====================================================================
+
 from django.db import models
 
 class MetodoPago(models.Model):
